@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
+import { getHomeRouteForRole } from '../../auth/roleHelpers'
+import { publicLeadsApi } from '../../features/leads/api'
 import '../../App.css'
 
 const categories = [
-  { name: 'Category 1', rule: 'Elite level' },
-  { name: 'Category 2', rule: 'Advanced' },
-  { name: 'Category 3', rule: 'Intermediate' },
-  { name: 'Category 4', rule: 'Recreational' },
-  { name: 'Women Open', rule: 'Women only' },
-  { name: 'Mixed', rule: 'Mixed pairs' },
+  { name: 'Masculino Open', rule: 'Nivel abierto' },
+  { name: 'Masculino 1era', rule: 'Nivel avanzado' },
+  { name: 'Masculino 2da', rule: 'Nivel intermedio' },
+  { name: 'Femenino Open', rule: 'Nivel abierto' },
+  { name: 'Femenino 1era', rule: 'Nivel avanzado' },
+  { name: 'Femenino 2da', rule: 'Nivel intermedio' },
 ]
 
 const steps = [
@@ -30,22 +33,8 @@ const steps = [
   },
 ]
 
-const loyalty = [
-  {
-    title: 'Earn points fast',
-    detail: 'Get points for registrations, wins, and referrals.',
-  },
-  {
-    title: 'Tier perks',
-    detail: 'Move up from Bronze to Gold with priority acceptance windows.',
-  },
-  {
-    title: 'Redeem rewards',
-    detail: 'Use points for discounts, gear, or future entry fees.',
-  },
-]
-
 export default function Home() {
+  const navigate = useNavigate()
   const { user, status, login, register, logout } = useAuth()
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({
@@ -57,6 +46,13 @@ export default function Home() {
     password_confirmation: '',
   })
   const [authError, setAuthError] = useState('')
+  const [contactForm, setContactForm] = useState({
+    full_name: '',
+    email: '',
+    company: '',
+    message: '',
+  })
+  const [contactStatus, setContactStatus] = useState('')
 
   useEffect(() => {
     const updateScroll = () => {
@@ -94,8 +90,9 @@ export default function Home() {
     event.preventDefault()
     setAuthError('')
     try {
-      await login(loginForm)
+      const loggedInUser = await login(loginForm)
       setLoginForm({ email: '', password: '' })
+      navigate(getHomeRouteForRole(loggedInUser))
     } catch (error) {
       setAuthError(error?.data?.message || error?.message || 'Login failed.')
     }
@@ -105,7 +102,7 @@ export default function Home() {
     event.preventDefault()
     setAuthError('')
     try {
-      await register(registerForm)
+      const loggedInUser = await register(registerForm)
       setRegisterForm({
         first_name: '',
         last_name: '',
@@ -114,8 +111,34 @@ export default function Home() {
         password: '',
         password_confirmation: '',
       })
+      navigate(getHomeRouteForRole(loggedInUser))
     } catch (error) {
       setAuthError(error?.data?.message || error?.message || 'Registration failed.')
+    }
+  }
+
+  const handleContactSubmit = async (event) => {
+    event.preventDefault()
+    setContactStatus('')
+
+    try {
+      await publicLeadsApi.create({
+        type: 'partnership',
+        full_name: contactForm.full_name,
+        email: contactForm.email,
+        company: contactForm.company || undefined,
+        message: contactForm.message,
+        source: 'landing',
+      })
+      setContactForm({
+        full_name: '',
+        email: '',
+        company: '',
+        message: '',
+      })
+      setContactStatus('¡Gracias! Te responderemos en menos de 24 horas.')
+    } catch (error) {
+      setContactStatus(error?.data?.message || error?.message || 'No pudimos enviar el mensaje.')
     }
   }
 
@@ -135,15 +158,14 @@ export default function Home() {
           <a href="#tournaments">Tournament</a>
           <a href="#categories">Categories</a>
           <a href="#schedule">Schedule</a>
-          <a href="#loyalty">Loyalty</a>
           <a href="#contact">Contact</a>
         </nav>
         {user ? (
           <button className="secondary-button" onClick={logout} type="button">
-            Log out
+            Cerrar sesión
           </button>
         ) : (
-          <a className="primary-button" href="#auth">Create Account</a>
+          <a className="primary-button" href="#auth">Crear cuenta</a>
         )}
       </header>
 
@@ -190,37 +212,37 @@ export default function Home() {
 
         <section id="auth" className="section auth reveal">
           <div className="section-title">
-            <h2>Player account</h2>
-            <p>Create your account or log in to join the tournament.</p>
+            <h2>Cuenta de jugador</h2>
+            <p>Crea tu cuenta o inicia sesión para unirte al torneo.</p>
           </div>
           <div className="auth-grid">
             <div className="auth-card">
-              <h3>Sign up</h3>
+              <h3>Regístrate</h3>
               <form onSubmit={handleRegister}>
                 <label>
-                  First name
+                  Nombre
                   <input
                     type="text"
                     value={registerForm.first_name}
                     onChange={(event) =>
                       setRegisterForm({ ...registerForm, first_name: event.target.value })
                     }
-                    placeholder="First name"
+                    placeholder="Nombre"
                   />
                 </label>
                 <label>
-                  Last name
+                  Apellido
                   <input
                     type="text"
                     value={registerForm.last_name}
                     onChange={(event) =>
                       setRegisterForm({ ...registerForm, last_name: event.target.value })
                     }
-                    placeholder="Last name"
+                    placeholder="Apellido"
                   />
                 </label>
                 <label>
-                  Email
+                  Correo
                   <input
                     type="email"
                     value={registerForm.email}
@@ -231,7 +253,7 @@ export default function Home() {
                   />
                 </label>
                 <label>
-                  Phone (optional)
+                  Teléfono (opcional)
                   <input
                     type="text"
                     value={registerForm.phone}
@@ -242,18 +264,18 @@ export default function Home() {
                   />
                 </label>
                 <label>
-                  Password
+                  Contraseña
                   <input
                     type="password"
                     value={registerForm.password}
                     onChange={(event) =>
                       setRegisterForm({ ...registerForm, password: event.target.value })
                     }
-                    placeholder="At least 8 characters"
+                    placeholder="Mínimo 8 caracteres"
                   />
                 </label>
                 <label>
-                  Confirm password
+                  Confirmar contraseña
                   <input
                     type="password"
                     value={registerForm.password_confirmation}
@@ -263,19 +285,19 @@ export default function Home() {
                         password_confirmation: event.target.value,
                       })
                     }
-                    placeholder="Repeat password"
+                    placeholder="Repite la contraseña"
                   />
                 </label>
                 <button className="primary-button" type="submit">
-                  Create account
+                  Crear cuenta
                 </button>
               </form>
             </div>
             <div className="auth-card">
-              <h3>Log in</h3>
+              <h3>Iniciar sesión</h3>
               <form onSubmit={handleLogin}>
                 <label>
-                  Email
+                  Correo
                   <input
                     type="email"
                     value={loginForm.email}
@@ -286,18 +308,18 @@ export default function Home() {
                   />
                 </label>
                 <label>
-                  Password
+                  Contraseña
                   <input
                     type="password"
                     value={loginForm.password}
                     onChange={(event) =>
                       setLoginForm({ ...loginForm, password: event.target.value })
                     }
-                    placeholder="Your password"
+                    placeholder="Tu contraseña"
                   />
                 </label>
                 <button className="secondary-button" type="submit">
-                  Log in
+                  Entrar
                 </button>
               </form>
               {user && (
@@ -331,7 +353,7 @@ export default function Home() {
               </div>
               <p className="card-detail">Dates: to be confirmed.</p>
               <p className="card-detail">Venue: to be confirmed.</p>
-              <p className="card-detail emphasis">Mode: invitational / open / hybrid.</p>
+              <p className="card-detail emphasis">Modalidad: pro / amateur.</p>
               <a className="ghost-button full" href="#contact">Get updates</a>
             </article>
           </div>
@@ -389,45 +411,59 @@ export default function Home() {
           <a className="primary-button" href="#contact">Ask for calendar link</a>
         </section>
 
-        <section id="loyalty" className="section loyalty reveal">
-          <div className="section-title">
-            <h2>Loyalty program</h2>
-            <p>Reward players who show up and compete.</p>
-          </div>
-          <div className="loyalty-grid">
-            {loyalty.map((item) => (
-              <div className="loyalty-card" key={item.title}>
-                <h3>{item.title}</h3>
-                <p>{item.detail}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section id="contact" className="section contact reveal">
           <div className="section-title">
             <h2>Contact & partnerships</h2>
             <p>Let us know if you want to sponsor or collaborate.</p>
           </div>
           <div className="contact-grid">
-            <form className="contact-form">
+            <form className="contact-form" onSubmit={handleContactSubmit}>
               <label>
-                Full name
-                <input type="text" placeholder="Your name" />
+                Nombre completo
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={contactForm.full_name}
+                  onChange={(event) =>
+                    setContactForm((prev) => ({ ...prev, full_name: event.target.value }))
+                  }
+                />
               </label>
               <label>
-                Email
-                <input type="email" placeholder="name@email.com" />
+                Correo
+                <input
+                  type="email"
+                  placeholder="name@email.com"
+                  value={contactForm.email}
+                  onChange={(event) =>
+                    setContactForm((prev) => ({ ...prev, email: event.target.value }))
+                  }
+                />
               </label>
               <label>
-                Company
-                <input type="text" placeholder="Optional" />
+                Empresa
+                <input
+                  type="text"
+                  placeholder="Opcional"
+                  value={contactForm.company}
+                  onChange={(event) =>
+                    setContactForm((prev) => ({ ...prev, company: event.target.value }))
+                  }
+                />
               </label>
               <label>
-                Message
-                <textarea rows="4" placeholder="Tell us about your idea" />
+                Mensaje
+                <textarea
+                  rows="4"
+                  placeholder="Cuéntanos tu idea"
+                  value={contactForm.message}
+                  onChange={(event) =>
+                    setContactForm((prev) => ({ ...prev, message: event.target.value }))
+                  }
+                />
               </label>
-              <button className="primary-button" type="button">Send message</button>
+              <button className="primary-button" type="submit">Enviar mensaje</button>
+              {contactStatus && <p className="form-message">{contactStatus}</p>}
             </form>
             <div className="contact-panel">
               <h3>Need help registering?</h3>

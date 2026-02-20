@@ -10,6 +10,8 @@ class StatusHistory extends Model
     /** @use HasFactory<\Database\Factories\StatusHistoryFactory> */
     use HasFactory;
 
+    protected $table = 'status_history';
+
     public $timestamps = false;
 
     protected $fillable = [

@@ -15,5 +15,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(StatusSeeder::class);
+        $this->call(CircuitSeeder::class);
+        $this->call(CategorySeeder::class);
+        $this->call(UserSeeder::class);
+
+        if (env('SEED_DEMO_TOURNAMENT')) {
+            $this->call(DemoTournamentSeeder::class);
+        }
     }
 }

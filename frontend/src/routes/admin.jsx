@@ -4,8 +4,9 @@ import Payments from '../pages/admin/Payments'
 import Draws from '../pages/admin/Draws'
 import Matches from '../pages/admin/Matches'
 import TournamentSettings from '../pages/admin/TournamentSettings'
+import Rankings from '../pages/admin/Rankings'
 import Leads from '../pages/admin/Leads'
-import Loyalty from '../pages/admin/Loyalty'
+import Wildcards from '../pages/admin/Wildcards'
 
 export const adminRoutes = [
   { path: '/admin', element: <Dashboard /> },
@@ -14,6 +15,7 @@ export const adminRoutes = [
   { path: '/admin/draws', element: <Draws /> },
   { path: '/admin/matches', element: <Matches /> },
   { path: '/admin/settings', element: <TournamentSettings /> },
+  { path: '/admin/rankings', element: <Rankings /> },
   { path: '/admin/leads', element: <Leads /> },
-  { path: '/admin/loyalty', element: <Loyalty /> },
+  { path: '/admin/wildcards', element: <Wildcards /> },
 ]

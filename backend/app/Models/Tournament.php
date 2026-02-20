@@ -26,6 +26,10 @@ class Tournament extends Model
         'end_date',
         'registration_open_at',
         'registration_close_at',
+        'day_start_time',
+        'day_end_time',
+        'match_duration_minutes',
+        'courts_count',
         'created_by',
     ];
 
@@ -34,6 +38,10 @@ class Tournament extends Model
         'end_date' => 'date',
         'registration_open_at' => 'datetime',
         'registration_close_at' => 'datetime',
+        'day_start_time' => 'string',
+        'day_end_time' => 'string',
+        'match_duration_minutes' => 'integer',
+        'courts_count' => 'integer',
     ];
 
     public function circuit()

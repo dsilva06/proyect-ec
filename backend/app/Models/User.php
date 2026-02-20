@@ -22,7 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
-        'password',
+        'password_hash',
         'role',
         'is_active',
         'last_login_at',
@@ -34,7 +34,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
+        'password_hash',
         'remember_token',
     ];
 
@@ -49,8 +49,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'is_active' => 'boolean',
-            'password' => 'hashed',
+            'password_hash' => 'hashed',
         ];
+    }
+
+    public function getAuthPasswordName(): string
+    {
+        return 'password_hash';
     }
 
     public function playerProfile()
@@ -78,15 +83,5 @@ class User extends Authenticatable
     public function calendarEvents()
     {
         return $this->hasMany(CalendarEvent::class, 'created_by');
-    }
-
-    public function loyaltyAccount()
-    {
-        return $this->hasOne(LoyaltyAccount::class);
-    }
-
-    public function loyaltyTransactions()
-    {
-        return $this->hasMany(LoyaltyTransaction::class);
     }
 }

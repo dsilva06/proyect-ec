@@ -21,6 +21,8 @@ class TournamentMatch extends Model
         'registration_b_id',
         'status_id',
         'scheduled_at',
+        'not_before_at',
+        'estimated_duration_minutes',
         'court',
         'score_json',
         'winner_registration_id',
@@ -33,6 +35,8 @@ class TournamentMatch extends Model
         'round_number' => 'integer',
         'match_number' => 'integer',
         'scheduled_at' => 'datetime',
+        'not_before_at' => 'datetime',
+        'estimated_duration_minutes' => 'integer',
         'score_json' => 'array',
         'updated_at_daily' => 'date',
     ];

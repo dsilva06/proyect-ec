@@ -15,6 +15,8 @@ class TeamInvite extends Model
         'invited_email',
         'invited_phone',
         'invited_user_id',
+        'invited_ranking_value',
+        'invited_ranking_source',
         'token',
         'status_id',
         'expires_at',
@@ -22,6 +24,7 @@ class TeamInvite extends Model
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'invited_ranking_value' => 'integer',
     ];
 
     public function team()

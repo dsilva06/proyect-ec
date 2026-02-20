@@ -12,7 +12,11 @@ class Invitation extends Model
 
     protected $fillable = [
         'tournament_category_id',
+        'purpose',
         'email',
+        'partner_email',
+        'partner_name',
+        'wildcard_fee_waived',
         'phone',
         'user_id',
         'team_id',
@@ -23,6 +27,7 @@ class Invitation extends Model
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'wildcard_fee_waived' => 'boolean',
     ];
 
     public function tournamentCategory()

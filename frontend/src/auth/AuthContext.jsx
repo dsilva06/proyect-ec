@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { authApi } from '../api/apiClient'
+import { authApi } from '../features/auth/api'
 
 const AuthContext = createContext(null)
 const STORAGE_KEY = 'padel-auth-user'

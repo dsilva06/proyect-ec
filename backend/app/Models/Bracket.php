@@ -10,11 +10,17 @@ class Bracket extends Model
     /** @use HasFactory<\Database\Factories\BracketFactory> */
     use HasFactory;
 
+    public const TYPE_SINGLE_ELIMINATION = 'single_elimination';
+
     protected $fillable = [
         'tournament_category_id',
         'type',
         'status_id',
         'published_at',
+    ];
+
+    protected $attributes = [
+        'type' => self::TYPE_SINGLE_ELIMINATION,
     ];
 
     protected $casts = [
