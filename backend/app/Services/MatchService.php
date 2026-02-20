@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 class MatchService
 {
+    private ?int $scheduledMatchStatusId = null;
+
     public function __construct(protected StatusService $statusService)
     {
     }
@@ -58,6 +60,12 @@ class MatchService
         $this->advanceWinnerIfReady($match);
 
         return $match->fresh();
+    }
+
+    public function delete(TournamentMatch $match): void
+    {
+        $this->clearNextPath($match);
+        $match->delete();
     }
 
     private function normalizeWithBracket(array $data, ?TournamentMatch $match = null): array
@@ -181,6 +189,45 @@ class MatchService
 
         $nextMatch->{$field} = $match->winner_registration_id;
         $nextMatch->save();
+    }
+
+    private function clearNextPath(TournamentMatch $match): void
+    {
+        if (! $match->bracket_id) {
+            return;
+        }
+
+        $nextRound = $match->round_number + 1;
+        $nextMatchNumber = (int) ceil($match->match_number / 2);
+
+        $nextMatch = TournamentMatch::query()
+            ->where('bracket_id', $match->bracket_id)
+            ->where('round_number', $nextRound)
+            ->where('match_number', $nextMatchNumber)
+            ->first();
+
+        if (! $nextMatch) {
+            return;
+        }
+
+        $field = $match->match_number % 2 === 1 ? 'registration_a_id' : 'registration_b_id';
+
+        $nextMatch->{$field} = null;
+        $nextMatch->winner_registration_id = null;
+        $nextMatch->score_json = null;
+        $nextMatch->status_id = $this->scheduledMatchStatusId();
+        $nextMatch->save();
+
+        $this->clearNextPath($nextMatch);
+    }
+
+    private function scheduledMatchStatusId(): int
+    {
+        if (! $this->scheduledMatchStatusId) {
+            $this->scheduledMatchStatusId = $this->statusService->resolveStatusId('match', 'scheduled');
+        }
+
+        return $this->scheduledMatchStatusId;
     }
 
     private function validateRegistrations(array $data, ?TournamentMatch $match = null): void

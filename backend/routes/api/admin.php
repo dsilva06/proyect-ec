@@ -47,6 +47,7 @@ Route::middleware(['auth:sanctum', 'is_admin'])->prefix('admin')->group(function
     Route::get('/matches', [MatchController::class, 'index']);
     Route::post('/matches', [MatchController::class, 'store']);
     Route::patch('/matches/{match}', [MatchController::class, 'update']);
+    Route::delete('/matches/{match}', [MatchController::class, 'destroy']);
     Route::post('/matches/{match}/delay', [MatchController::class, 'delay']);
 
     Route::get('/leads', [AdminLeadController::class, 'index']);

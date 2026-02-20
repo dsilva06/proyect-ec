@@ -120,4 +120,11 @@ class MatchController extends Controller
 
         return new MatchResource($match);
     }
+
+    public function destroy(TournamentMatch $match)
+    {
+        app(MatchService::class)->delete($match);
+
+        return response()->noContent();
+    }
 }

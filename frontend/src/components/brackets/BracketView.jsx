@@ -23,17 +23,32 @@ const getDrawSize = (bracket) => {
   return 0
 }
 
-const buildRoundsFromMatches = (matches, roundsCount) => {
-  if (!matches.length) return []
-  const byRound = Array.from({ length: roundsCount }, () => [])
+const buildRoundsFromMatches = (matches, roundsCount, drawSize) => {
+  if (!drawSize) return []
+
+  const byRound = Array.from({ length: roundsCount }, (_, roundIndex) => {
+    const totalMatches = Math.max(1, Math.floor(drawSize / 2 ** (roundIndex + 1)))
+    return Array.from({ length: totalMatches }, (_, idx) => ({
+      round_number: roundIndex + 1,
+      match_number: idx + 1,
+      is_placeholder: true,
+    }))
+  })
+
   matches
     .slice()
     .sort((a, b) => Number(a.round_number) - Number(b.round_number) || Number(a.match_number) - Number(b.match_number))
     .forEach((match) => {
-      const index = (Number(match.round_number) || 1) - 1
-      if (!byRound[index]) byRound[index] = []
-      byRound[index].push(match)
+      const roundIndex = (Number(match.round_number) || 1) - 1
+      const matchIndex = (Number(match.match_number) || 1) - 1
+      if (!byRound[roundIndex]) return
+      byRound[roundIndex][matchIndex] = {
+        ...byRound[roundIndex][matchIndex],
+        ...match,
+        is_placeholder: false,
+      }
     })
+
   return byRound
 }
 
@@ -69,14 +84,14 @@ const getRegistration = (match, side) => {
   return match.registration_b || match.registrationB
 }
 
-const getTeamLabel = (registration, other) => {
+const getTeamLabel = (registration, other, isPlaceholder = false) => {
   if (registration?.team) {
     return registration.team.display_name || 'Equipo'
   }
   if (other?.team) {
     return 'BYE'
   }
-  return '—'
+  return isPlaceholder ? 'Pendiente' : '—'
 }
 
 export default function BracketView({ bracket, onMatchClick }) {
@@ -86,7 +101,7 @@ export default function BracketView({ bracket, onMatchClick }) {
     const roundsCount = Math.max(1, Math.round(Math.log2(drawSize)))
     const matches = bracket.matches || []
     if (matches.length) {
-      return buildRoundsFromMatches(matches, roundsCount)
+      return buildRoundsFromMatches(matches, roundsCount, drawSize)
     }
     return buildRoundsFromSlots(bracket.slots || [], roundsCount)
   }, [bracket])
@@ -111,18 +126,23 @@ export default function BracketView({ bracket, onMatchClick }) {
               const registrationB = getRegistration(match, 'b')
               const winnerId = match.winner_registration?.id || match.winnerRegistration?.id
               const matchTime = match.not_before_at || match.scheduled_at
-              const hasClick = typeof onMatchClick === 'function' && match.id
+              const hasClick = typeof onMatchClick === 'function'
+              const isPlaceholder = Boolean(match.is_placeholder && !match.id)
               return (
                 <div
                   key={`match-${roundIndex}-${match.match_number}`}
-                  className={`bracket-match ${isFinal ? 'is-final' : ''} ${hasClick ? 'is-clickable' : ''}`}
+                  className={`bracket-match ${isFinal ? 'is-final' : ''} ${hasClick ? 'is-clickable' : ''} ${isPlaceholder ? 'is-placeholder' : ''}`}
                   onClick={() => {
                     if (hasClick) onMatchClick(match)
                   }}
                   role={hasClick ? 'button' : undefined}
                   tabIndex={hasClick ? 0 : undefined}
                   onKeyDown={(event) => {
-                    if (hasClick && event.key === 'Enter') onMatchClick(match)
+                    if (!hasClick) return
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      onMatchClick(match)
+                    }
                   }}
                 >
                   <div
@@ -131,7 +151,7 @@ export default function BracketView({ bracket, onMatchClick }) {
                     }`}
                   >
                     {registrationA?.seed_number ? <span className="seed-badge">#{registrationA.seed_number}</span> : null}
-                    <span className="team-name">{getTeamLabel(registrationA, registrationB)}</span>
+                    <span className="team-name">{getTeamLabel(registrationA, registrationB, isPlaceholder)}</span>
                   </div>
                   <div
                     className={`bracket-team ${winnerId && winnerId === registrationB?.id ? 'is-winner' : ''} ${
@@ -139,8 +159,9 @@ export default function BracketView({ bracket, onMatchClick }) {
                     }`}
                   >
                     {registrationB?.seed_number ? <span className="seed-badge">#{registrationB.seed_number}</span> : null}
-                    <span className="team-name">{getTeamLabel(registrationB, registrationA)}</span>
+                    <span className="team-name">{getTeamLabel(registrationB, registrationA, isPlaceholder)}</span>
                   </div>
+                  <div className="bracket-match-index">Partido {match.match_number}</div>
                   {matchTime || match.court ? (
                     <div className="bracket-match-meta">
                       {matchTime ? <span>{formatDateTime(matchTime)}</span> : null}
