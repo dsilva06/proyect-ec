@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateRegistrationRankingsRequest;
 use App\Http\Requests\Admin\UpdateRegistrationRequest;
 use App\Http\Resources\RegistrationResource;
 use App\Models\Registration;
@@ -17,6 +18,8 @@ class RegistrationController extends Controller
             ->with([
                 'status',
                 'team.users.playerProfile',
+                'rankings.user.playerProfile',
+                'rankings.verifier',
                 'tournamentCategory.tournament.status',
                 'tournamentCategory.category',
             ])
@@ -52,9 +55,22 @@ class RegistrationController extends Controller
         $registration->load([
             'status',
             'team.users.playerProfile',
+            'rankings.user.playerProfile',
+            'rankings.verifier',
             'tournamentCategory.tournament.status',
             'tournamentCategory.category',
         ]);
+
+        return new RegistrationResource($registration);
+    }
+
+    public function updateRankings(UpdateRegistrationRankingsRequest $request, Registration $registration)
+    {
+        $registration = app(RegistrationService::class)->updateRankingsFromAdmin(
+            $registration,
+            $request->validated()['rankings'],
+            $request->user()
+        );
 
         return new RegistrationResource($registration);
     }

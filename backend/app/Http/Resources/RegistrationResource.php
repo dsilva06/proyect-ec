@@ -24,6 +24,10 @@ class RegistrationResource extends JsonResource
             'is_wildcard' => (bool) $this->is_wildcard,
             'wildcard_fee_waived' => (bool) $this->wildcard_fee_waived,
             'wildcard_invitation_id' => $this->wildcard_invitation_id,
+            'rankings' => RegistrationRankingResource::collection($this->whenLoaded('rankings')),
+            'has_ranking' => $this->whenLoaded('rankings', function () {
+                return $this->rankings->contains(fn ($ranking) => $ranking->ranking_value !== null);
+            }, null),
             'accepted_at' => optional($this->accepted_at)->toIso8601String(),
             'payment_due_at' => optional($this->payment_due_at)->toIso8601String(),
             'cancelled_at' => optional($this->cancelled_at)->toIso8601String(),

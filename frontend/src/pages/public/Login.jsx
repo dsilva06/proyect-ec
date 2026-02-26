@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { inviteStorage } from '../../auth/inviteStorage'
 import { getHomeRouteForRole } from '../../auth/roleHelpers'
@@ -24,7 +24,7 @@ export default function Login() {
           navigate('/player/invitations')
           return
         } catch (claimError) {
-          setError(claimError?.data?.message || 'No pudimos asociar tu invitación.')
+          setError(claimError?.data?.message || 'No pudimos asociar tu invitacion.')
         }
       }
       navigate(getHomeRouteForRole(loggedInUser))
@@ -34,24 +34,59 @@ export default function Login() {
   }
 
   return (
-    <div style={{ padding: '48px' }}>
-      <h1>Iniciar sesión</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '12px', maxWidth: '320px' }}>
-        <input
-          type="email"
-          placeholder="Correo"
-          value={form.email}
-          onChange={(event) => setForm({ ...form, email: event.target.value })}
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={form.password}
-          onChange={(event) => setForm({ ...form, password: event.target.value })}
-        />
-        <button type="submit">Entrar</button>
-      </form>
-      {error && <p style={{ color: '#ff9b9b' }}>{error}</p>}
+    <div className="page auth-page">
+      <div className="background-orb orb-one" />
+      <div className="background-orb orb-two" />
+      <div className="background-grid" />
+
+      <header className="nav auth-nav">
+        <div className="brand">
+          <Link to="/" className="brand-mark">ESTARS PADEL TOUR</Link>
+          <span className="brand-subtitle">Tournament Hub</span>
+        </div>
+        <div className="nav-auth-actions">
+          <span className="tag muted">Player Access</span>
+          <Link className="primary-button" to="/register">Sign up</Link>
+        </div>
+      </header>
+
+      <main>
+        <section className="section auth-standalone">
+          <div className="auth-shell single-card">
+            <div className="auth-card">
+              <h2>Iniciar sesion</h2>
+              <p className="muted">Ingresa con tu cuenta para ver torneos, pagos e invitaciones.</p>
+              <form onSubmit={handleSubmit}>
+                <label>
+                  Correo
+                  <input
+                    type="email"
+                    placeholder="name@email.com"
+                    value={form.email}
+                    onChange={(event) => setForm({ ...form, email: event.target.value })}
+                    required
+                  />
+                </label>
+                <label>
+                  Contrasena
+                  <input
+                    type="password"
+                    placeholder="Tu contrasena"
+                    value={form.password}
+                    onChange={(event) => setForm({ ...form, password: event.target.value })}
+                    required
+                  />
+                </label>
+                <button className="primary-button auth-submit" type="submit">Entrar</button>
+              </form>
+              {error && <p className="auth-error">{error}</p>}
+              <p className="auth-switch">
+                No tienes cuenta? <Link to="/register">Crear cuenta</Link>
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   )
 }

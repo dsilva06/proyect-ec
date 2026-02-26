@@ -28,7 +28,7 @@ export default function AdminLayout() {
         <NavLink to="/admin/settings">Torneos</NavLink>
         <NavLink to="/admin/registrations">Inscripciones</NavLink>
         <NavLink to="/admin/wildcards">Wildcards</NavLink>
-        <NavLink to="/admin/rankings">Rankings</NavLink>
+        <NavLink to="/admin/players">Jugadores</NavLink>
         <NavLink to="/admin/payments">Pagos</NavLink>
         <NavLink to="/admin/draws">Cuadros</NavLink>
         <NavLink to="/admin/matches">Partidos</NavLink>

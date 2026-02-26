@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { adminBracketSlotsApi, adminBracketsApi } from '../../features/brackets/api'
+import { adminBracketsApi } from '../../features/brackets/api'
 import { adminMatchesApi } from '../../features/matches/api'
-import { adminRegistrationsApi } from '../../features/registrations/api'
 import { adminTournamentsApi } from '../../features/tournaments/api'
 import { statusesApi } from '../../features/statuses/api'
 import { cleanPayload } from '../../utils/cleanPayload'
@@ -17,12 +16,10 @@ const initialForm = {
 export default function Draws() {
   const [brackets, setBrackets] = useState([])
   const [tournaments, setTournaments] = useState([])
-  const [registrations, setRegistrations] = useState([])
   const [statuses, setStatuses] = useState([])
   const [form, setForm] = useState(initialForm)
   const [error, setError] = useState('')
   const [activeBracketId, setActiveBracketId] = useState(null)
-  const [slotError, setSlotError] = useState('')
   const [scheduleMatch, setScheduleMatch] = useState(null)
   const [scheduleForm, setScheduleForm] = useState({
     scheduled_at: '',
@@ -60,19 +57,9 @@ export default function Draws() {
     [brackets, activeBracketId],
   )
 
-  const sortedSlots = useMemo(() => {
-    if (!activeBracket?.slots) return []
-    return [...activeBracket.slots].sort((a, b) => a.slot_number - b.slot_number)
-  }, [activeBracket])
+  const hasGeneratedBracket = (bracket) => ((bracket?.matches?.length || 0) > 0 || (bracket?.slots?.length || 0) > 0)
 
-  const registrationOptions = useMemo(
-    () =>
-      registrations.map((registration) => ({
-        id: registration.id,
-        label: `${registration.team?.display_name || 'Equipo'} • ${registration.status?.label || '—'}${registration.is_wildcard ? ' • WC' : ''}`,
-      })),
-    [registrations],
-  )
+  const isFocusMode = useMemo(() => hasGeneratedBracket(activeBracket), [activeBracket])
 
   const load = async () => {
     try {
@@ -92,37 +79,6 @@ export default function Draws() {
   useEffect(() => {
     load()
   }, [])
-
-  useEffect(() => {
-    setSlotError('')
-    if (!activeBracketId) {
-      setRegistrations([])
-      return
-    }
-
-    const bracket = brackets.find((item) => item.id === activeBracketId)
-    const tournamentId = bracket?.tournament_category?.tournament?.id
-    const categoryId = bracket?.tournament_category?.category?.id
-
-    if (!tournamentId || !categoryId) {
-      setRegistrations([])
-      return
-    }
-
-    const loadRegistrations = async () => {
-      try {
-        const registrationsData = await adminRegistrationsApi.list({
-          tournament_id: tournamentId,
-          category_id: categoryId,
-        })
-        setRegistrations(registrationsData)
-      } catch (err) {
-        setSlotError(err?.message || 'No pudimos cargar las inscripciones.')
-      }
-    }
-
-    loadRegistrations()
-  }, [activeBracketId, brackets])
 
   const handleChange = (field) => (event) => {
     const value = event.target.value
@@ -163,18 +119,6 @@ export default function Draws() {
       setActiveBracketId(bracket.id)
     } catch (err) {
       setError(err?.message || 'No pudimos generar el cuadro.')
-    }
-  }
-
-  const handleSlotChange = async (slotId, registrationId) => {
-    setSlotError('')
-    try {
-      await adminBracketSlotsApi.update(slotId, {
-        registration_id: registrationId ? Number(registrationId) : null,
-      })
-      await load()
-    } catch (err) {
-      setSlotError(err?.data?.message || err?.message || 'No pudimos actualizar el slot.')
     }
   }
 
@@ -233,6 +177,82 @@ export default function Draws() {
     } catch (err) {
       setMatchError(err?.data?.message || err?.message || 'No pudimos actualizar el partido.')
     }
+  }
+
+  const scheduleModal = scheduleMatch ? (
+    <div className="modal-backdrop" onClick={() => setScheduleMatch(null)}>
+      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <h3>Programar partido</h3>
+            <p>
+              Ronda {scheduleMatch.round_number} • Partido {scheduleMatch.match_number}
+            </p>
+          </div>
+          <button className="ghost-button" type="button" onClick={() => setScheduleMatch(null)}>
+            Cerrar
+          </button>
+        </div>
+        <div className="modal-body">
+          <div className="form-grid">
+            <label>
+              No antes de
+              <DateTimePicker value={scheduleForm.scheduled_at} onChange={handleScheduleChange('scheduled_at')} />
+            </label>
+            <label>
+              Cancha
+              <input type="text" value={scheduleForm.court} onChange={handleScheduleChange('court')} />
+            </label>
+            <label>
+              Duración estimada (min)
+              <input
+                type="number"
+                min="10"
+                value={scheduleForm.estimated_duration_minutes}
+                onChange={handleScheduleChange('estimated_duration_minutes')}
+              />
+            </label>
+            <label>
+              Estado
+              <select value={scheduleForm.status_id} onChange={handleScheduleChange('status_id')}>
+                <option value="">Selecciona</option>
+                {matchStatusOptions.map((status) => (
+                  <option key={status.id} value={status.id}>{status.label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="form-actions">
+            <button className="primary-button" type="button" onClick={handleScheduleSave}>
+              Guardar
+            </button>
+          </div>
+          {matchError && <p className="form-message error">{matchError}</p>}
+        </div>
+      </div>
+    </div>
+  ) : null
+
+  if (isFocusMode) {
+    return (
+      <section className="admin-page draw-focus-page">
+        <div className="draw-focus-shell">
+          <button
+            type="button"
+            className="draw-focus-back"
+            onClick={() => setActiveBracketId(null)}
+            aria-label="Volver a cuadros"
+          >
+            ‹
+          </button>
+          <div className="draw-focus-board">
+            <BracketView bracket={activeBracket} onMatchClick={handleMatchClick} />
+          </div>
+          {error ? <p className="form-message error">{error}</p> : null}
+        </div>
+        {scheduleModal}
+      </section>
+    )
   }
 
   return (
@@ -340,45 +360,12 @@ export default function Draws() {
                     <button
                       className="ghost-button"
                       type="button"
-                      onClick={() => setActiveBracketId(activeBracketId === bracket.id ? null : bracket.id)}
+                      onClick={() => setActiveBracketId(bracket.id)}
+                      disabled={!hasGeneratedBracket(bracket)}
                     >
-                      Ver cuadro
+                      {hasGeneratedBracket(bracket) ? 'Ver cuadro' : 'Genera para ver'}
                     </button>
                   </div>
-                  {activeBracketId === bracket.id ? (
-                    <div className="bracket-view">
-                      <BracketView bracket={bracket} onMatchClick={handleMatchClick} />
-                      <div className="slot-editor">
-                        <div className="panel-header">
-                          <h5>Editar slots</h5>
-                          <span className="tag muted">{sortedSlots.length}</span>
-                        </div>
-                        {sortedSlots.length === 0 ? (
-                          <p className="muted">Genera el cuadro para asignar posiciones.</p>
-                        ) : (
-                          <div className="form-grid">
-                            {sortedSlots.map((slot) => (
-                              <label key={slot.id}>
-                                Slot {slot.slot_number}
-                                <select
-                                  value={slot.registration?.id || ''}
-                                  onChange={(event) => handleSlotChange(slot.id, event.target.value)}
-                                >
-                                  <option value="">Vacío</option>
-                                  {registrationOptions.map((option) => (
-                                    <option key={option.id} value={option.id}>
-                                      {option.label}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                            ))}
-                          </div>
-                        )}
-                        {slotError && <p className="form-message error">{slotError}</p>}
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
               ))}
             </div>
@@ -386,59 +373,7 @@ export default function Draws() {
         </div>
       </div>
 
-      {scheduleMatch ? (
-        <div className="modal-backdrop" onClick={() => setScheduleMatch(null)}>
-          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <h3>Programar partido</h3>
-                <p>
-                  Ronda {scheduleMatch.round_number} • Partido {scheduleMatch.match_number}
-                </p>
-              </div>
-              <button className="ghost-button" type="button" onClick={() => setScheduleMatch(null)}>
-                Cerrar
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="form-grid">
-                <label>
-                  No antes de
-                  <DateTimePicker value={scheduleForm.scheduled_at} onChange={handleScheduleChange('scheduled_at')} />
-                </label>
-                <label>
-                  Cancha
-                  <input type="text" value={scheduleForm.court} onChange={handleScheduleChange('court')} />
-                </label>
-                <label>
-                  Duración estimada (min)
-                  <input
-                    type="number"
-                    min="10"
-                    value={scheduleForm.estimated_duration_minutes}
-                    onChange={handleScheduleChange('estimated_duration_minutes')}
-                  />
-                </label>
-                <label>
-                  Estado
-                  <select value={scheduleForm.status_id} onChange={handleScheduleChange('status_id')}>
-                    <option value="">Selecciona</option>
-                    {matchStatusOptions.map((status) => (
-                      <option key={status.id} value={status.id}>{status.label}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <div className="form-actions">
-                <button className="primary-button" type="button" onClick={handleScheduleSave}>
-                  Guardar
-                </button>
-              </div>
-              {matchError && <p className="form-message error">{matchError}</p>}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {scheduleModal}
     </section>
   )
 }

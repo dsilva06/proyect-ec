@@ -20,11 +20,24 @@ return new class extends Migration
                 ->cascadeOnDelete();
         });
 
-        DB::table('matches')
-            ->join('brackets', 'matches.bracket_id', '=', 'brackets.id')
-            ->update([
-                'matches.tournament_category_id' => DB::raw('brackets.tournament_category_id'),
-            ]);
+        // SQLite does not support this JOIN-update pattern reliably.
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('
+                UPDATE matches
+                SET tournament_category_id = (
+                    SELECT brackets.tournament_category_id
+                    FROM brackets
+                    WHERE brackets.id = matches.bracket_id
+                )
+                WHERE bracket_id IS NOT NULL
+            ');
+        } else {
+            DB::table('matches')
+                ->join('brackets', 'matches.bracket_id', '=', 'brackets.id')
+                ->update([
+                    'matches.tournament_category_id' => DB::raw('brackets.tournament_category_id'),
+                ]);
+        }
 
         Schema::table('matches', function (Blueprint $table) {
             $table->index(['tournament_category_id']);

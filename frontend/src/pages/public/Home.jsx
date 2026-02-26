@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
-import { getHomeRouteForRole } from '../../auth/roleHelpers'
 import { publicLeadsApi } from '../../features/leads/api'
 import '../../App.css'
 
@@ -34,18 +33,7 @@ const steps = [
 ]
 
 export default function Home() {
-  const navigate = useNavigate()
-  const { user, status, login, register, logout } = useAuth()
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
-  const [registerForm, setRegisterForm] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    password: '',
-    password_confirmation: '',
-  })
-  const [authError, setAuthError] = useState('')
+  const { user, logout } = useAuth()
   const [contactForm, setContactForm] = useState({
     full_name: '',
     email: '',
@@ -86,37 +74,6 @@ export default function Home() {
     return () => observer.disconnect()
   }, [])
 
-  const handleLogin = async (event) => {
-    event.preventDefault()
-    setAuthError('')
-    try {
-      const loggedInUser = await login(loginForm)
-      setLoginForm({ email: '', password: '' })
-      navigate(getHomeRouteForRole(loggedInUser))
-    } catch (error) {
-      setAuthError(error?.data?.message || error?.message || 'Login failed.')
-    }
-  }
-
-  const handleRegister = async (event) => {
-    event.preventDefault()
-    setAuthError('')
-    try {
-      const loggedInUser = await register(registerForm)
-      setRegisterForm({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        password: '',
-        password_confirmation: '',
-      })
-      navigate(getHomeRouteForRole(loggedInUser))
-    } catch (error) {
-      setAuthError(error?.data?.message || error?.message || 'Registration failed.')
-    }
-  }
-
   const handleContactSubmit = async (event) => {
     event.preventDefault()
     setContactStatus('')
@@ -150,23 +107,27 @@ export default function Home() {
 
       <header className="nav">
         <div className="brand">
-          <span className="brand-mark">PADEL CUP</span>
+          <span className="brand-mark">ESTARS PADEL TOUR</span>
           <span className="brand-subtitle">Tournament Hub</span>
         </div>
         <nav className="nav-links">
-          <a href="#auth">Account</a>
           <a href="#tournaments">Tournament</a>
           <a href="#categories">Categories</a>
           <a href="#schedule">Schedule</a>
           <a href="#contact">Contact</a>
         </nav>
-        {user ? (
-          <button className="secondary-button" onClick={logout} type="button">
-            Cerrar sesión
-          </button>
-        ) : (
-          <a className="primary-button" href="#auth">Crear cuenta</a>
-        )}
+        <div className="nav-auth-actions">
+          {user ? (
+            <button className="secondary-button" onClick={logout} type="button">
+              Cerrar sesión
+            </button>
+          ) : (
+            <>
+              <Link className="ghost-button" to="/login">Login</Link>
+              <Link className="primary-button" to="/register">Sign up</Link>
+            </>
+          )}
+        </div>
       </header>
 
       <main>
@@ -180,7 +141,8 @@ export default function Home() {
               first, ready for mobile later.
             </p>
             <div className="hero-actions">
-              <a className="primary-button" href="#auth">Create account</a>
+              <Link className="primary-button" to="/register">Create account</Link>
+              <Link className="secondary-button" to="/login">Login</Link>
               <a className="ghost-button" href="#contact">Contact us</a>
             </div>
           </div>
@@ -208,133 +170,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
-
-        <section id="auth" className="section auth reveal">
-          <div className="section-title">
-            <h2>Cuenta de jugador</h2>
-            <p>Crea tu cuenta o inicia sesión para unirte al torneo.</p>
-          </div>
-          <div className="auth-grid">
-            <div className="auth-card">
-              <h3>Regístrate</h3>
-              <form onSubmit={handleRegister}>
-                <label>
-                  Nombre
-                  <input
-                    type="text"
-                    value={registerForm.first_name}
-                    onChange={(event) =>
-                      setRegisterForm({ ...registerForm, first_name: event.target.value })
-                    }
-                    placeholder="Nombre"
-                  />
-                </label>
-                <label>
-                  Apellido
-                  <input
-                    type="text"
-                    value={registerForm.last_name}
-                    onChange={(event) =>
-                      setRegisterForm({ ...registerForm, last_name: event.target.value })
-                    }
-                    placeholder="Apellido"
-                  />
-                </label>
-                <label>
-                  Correo
-                  <input
-                    type="email"
-                    value={registerForm.email}
-                    onChange={(event) =>
-                      setRegisterForm({ ...registerForm, email: event.target.value })
-                    }
-                    placeholder="name@email.com"
-                  />
-                </label>
-                <label>
-                  Teléfono (opcional)
-                  <input
-                    type="text"
-                    value={registerForm.phone}
-                    onChange={(event) =>
-                      setRegisterForm({ ...registerForm, phone: event.target.value })
-                    }
-                    placeholder="+34 600 000 000"
-                  />
-                </label>
-                <label>
-                  Contraseña
-                  <input
-                    type="password"
-                    value={registerForm.password}
-                    onChange={(event) =>
-                      setRegisterForm({ ...registerForm, password: event.target.value })
-                    }
-                    placeholder="Mínimo 8 caracteres"
-                  />
-                </label>
-                <label>
-                  Confirmar contraseña
-                  <input
-                    type="password"
-                    value={registerForm.password_confirmation}
-                    onChange={(event) =>
-                      setRegisterForm({
-                        ...registerForm,
-                        password_confirmation: event.target.value,
-                      })
-                    }
-                    placeholder="Repite la contraseña"
-                  />
-                </label>
-                <button className="primary-button" type="submit">
-                  Crear cuenta
-                </button>
-              </form>
-            </div>
-            <div className="auth-card">
-              <h3>Iniciar sesión</h3>
-              <form onSubmit={handleLogin}>
-                <label>
-                  Correo
-                  <input
-                    type="email"
-                    value={loginForm.email}
-                    onChange={(event) =>
-                      setLoginForm({ ...loginForm, email: event.target.value })
-                    }
-                    placeholder="name@email.com"
-                  />
-                </label>
-                <label>
-                  Contraseña
-                  <input
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(event) =>
-                      setLoginForm({ ...loginForm, password: event.target.value })
-                    }
-                    placeholder="Tu contraseña"
-                  />
-                </label>
-                <button className="secondary-button" type="submit">
-                  Entrar
-                </button>
-              </form>
-              {user && (
-                <div className="auth-status">
-                  <span className="tag">Signed in</span>
-                  <p>{user.name}</p>
-                  <button className="ghost-button" type="button" onClick={logout}>
-                    Log out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          {authError && <p className="auth-error">{authError}</p>}
-          {status === 'loading' && <p className="auth-loading">Checking session...</p>}
         </section>
 
         <section id="tournaments" className="section reveal">
@@ -474,7 +309,7 @@ export default function Home() {
               <div className="contact-details">
                 <div>
                   <span>Support</span>
-                  <strong>support@padelcup.com</strong>
+                  <strong>support@estarspadeltour.com</strong>
                 </div>
                 <div>
                   <span>WhatsApp</span>
@@ -488,7 +323,7 @@ export default function Home() {
 
       <footer className="footer">
         <div>
-          <strong>PADEL CUP</strong>
+          <strong>ESTARS PADEL TOUR</strong>
           <span>Smart tournaments for modern players.</span>
         </div>
         <div className="footer-links">

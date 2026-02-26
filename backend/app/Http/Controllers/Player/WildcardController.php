@@ -87,6 +87,8 @@ class WildcardController extends Controller
         $registration->load([
             'status',
             'team.users.playerProfile',
+            'rankings.user.playerProfile',
+            'rankings.verifier',
             'tournamentCategory.tournament.status',
             'tournamentCategory.category',
         ]);

@@ -95,6 +95,12 @@ main,
   color: var(--color-text);
 }
 
+.nav-auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .primary-button,
 .secondary-button,
 .ghost-button {
@@ -461,6 +467,42 @@ main,
   color: var(--color-muted);
 }
 
+.auth-standalone {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  background: rgba(12, 15, 27, 0.6);
+  border-radius: 28px;
+  padding: 44px 32px;
+}
+
+.auth-shell {
+  display: grid;
+  gap: 24px;
+}
+
+.auth-shell.single-card {
+  grid-template-columns: 1fr;
+}
+
+.auth-card h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.2rem);
+}
+
+.auth-submit {
+  width: 100%;
+  justify-content: center;
+}
+
+.auth-switch {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.auth-switch a {
+  color: var(--color-text);
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -535,6 +577,12 @@ main,
     align-items: flex-start;
   }
 
+  .nav-auth-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
   .nav-links {
     flex-wrap: wrap;
   }
@@ -568,6 +616,10 @@ main,
     padding: 40px 24px;
   }
 
+  .auth-standalone {
+    padding: 32px 18px;
+  }
+
   .category {
     flex-direction: column;
     align-items: flex-start;
@@ -577,6 +629,19 @@ main,
   .schedule-item {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .bracket-stage {
+    padding: 4px 0 10px;
+  }
+
+  .bracket-round-label {
+    font-size: 10px;
+  }
+
+  .draw-focus-board {
+    min-height: calc(100vh - 250px);
+    padding: 8px;
   }
 
   .footer {
@@ -766,9 +831,202 @@ main,
   gap: 24px;
 }
 
+.tournament-settings-page {
+  gap: 20px;
+}
+
+.tournaments-trello-page .admin-page-actions input {
+  min-width: 280px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(7, 9, 17, 0.8);
+  color: var(--color-text);
+  padding: 8px 14px;
+}
+
+.tournaments-trello-board {
+  min-height: calc(100vh - 310px);
+  grid-auto-columns: minmax(320px, 1fr);
+  gap: 14px;
+  padding-bottom: 10px;
+}
+
+.tournaments-trello-column {
+  min-height: calc(100vh - 340px);
+  padding: 12px;
+}
+
+.tournaments-trello-card {
+  cursor: pointer;
+  gap: 10px;
+}
+
+.tournaments-settings-modal {
+  width: min(1380px, 100%);
+  max-height: 94vh;
+}
+
+.tournaments-settings-modal-body {
+  gap: 14px;
+}
+
+.tournaments-settings-modal .settings-tournament-card {
+  margin: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.tournament-settings-page .admin-page-header {
+  align-items: flex-end;
+}
+
+.settings-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.settings-tabs {
+  flex: 1 1 620px;
+}
+
+.settings-actions {
+  margin-left: auto;
+}
+
+.settings-active-layout {
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+}
+
+.active-list-card {
+  align-self: start;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.active-tournament-list {
+  gap: 10px;
+}
+
+.tournament-settings-page .settings-tournament-card {
+  gap: 20px;
+  padding: 24px;
+}
+
+.tournament-settings-page .status-select {
+  min-width: 170px;
+}
+
+.tournament-settings-page .tournament-meta {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.tournament-editor-card,
+.tournament-categories-card,
+.tournament-add-category-card,
+.tournament-default-categories {
+  gap: 18px;
+}
+
+.tournament-edit-grid,
+.tournament-create-grid,
+.category-defaults-grid,
+.add-category-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 14px;
+  align-items: start;
+}
+
+.field-span-2 {
+  grid-column: 1 / -1;
+}
+
+.tournament-create-card .panel-card {
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.tournament-category-list,
+.settings-tournament-list {
+  gap: 14px;
+}
+
+.tournament-category-item {
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 14px 16px;
+  padding: 16px;
+}
+
+.tournament-category-name {
+  grid-column: 1 / -1;
+}
+
+.category-row-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+.category-selection-list {
+  gap: 12px;
+}
+
+.category-group-item {
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.category-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.category-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-checkbox input {
+  width: auto;
+  margin: 0;
+}
+
+.tournament-settings-page textarea {
+  min-height: 96px;
+}
+
 @media (max-width: 1200px) {
   .active-layout {
     grid-template-columns: 1fr;
+  }
+
+  .active-list-card {
+    position: static;
+    max-height: none;
+  }
+
+  .tournaments-trello-board {
+    grid-auto-columns: minmax(280px, 1fr);
+  }
+
+  .tournaments-trello-column {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tournaments-trello-page .admin-page-actions input {
+    min-width: 0;
+    width: 100%;
   }
 }
 
@@ -1059,6 +1317,17 @@ main,
   resize: vertical;
 }
 
+@media (max-width: 900px) {
+  .tournament-edit-grid,
+  .tournament-create-grid,
+  .category-defaults-grid,
+  .add-category-grid,
+  .tournament-category-item,
+  .category-group-item {
+    grid-template-columns: 1fr;
+  }
+}
+
 .table-actions {
   display: flex;
   justify-content: space-between;
@@ -1162,9 +1431,713 @@ main,
   font-size: 0.85rem;
 }
 
+.registrations-kanban-modal {
+  width: min(1400px, 100%);
+  max-height: 92vh;
+}
+
+.registrations-kanban-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 1fr);
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  align-items: start;
+}
+
+.registrations-kanban-column {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  min-height: 540px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(7, 9, 17, 0.72);
+  padding: 12px;
+}
+
+.registrations-kanban-column.is-drop-target {
+  border-color: rgba(255, 179, 106, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(255, 179, 106, 0.4);
+}
+
+.registrations-kanban-column.is-readonly {
+  border-style: dashed;
+}
+
+.registrations-kanban-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.registrations-kanban-column-header h5 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.registrations-kanban-column-body {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 460px;
+}
+
+.registrations-kanban-empty {
+  min-height: 88px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  padding: 10px;
+  text-align: center;
+}
+
+.registrations-kanban-card {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 15, 28, 0.95);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  cursor: grab;
+  outline: none;
+}
+
+.registrations-kanban-card:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.registrations-kanban-card.is-dragging {
+  opacity: 0.45;
+}
+
+.registrations-kanban-card.is-updating {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.registrations-kanban-card.is-readonly-card {
+  cursor: pointer;
+}
+
+.registrations-kanban-card strong {
+  display: block;
+}
+
+.registrations-kanban-card span {
+  display: block;
+  font-size: 0.82rem;
+}
+
+.registrations-kanban-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  color: var(--color-muted);
+}
+
+.registrations-trello-page {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding-inline: clamp(18px, 3vw, 44px);
+  gap: 22px;
+}
+
+.registrations-trello-toolbar {
+  position: sticky;
+  top: 10px;
+  z-index: 12;
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(7, 9, 17, 0.86);
+  backdrop-filter: blur(8px);
+  padding: 12px 14px;
+}
+
+.registrations-trello-toolbar-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.registrations-trello-toolbar-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.registrations-focus-toggle {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-muted);
+  padding: 6px 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.registrations-focus-toggle .tag {
+  padding: 2px 8px;
+  font-size: 0.65rem;
+}
+
+.registrations-focus-toggle.is-active {
+  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.registrations-trello-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 460px);
+  gap: 20px;
+  align-items: start;
+}
+
+.registrations-trello-board-shell {
+  min-width: 0;
+}
+
+.registrations-trello-board {
+  min-height: calc(100vh - 325px);
+  grid-auto-columns: minmax(300px, 1fr);
+  gap: 16px;
+  padding: 4px 2px 14px;
+}
+
+.registrations-trello-column {
+  min-height: calc(100vh - 355px);
+  padding: 14px;
+  gap: 10px;
+}
+
+.registrations-kanban-column-body {
+  gap: 8px;
+  max-height: calc(100vh - 445px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.registrations-trello-card {
+  gap: 8px;
+  border-radius: 12px;
+  padding: 11px 12px;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.registrations-trello-card:hover {
+  border-color: rgba(255, 255, 255, 0.26);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24);
+}
+
+.registrations-trello-card:focus-visible {
+  border-color: rgba(255, 179, 106, 0.7);
+  box-shadow: 0 0 0 2px rgba(255, 179, 106, 0.25);
+}
+
+.registrations-trello-card.is-selected {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.registrations-trello-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.registrations-trello-card-head strong {
+  font-size: 0.9rem;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.registrations-trello-card-head .tag {
+  padding: 3px 8px;
+  font-size: 0.62rem;
+}
+
+.registrations-trello-players {
+  font-size: 0.76rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.registrations-trello-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.registrations-trello-category {
+  font-size: 0.78rem;
+  max-width: 68%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.registrations-trello-card.is-compact {
+  padding: 9px 10px;
+  gap: 6px;
+}
+
+.registrations-trello-card.is-wildcard {
+  border-color: rgba(255, 179, 106, 0.65);
+  background: linear-gradient(180deg, rgba(34, 20, 9, 0.88), rgba(18, 13, 8, 0.88));
+}
+
+.registrations-trello-card-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.registrations-tag-wildcard {
+  background: rgba(255, 179, 106, 0.22);
+  color: #ffd9a3;
+  border: 1px solid rgba(255, 179, 106, 0.5);
+}
+
+.registrations-paid-group {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.registrations-paid-group-head {
+  display: grid;
+  gap: 2px;
+}
+
+.registrations-paid-group-head strong {
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.registrations-paid-group-head .muted {
+  font-size: 0.72rem;
+}
+
+.registrations-paid-group-head .tag {
+  justify-self: start;
+  font-size: 0.62rem;
+  padding: 2px 8px;
+}
+
+.registrations-paid-group-list {
+  display: grid;
+  gap: 6px;
+}
+
+.registrations-detail-drawer {
+  position: sticky;
+  top: 106px;
+  max-height: calc(100vh - 118px);
+  overflow-y: auto;
+  padding: 16px;
+  gap: 12px;
+}
+
+.registration-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+.registration-drawer-header h4 {
+  margin-bottom: 6px;
+}
+
+.registration-drawer-content {
+  display: grid;
+  gap: 12px;
+}
+
+.registration-detail-panel,
+.registration-edit-panel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(7, 9, 17, 0.54);
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.registration-detail-panel h5,
+.registration-edit-panel h5 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.registration-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.registration-detail-grid span {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.registration-detail-grid strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+
+.registration-detail-players {
+  display: grid;
+  gap: 8px;
+}
+
+.registration-detail-players h6 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.registration-detail-players ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.registration-detail-players li {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(7, 9, 17, 0.65);
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.registration-edit-panel label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--color-muted);
+}
+
+.registration-edit-panel select,
+.registration-edit-panel textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(7, 9, 17, 0.85);
+  color: var(--color-text);
+  padding: 12px 14px;
+}
+
+.registration-edit-panel textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.registration-ranking-list {
+  display: grid;
+  gap: 10px;
+}
+
+.registration-ranking-row {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(7, 9, 17, 0.6);
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.registration-ranking-row span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+}
+
+.registration-ranking-row strong {
+  display: block;
+  margin-top: 4px;
+}
+
+.registration-ranking-row input {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 9, 17, 0.85);
+  color: var(--color-text);
+  padding: 9px 10px;
+}
+
+.registrations-detail-empty {
+  min-height: 220px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+
+.registrations-detail-empty h4 {
+  margin: 0;
+}
+
 @media (max-width: 1100px) {
   .registrations-row {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .registrations-trello-page {
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-inline: 0;
+  }
+
+  .registrations-trello-toolbar {
+    position: static;
+  }
+
+  .registrations-trello-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .registrations-detail-drawer {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 740px) {
+  .registrations-trello-board {
+    grid-auto-columns: minmax(260px, 1fr);
+  }
+
+  .registrations-trello-column {
+    min-height: 500px;
+  }
+
+  .registrations-kanban-column-body {
+    max-height: 420px;
+  }
+
+  .registration-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.players-page {
+  gap: 18px;
+}
+
+.players-layout {
+  grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+}
+
+.players-rule-card,
+.players-list-card {
+  gap: 14px;
+}
+
+.players-rule-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.players-rule-summary {
+  margin: 0;
+}
+
+.players-list {
+  gap: 10px;
+}
+
+.player-item {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  align-items: start;
+}
+
+.players-modal {
+  width: min(1180px, 100%);
+}
+
+.players-modal-body {
+  gap: 14px;
+}
+
+.players-palmares-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.players-payouts-card {
+  padding: 16px;
+  gap: 12px;
+}
+
+.players-payout-create {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.players-payout-list {
+  gap: 10px;
+}
+
+.players-payout-item {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .players-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .players-rule-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .players-payout-create,
+  .players-payout-item {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wildcards-page {
+  gap: 18px;
+}
+
+.wildcards-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.wildcards-form-card,
+.wildcards-list-card {
+  gap: 14px;
+}
+
+.wildcards-filter-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wildcards-filter-row select,
+.wildcards-filter-row input {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(7, 9, 17, 0.8);
+  color: var(--color-text);
+  padding: 10px 12px;
+}
+
+.wildcards-list {
+  display: grid;
+  gap: 10px;
+  max-height: calc(100vh - 290px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.wildcard-item {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(7, 9, 17, 0.65);
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.wildcard-item-main {
+  display: grid;
+  gap: 8px;
+}
+
+.wildcard-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.wildcard-item-head strong {
+  font-size: 0.95rem;
+}
+
+.wildcard-item-main p {
+  margin: 0;
+}
+
+.wildcard-item-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.wildcard-item-meta span {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.wildcard-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .wildcards-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .wildcards-list {
+    max-height: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .wildcards-filter-row {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1646,38 +2619,72 @@ main,
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.bracket-board {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
+.bracket-stage {
   overflow-x: auto;
-  align-items: flex-start;
+  overflow-y: hidden;
+  padding: 8px 6px 14px;
 }
 
-.bracket-round {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 180px;
+.bracket-canvas {
+  position: relative;
+  min-height: 180px;
 }
 
-.bracket-round-header {
-  font-size: 12px;
+.bracket-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bracket-line-group path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.24);
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+}
+
+.bracket-round-layer {
+  position: static;
+}
+
+.bracket-round-label {
+  position: absolute;
+  top: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-muted);
+  font-weight: 700;
 }
 
-.bracket-match {
-  background: rgba(10, 12, 24, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 10px 28px 10px 12px;
+.bracket-node {
+  position: absolute;
+  background: linear-gradient(180deg, rgba(10, 12, 24, 0.95), rgba(8, 10, 18, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  position: relative;
-  min-height: 72px;
+  gap: 7px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.bracket-node-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.bracket-node-status {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.74);
 }
 
 .bracket-team {
@@ -1686,6 +2693,12 @@ main,
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bracket-team.is-winner {
@@ -1717,42 +2730,19 @@ main,
   font-size: 11px;
   color: var(--color-muted);
   margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
 }
 
-.bracket-match.is-clickable {
+.bracket-node.is-clickable {
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.bracket-match.is-clickable:hover {
+.bracket-node.is-clickable:hover {
   border-color: rgba(255, 154, 61, 0.5);
   transform: translateY(-2px);
-}
-
-.bracket-match::before,
-.bracket-match::after {
-  content: '';
-  position: absolute;
-  right: 10px;
-  border-color: rgba(255, 255, 255, 0.35);
-}
-
-.bracket-match::before {
-  top: 16px;
-  bottom: 16px;
-  border-right: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-.bracket-match::after {
-  top: 50%;
-  width: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.35);
-  transform: translateY(-50%);
-}
-
-.bracket-match.is-final::before,
-.bracket-match.is-final::after {
-  display: none;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
 }
 
 .bracket-item .form-actions {
@@ -1814,4 +2804,142 @@ main,
 
 .bracket-panel {
   margin-top: 12px;
+}
+
+.draw-focus-page {
+  min-height: calc(100vh - 130px);
+}
+
+.draw-focus-shell {
+  display: grid;
+  gap: 10px;
+}
+
+.draw-focus-back {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(6, 9, 18, 0.72);
+  color: var(--color-text);
+  font-size: 2rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+.draw-focus-board {
+  min-height: calc(100vh - 180px);
+  display: grid;
+  align-content: start;
+  overflow: auto;
+  padding: 10px;
+}
+
+.bracket-match-index {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.bracket-node.is-placeholder {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(8, 10, 18, 0.5);
+}
+
+.ghost-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.matches-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.matches-search {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 9, 17, 0.8);
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+.matches-round-list {
+  display: grid;
+  gap: 14px;
+}
+
+.matches-round-group {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(7, 10, 18, 0.55);
+}
+
+.matches-round-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.matches-round-header h5 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.match-item.is-clickable {
+  cursor: pointer;
+}
+
+.match-item.is-clickable:hover {
+  border-color: rgba(255, 154, 61, 0.35);
+}
+
+.match-detail-body {
+  gap: 16px;
+}
+
+.match-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.match-detail-grid span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+}
+
+.match-detail-grid strong {
+  display: block;
+  margin-top: 4px;
+}
+
+.match-detail-section h4 {
+  margin: 0 0 8px;
+}
+
+.match-detail-section p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.match-score-box {
+  margin: 0;
+  background: rgba(7, 9, 17, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.85rem;
 }

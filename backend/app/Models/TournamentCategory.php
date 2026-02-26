@@ -67,4 +67,9 @@ class TournamentCategory extends Model
     {
         return $this->hasMany(Invitation::class);
     }
+
+    public function prizePayouts()
+    {
+        return $this->hasMany(PlayerPrizePayout::class);
+    }
 }

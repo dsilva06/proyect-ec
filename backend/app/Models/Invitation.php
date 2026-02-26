@@ -49,4 +49,9 @@ class Invitation extends Model
     {
         return $this->belongsTo(Status::class);
     }
+
+    public function wildcardRegistration()
+    {
+        return $this->hasOne(Registration::class, 'wildcard_invitation_id');
+    }
 }

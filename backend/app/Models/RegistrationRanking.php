@@ -18,11 +18,16 @@ class RegistrationRanking extends Model
         'invited_email',
         'ranking_value',
         'ranking_source',
+        'is_verified',
+        'verified_at',
+        'verified_by_user_id',
     ];
 
     protected $casts = [
         'slot' => 'integer',
         'ranking_value' => 'integer',
+        'is_verified' => 'boolean',
+        'verified_at' => 'datetime',
     ];
 
     public function registration()
@@ -38,5 +43,10 @@ class RegistrationRanking extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_user_id');
     }
 }

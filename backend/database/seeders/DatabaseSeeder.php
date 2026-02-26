@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CircuitSeeder::class);
         $this->call(CategorySeeder::class);
         $this->call(UserSeeder::class);
+        $this->call(InternalRankingRuleSeeder::class);
 
         if (env('SEED_DEMO_TOURNAMENT')) {
             $this->call(DemoTournamentSeeder::class);

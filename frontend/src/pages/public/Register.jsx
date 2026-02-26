@@ -25,7 +25,6 @@ export default function Register() {
     if (!token) return
 
     let isMounted = true
-    setInviteError('')
 
     publicTeamInvitesApi.get(token)
       .then((data) => {
@@ -37,7 +36,7 @@ export default function Register() {
       })
       .catch(() => {
         if (!isMounted) return
-        setInviteError('No pudimos cargar la invitación. Intenta nuevamente.')
+        setInviteError('No pudimos cargar la invitacion. Intenta nuevamente.')
         inviteStorage.clearToken()
       })
 
@@ -60,7 +59,7 @@ export default function Register() {
           navigate('/player/invitations')
           return
         } catch (claimError) {
-          setInviteError(claimError?.data?.message || 'No pudimos asociar tu invitación.')
+          setInviteError(claimError?.data?.message || 'No pudimos asociar tu invitacion.')
         }
       }
       navigate(getHomeRouteForRole(loggedInUser))
@@ -70,61 +69,113 @@ export default function Register() {
   }
 
   return (
-    <div style={{ padding: '48px' }}>
-      <h1>Crear cuenta</h1>
-      {invite && (
-        <div style={{ marginBottom: '16px', color: '#cbd5f5' }}>
-          Invitación pendiente para el equipo <strong>{invite.team?.display_name || 'Equipo'}</strong>.
-          Crea tu cuenta con este correo para aceptarla en tu perfil.
-          <div style={{ marginTop: '8px' }}>
-            ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
-          </div>
+    <div className="page auth-page">
+      <div className="background-orb orb-one" />
+      <div className="background-orb orb-two" />
+      <div className="background-grid" />
+
+      <header className="nav auth-nav">
+        <div className="brand">
+          <Link to="/" className="brand-mark">ESTARS PADEL TOUR</Link>
+          <span className="brand-subtitle">Tournament Hub</span>
         </div>
-      )}
-      {inviteError && <p style={{ color: '#ff9b9b' }}>{inviteError}</p>}
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '12px', maxWidth: '320px' }}>
-        <input
-          type="text"
-          placeholder="Nombre"
-          value={form.first_name}
-          onChange={(event) => setForm({ ...form, first_name: event.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Apellido"
-          value={form.last_name}
-          onChange={(event) => setForm({ ...form, last_name: event.target.value })}
-        />
-        <input
-          type="email"
-          placeholder="Correo"
-          value={form.email}
-          disabled={Boolean(invite?.invited_email)}
-          onChange={(event) => setForm({ ...form, email: event.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Teléfono"
-          value={form.phone}
-          onChange={(event) => setForm({ ...form, phone: event.target.value })}
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={form.password}
-          onChange={(event) => setForm({ ...form, password: event.target.value })}
-        />
-        <input
-          type="password"
-          placeholder="Confirmar contraseña"
-          value={form.password_confirmation}
-          onChange={(event) =>
-            setForm({ ...form, password_confirmation: event.target.value })
-          }
-        />
-        <button type="submit">Crear cuenta</button>
-      </form>
-      {error && <p style={{ color: '#ff9b9b' }}>{error}</p>}
+        <div className="nav-auth-actions">
+          <Link className="ghost-button" to="/login">Login</Link>
+          <span className="tag muted">Player Access</span>
+        </div>
+      </header>
+
+      <main>
+        <section className="section auth-standalone">
+          <div className="auth-shell single-card">
+            <div className="auth-card">
+              <h2>Crear cuenta</h2>
+              <p className="muted">Registra tu perfil para unirte al torneo y gestionar tu equipo.</p>
+
+              {invite && (
+                <div className="auth-status">
+                  <span className="tag">Invitacion pendiente</span>
+                  <p>
+                    Equipo: <strong>{invite.team?.display_name || 'Equipo'}</strong>
+                  </p>
+                  <p>Usa este correo para reclamar tu invitacion automaticamente.</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                <label>
+                  Nombre
+                  <input
+                    type="text"
+                    placeholder="Nombre"
+                    value={form.first_name}
+                    onChange={(event) => setForm({ ...form, first_name: event.target.value })}
+                    required
+                  />
+                </label>
+                <label>
+                  Apellido
+                  <input
+                    type="text"
+                    placeholder="Apellido"
+                    value={form.last_name}
+                    onChange={(event) => setForm({ ...form, last_name: event.target.value })}
+                    required
+                  />
+                </label>
+                <label>
+                  Correo
+                  <input
+                    type="email"
+                    placeholder="name@email.com"
+                    value={form.email}
+                    disabled={Boolean(invite?.invited_email)}
+                    onChange={(event) => setForm({ ...form, email: event.target.value })}
+                    required
+                  />
+                </label>
+                <label>
+                  Telefono (opcional)
+                  <input
+                    type="text"
+                    placeholder="+34 600 000 000"
+                    value={form.phone}
+                    onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                  />
+                </label>
+                <label>
+                  Contrasena
+                  <input
+                    type="password"
+                    placeholder="Minimo 8 caracteres"
+                    value={form.password}
+                    onChange={(event) => setForm({ ...form, password: event.target.value })}
+                    required
+                  />
+                </label>
+                <label>
+                  Confirmar contrasena
+                  <input
+                    type="password"
+                    placeholder="Repite la contrasena"
+                    value={form.password_confirmation}
+                    onChange={(event) => setForm({ ...form, password_confirmation: event.target.value })}
+                    required
+                  />
+                </label>
+                <button className="primary-button auth-submit" type="submit">Crear cuenta</button>
+              </form>
+
+              {inviteError && <p className="auth-error">{inviteError}</p>}
+              {error && <p className="auth-error">{error}</p>}
+
+              <p className="auth-switch">
+                Ya tienes cuenta? <Link to="/login">Inicia sesion</Link>
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   )
 }

@@ -12,6 +12,8 @@ const initialForm = {
   partnerEmail: '',
   selfRanking: '',
   partnerRanking: '',
+  selfRankingSource: 'FEP',
+  partnerRankingSource: 'FEP',
 }
 
 const GROUP_LABELS = {
@@ -48,6 +50,26 @@ const formatRange = (start, end, formatter) => {
   const endLabel = formatter(end)
   if (startLabel && endLabel) return `${startLabel} → ${endLabel}`
   return startLabel || endLabel || 'TBD'
+}
+
+const resolveRegistrationErrorMessage = (err) => {
+  const rankingMessage = err?.data?.errors?.ranking?.[0]
+  if (rankingMessage) return rankingMessage
+  const selfSourceMessage = err?.data?.errors?.self_ranking_source?.[0]
+  if (selfSourceMessage) return selfSourceMessage
+  const partnerSourceMessage = err?.data?.errors?.partner_ranking_source?.[0]
+  if (partnerSourceMessage) return partnerSourceMessage
+  return err?.data?.message || err?.message || 'No pudimos completar la inscripción.'
+}
+
+const isOpenCategory = (category) => String(category?.category?.level_code || '').toLowerCase() === 'open'
+
+const getRankingSourceOptions = (category) => {
+  if (isOpenCategory(category)) {
+    return ['FIP', 'FEP']
+  }
+
+  return ['FEP']
 }
 
 export default function Tournament() {
@@ -132,6 +154,12 @@ export default function Tournament() {
       return
     }
 
+    const tournament = tournaments.find((item) => String(item.id) === String(tournamentId))
+    const selectedCategory = (tournament?.categories || []).find((item) => String(item.id) === String(form.categoryId))
+    const sourceOptions = getRankingSourceOptions(selectedCategory)
+    const selfSource = sourceOptions.includes(form.selfRankingSource) ? form.selfRankingSource : sourceOptions[0]
+    const partnerSource = sourceOptions.includes(form.partnerRankingSource) ? form.partnerRankingSource : sourceOptions[0]
+
     try {
       const team = await playerTeamsApi.create({
         partner_email: form.partnerEmail,
@@ -142,7 +170,9 @@ export default function Tournament() {
         team_id: team.id,
         partner_email: form.partnerEmail,
         self_ranking_value: Number(form.selfRanking),
+        self_ranking_source: selfSource,
         partner_ranking_value: Number(form.partnerRanking),
+        partner_ranking_source: partnerSource,
       })
 
       setMessage('Inscripción enviada correctamente.')
@@ -150,7 +180,7 @@ export default function Tournament() {
       setBrackets([])
       await load()
     } catch (err) {
-      setError(err?.data?.message || err?.message || 'No pudimos completar la inscripción.')
+      setError(resolveRegistrationErrorMessage(err))
     }
   }
 
@@ -250,6 +280,9 @@ export default function Tournament() {
               if (!tournament) return null
               const categories = tournament.categories || []
               const isRegistered = registeredIds.has(tournament.id)
+              const selectedCategory = categories.find((item) => String(item.id) === String(form.categoryId)) || null
+              const rankingSourceOptions = getRankingSourceOptions(selectedCategory)
+              const rankingSourceLabel = rankingSourceOptions.join(' / ')
 
               return (
                 <>
@@ -282,7 +315,17 @@ export default function Tournament() {
                             Categoría
                             <select
                               value={form.categoryId}
-                              onChange={(event) => setForm((prev) => ({ ...prev, categoryId: event.target.value }))}
+                              onChange={(event) => {
+                                const nextCategoryId = event.target.value
+                                const category = categories.find((item) => String(item.id) === String(nextCategoryId)) || null
+                                const options = getRankingSourceOptions(category)
+                                setForm((prev) => ({
+                                  ...prev,
+                                  categoryId: nextCategoryId,
+                                  selfRankingSource: options[0],
+                                  partnerRankingSource: options[0],
+                                }))
+                              }}
                             >
                               <option value="">Selecciona</option>
                               {Object.entries(
@@ -312,7 +355,7 @@ export default function Tournament() {
                             />
                           </label>
                           <label>
-                            Tu ranking (obligatorio)
+                            Tu ranking {rankingSourceLabel} (obligatorio)
                             <input
                               type="number"
                               min="1"
@@ -321,13 +364,39 @@ export default function Tournament() {
                             />
                           </label>
                           <label>
-                            Ranking del partner (obligatorio)
+                            Fuente ranking (tú)
+                            <select
+                              value={form.selfRankingSource}
+                              onChange={(event) => setForm((prev) => ({ ...prev, selfRankingSource: event.target.value }))}
+                            >
+                              {rankingSourceOptions.map((source) => (
+                                <option key={source} value={source}>
+                                  {source}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label>
+                            Ranking del partner {rankingSourceLabel} (obligatorio)
                             <input
                               type="number"
                               min="1"
                               value={form.partnerRanking}
                               onChange={(event) => setForm((prev) => ({ ...prev, partnerRanking: event.target.value }))}
                             />
+                          </label>
+                          <label>
+                            Fuente ranking (partner)
+                            <select
+                              value={form.partnerRankingSource}
+                              onChange={(event) => setForm((prev) => ({ ...prev, partnerRankingSource: event.target.value }))}
+                            >
+                              {rankingSourceOptions.map((source) => (
+                                <option key={source} value={source}>
+                                  {source}
+                                </option>
+                              ))}
+                            </select>
                           </label>
                           <div className="form-actions">
                             <button className="primary-button" type="submit">Enviar inscripción</button>

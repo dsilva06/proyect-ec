@@ -1,3 +1,4 @@
+import { Navigate } from 'react-router-dom'
 import Dashboard from '../pages/admin/Dashboard'
 import Registrations from '../pages/admin/Registrations'
 import Payments from '../pages/admin/Payments'
@@ -15,7 +16,8 @@ export const adminRoutes = [
   { path: '/admin/draws', element: <Draws /> },
   { path: '/admin/matches', element: <Matches /> },
   { path: '/admin/settings', element: <TournamentSettings /> },
-  { path: '/admin/rankings', element: <Rankings /> },
+  { path: '/admin/players', element: <Rankings /> },
+  { path: '/admin/rankings', element: <Navigate to="/admin/players" replace /> },
   { path: '/admin/leads', element: <Leads /> },
   { path: '/admin/wildcards', element: <Wildcards /> },
 ]

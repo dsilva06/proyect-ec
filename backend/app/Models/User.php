@@ -84,4 +84,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(CalendarEvent::class, 'created_by');
     }
+
+    public function prizePayouts()
+    {
+        return $this->hasMany(PlayerPrizePayout::class);
+    }
 }

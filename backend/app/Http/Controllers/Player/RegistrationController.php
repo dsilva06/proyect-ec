@@ -20,6 +20,8 @@ class RegistrationController extends Controller
             ->with([
                 'status',
                 'team.users.playerProfile',
+                'rankings.user.playerProfile',
+                'rankings.verifier',
                 'tournamentCategory.tournament.status',
                 'tournamentCategory.category',
             ])
@@ -43,6 +45,8 @@ class RegistrationController extends Controller
         $registration->load([
             'status',
             'team.users.playerProfile',
+            'rankings.user.playerProfile',
+            'rankings.verifier',
             'tournamentCategory.tournament.status',
             'tournamentCategory.category',
         ]);

@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum', 'is_admin'])->prefix('admin')->group(function
 
     Route::get('/registrations', [RegistrationController::class, 'index']);
     Route::patch('/registrations/{registration}', [RegistrationController::class, 'update']);
+    Route::patch('/registrations/{registration}/rankings', [RegistrationController::class, 'updateRankings']);
 
     Route::get('/payments', [PaymentController::class, 'index']);
     Route::patch('/payments/{payment}', [PaymentController::class, 'update']);
@@ -55,7 +56,17 @@ Route::middleware(['auth:sanctum', 'is_admin'])->prefix('admin')->group(function
 
     Route::get('/players', [AdminPlayerRankingController::class, 'index']);
     Route::patch('/players/{user}/ranking', [AdminPlayerRankingController::class, 'update']);
+    Route::patch('/players/{user}/ranking-fep', [AdminPlayerRankingController::class, 'updateFep']);
+    Route::get('/players/{user}/palmares', [AdminPlayerRankingController::class, 'showPalmares']);
+    Route::get('/players/{user}/prize-payouts', [AdminPlayerRankingController::class, 'listPrizePayouts']);
+    Route::post('/players/{user}/prize-payouts', [AdminPlayerRankingController::class, 'storePrizePayout']);
+    Route::patch('/player-prize-payouts/{playerPrizePayout}', [AdminPlayerRankingController::class, 'updatePrizePayout']);
+    Route::delete('/player-prize-payouts/{playerPrizePayout}', [AdminPlayerRankingController::class, 'destroyPrizePayout']);
+    Route::get('/internal-ranking-rule', [AdminPlayerRankingController::class, 'showInternalRule']);
+    Route::patch('/internal-ranking-rule', [AdminPlayerRankingController::class, 'updateInternalRule']);
 
     Route::get('/wildcards', [AdminWildcardController::class, 'index']);
     Route::post('/wildcards', [AdminWildcardController::class, 'store']);
+    Route::patch('/wildcards/{wildcard}', [AdminWildcardController::class, 'update']);
+    Route::delete('/wildcards/{wildcard}', [AdminWildcardController::class, 'destroy']);
 });

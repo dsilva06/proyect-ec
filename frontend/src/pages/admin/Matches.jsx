@@ -1,41 +1,38 @@
 import { useEffect, useMemo, useState } from 'react'
 import { adminMatchesApi } from '../../features/matches/api'
 import { adminTournamentsApi } from '../../features/tournaments/api'
-import { statusesApi } from '../../features/statuses/api'
-import { cleanPayload } from '../../utils/cleanPayload'
-import DateTimePicker from '../../components/shared/DateTimePicker'
 
-const initialForm = {
-  tournament_category_id: '',
-  round_number: 1,
-  match_number: 1,
-  status_id: '',
-  scheduled_at: '',
-  estimated_duration_minutes: '',
-  court: '',
+const formatDateTime = (value) => {
+  if (!value) return '—'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return String(value)
+  return parsed.toLocaleString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const getTeamLabel = (registration) => registration?.team?.display_name || 'Por definir'
+const getMatchDateTime = (match) => match?.not_before_at || match?.scheduled_at || null
+
+const getHourKey = (value) => {
+  if (!value) return ''
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return `${String(parsed.getHours()).padStart(2, '0')}:00`
 }
 
 export default function Matches() {
   const [matches, setMatches] = useState([])
   const [tournaments, setTournaments] = useState([])
-  const [statuses, setStatuses] = useState([])
-  const [form, setForm] = useState(initialForm)
   const [filters, setFilters] = useState({ tournament_id: '', category_id: '' })
+  const [searchTerm, setSearchTerm] = useState('')
+  const [hourFilter, setHourFilter] = useState('')
+  const [selectedMatch, setSelectedMatch] = useState(null)
   const [error, setError] = useState('')
-
-  const categoryOptions = useMemo(() => {
-    return tournaments.flatMap((tournament) =>
-      (tournament.categories || []).map((category) => ({
-        id: category.id,
-        label: `${tournament.name} • ${category.category?.name}`,
-      })),
-    )
-  }, [tournaments])
-
-  const statusOptions = useMemo(
-    () => statuses.filter((status) => status.module === 'match'),
-    [statuses],
-  )
 
   const categoryFilterOptions = useMemo(() => {
     if (!filters.tournament_id) {
@@ -46,6 +43,7 @@ export default function Matches() {
         })),
       )
     }
+
     const tournament = tournaments.find((item) => String(item.id) === String(filters.tournament_id))
     return (tournament?.categories || []).map((category) => ({
       id: category.category?.id,
@@ -55,14 +53,12 @@ export default function Matches() {
 
   const load = async (nextFilters = filters) => {
     try {
-      const [matchesData, tournamentsData, statusesData] = await Promise.all([
+      const [matchesData, tournamentsData] = await Promise.all([
         adminMatchesApi.list(nextFilters),
         adminTournamentsApi.list(),
-        statusesApi.list(),
       ])
       setMatches(matchesData)
       setTournaments(tournamentsData)
-      setStatuses(statusesData)
     } catch (err) {
       setError(err?.message || 'No pudimos cargar los partidos.')
     }
@@ -72,10 +68,6 @@ export default function Matches() {
     load()
   }, [])
 
-  const handleChange = (field) => (event) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }))
-  }
-
   const handleFilterChange = (field) => (event) => {
     const value = event.target.value
     const nextFilters = { ...filters, [field]: value }
@@ -83,51 +75,98 @@ export default function Matches() {
       nextFilters.category_id = ''
     }
     setFilters(nextFilters)
+    setSelectedMatch(null)
     load(nextFilters)
   }
 
-  const handleValueChange = (field) => (value) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-  }
+  const hourOptions = useMemo(() => {
+    const unique = new Set(
+      matches
+        .map((match) => getHourKey(getMatchDateTime(match)))
+        .filter(Boolean),
+    )
 
-  const handleCreate = async (event) => {
-    event.preventDefault()
-    setError('')
-    try {
-      await adminMatchesApi.create({
-        ...cleanPayload(form),
-        status_id: form.status_id || statusOptions?.[0]?.id,
-        round_number: Number(form.round_number || 1),
-        match_number: Number(form.match_number || 1),
-        estimated_duration_minutes: form.estimated_duration_minutes
-          ? Number(form.estimated_duration_minutes)
-          : null,
+    return Array.from(unique).sort((a, b) => a.localeCompare(b))
+  }, [matches])
+
+  const visibleMatches = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
+
+    return matches
+      .filter((match) => {
+        if (hourFilter) {
+          const matchHour = getHourKey(getMatchDateTime(match))
+          if (matchHour !== hourFilter) return false
+        }
+
+        if (!query) return true
+
+        const searchable = [
+          getTeamLabel(match.registration_a),
+          getTeamLabel(match.registration_b),
+          match.tournament_category?.tournament?.name,
+          match.tournament_category?.category?.display_name,
+          match.tournament_category?.category?.name,
+          match.status?.label,
+          match.court,
+          `ronda ${match.round_number}`,
+          `partido ${match.match_number}`,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+
+        return searchable.includes(query)
       })
-      setForm(initialForm)
-      await load()
-    } catch (err) {
-      setError(err?.message || 'No pudimos crear el partido.')
-    }
-  }
+      .sort((a, b) => {
+        const roundA = Number(a.round_number || 0)
+        const roundB = Number(b.round_number || 0)
+        if (roundA !== roundB) return roundA - roundB
 
-  const handleDelay = async (matchId) => {
-    setError('')
-    try {
-      await adminMatchesApi.delay(matchId)
-      await load()
-    } catch (err) {
-      setError(err?.message || 'No pudimos retrasar el partido.')
-    }
-  }
+        const matchA = Number(a.match_number || 0)
+        const matchB = Number(b.match_number || 0)
+        if (matchA !== matchB) return matchA - matchB
+
+        const timeA = getMatchDateTime(a) ? new Date(getMatchDateTime(a)).getTime() : Number.MAX_SAFE_INTEGER
+        const timeB = getMatchDateTime(b) ? new Date(getMatchDateTime(b)).getTime() : Number.MAX_SAFE_INTEGER
+        return timeA - timeB
+      })
+  }, [matches, searchTerm, hourFilter])
+
+  const matchesByRound = useMemo(() => {
+    const grouped = new Map()
+
+    visibleMatches.forEach((match) => {
+      const roundNumber = Number(match.round_number || 0)
+      const key = roundNumber > 0 ? String(roundNumber) : 'sin-ronda'
+      if (!grouped.has(key)) {
+        grouped.set(key, [])
+      }
+      grouped.get(key).push(match)
+    })
+
+    return Array.from(grouped.entries()).sort((a, b) => {
+      if (a[0] === 'sin-ronda') return 1
+      if (b[0] === 'sin-ronda') return -1
+      return Number(a[0]) - Number(b[0])
+    })
+  }, [visibleMatches])
 
   return (
     <section className="admin-page">
       <div className="admin-page-header">
         <div>
           <h3>Partidos</h3>
-          <p>Agenda partidos y actualiza estado.</p>
+          <p>Vista detallada de los partidos generados desde el cuadro.</p>
         </div>
-        <div className="admin-page-actions">
+      </div>
+
+      <div className="panel-card">
+        <div className="panel-header">
+          <h4>Filtros</h4>
+          <span className="tag muted">{visibleMatches.length}</span>
+        </div>
+        <div className="admin-page-actions matches-filters">
           <select value={filters.tournament_id} onChange={handleFilterChange('tournament_id')}>
             <option value="">Todos los torneos</option>
             {tournaments.map((tournament) => (
@@ -140,108 +179,157 @@ export default function Matches() {
               <option key={category.id} value={category.id}>{category.label}</option>
             ))}
           </select>
+          <select value={hourFilter} onChange={(event) => setHourFilter(event.target.value)}>
+            <option value="">Todas las horas</option>
+            {hourOptions.map((hour) => (
+              <option key={hour} value={hour}>{hour}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            className="matches-search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Buscar por jugador, equipo, torneo o categoria"
+          />
         </div>
       </div>
 
-      <div className="admin-grid">
-        <div className="panel-card">
-          <div className="panel-header">
-            <h4>Crear partido</h4>
-          </div>
-          <form className="form-grid" onSubmit={handleCreate}>
-            <label>
-              Categoría del torneo
-              <select value={form.tournament_category_id} onChange={handleChange('tournament_category_id')}>
-                <option value="">Selecciona</option>
-                {categoryOptions.map((option) => (
-                  <option key={option.id} value={option.id}>{option.label}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Ronda
-              <input type="number" value={form.round_number} onChange={handleChange('round_number')} />
-            </label>
-            <label>
-              Número de partido
-              <input type="number" value={form.match_number} onChange={handleChange('match_number')} />
-            </label>
-            <label>
-              No antes de
-              <DateTimePicker value={form.scheduled_at} onChange={handleValueChange('scheduled_at')} />
-            </label>
-            <label>
-              Duración estimada (min)
-              <input
-                type="number"
-                min="10"
-                value={form.estimated_duration_minutes}
-                onChange={handleChange('estimated_duration_minutes')}
-              />
-            </label>
-            <label>
-              Cancha
-              <input type="text" value={form.court} onChange={handleChange('court')} />
-            </label>
-            <label>
-              Estado
-              <select value={form.status_id} onChange={handleChange('status_id')}>
-                <option value="">Selecciona</option>
-                {statusOptions.map((status) => (
-                  <option key={status.id} value={status.id}>{status.label}</option>
-                ))}
-              </select>
-            </label>
-            <div className="form-actions">
-              <button className="primary-button" type="submit">Crear partido</button>
-            </div>
-          </form>
-          {error && <p className="form-message error">{error}</p>}
+      {error && <div className="empty-state">{error}</div>}
+
+      <div className="panel-card">
+        <div className="panel-header">
+          <h4>Partidos ordenados por ronda</h4>
+          <span className="tag muted">{visibleMatches.length}</span>
         </div>
 
-        <div className="panel-card">
-          <div className="panel-header">
-            <h4>Partidos programados</h4>
-            <span className="tag muted">{matches.length}</span>
-          </div>
-          {matches.length === 0 ? (
-            <div className="empty-state">No hay partidos registrados.</div>
-          ) : (
-            <div className="registration-list">
-              {matches.map((match) => (
-                <div key={match.id} className="registration-item">
-                  <div>
-                    <strong>Ronda {match.round_number} • Partido {match.match_number}</strong>
-                    <span>{match.tournament_category?.tournament?.name || 'Torneo'}</span>
-                    <span>{match.tournament_category?.category?.display_name || match.tournament_category?.category?.name || 'Categoría'}</span>
-                  </div>
-                  <div>
-                    <span>No antes de</span>
-                    <strong>{(match.not_before_at || match.scheduled_at) ? (match.not_before_at || match.scheduled_at).replace('T', ' ').slice(0, 16) : '—'}</strong>
-                  </div>
-                  <div>
-                    <span>Estado</span>
-                    <strong>{match.status?.label || '—'}</strong>
-                  </div>
-                  <div>
-                    <span>Cancha</span>
-                    <strong>{match.court || '—'}</strong>
-                  </div>
-                  <div className="form-actions">
-                    <button
-                      className="ghost-button"
-                      type="button"
-                      onClick={() => handleDelay(match.id)}
-                    >
-                      Retrasar
-                    </button>
-                  </div>
+        {visibleMatches.length === 0 ? (
+          <div className="empty-state">No hay partidos para estos filtros.</div>
+        ) : (
+          <div className="matches-round-list">
+            {matchesByRound.map(([roundKey, roundMatches]) => (
+              <section key={roundKey} className="matches-round-group">
+                <div className="matches-round-header">
+                  <h5>{roundKey === 'sin-ronda' ? 'Sin ronda' : `Ronda ${roundKey}`}</h5>
+                  <span className="tag muted">{roundMatches.length}</span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+                <div className="registration-list">
+                  {roundMatches.map((match) => (
+                    <div
+                      key={match.id}
+                      className="registration-item match-item is-clickable"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedMatch(match)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          setSelectedMatch(match)
+                        }
+                      }}
+                    >
+                      <div>
+                        <strong>Partido {match.match_number}</strong>
+                        <span>{match.tournament_category?.tournament?.name || 'Torneo'}</span>
+                        <span>{match.tournament_category?.category?.display_name || match.tournament_category?.category?.name || 'Categoría'}</span>
+                      </div>
+                      <div>
+                        <span>Pareja A</span>
+                        <strong>{getTeamLabel(match.registration_a)}</strong>
+                      </div>
+                      <div>
+                        <span>Pareja B</span>
+                        <strong>{getTeamLabel(match.registration_b)}</strong>
+                      </div>
+                      <div>
+                        <span>No antes de</span>
+                        <strong>{formatDateTime(match.not_before_at || match.scheduled_at)}</strong>
+                      </div>
+                      <div>
+                        <span>Estado</span>
+                        <strong>{match.status?.label || '—'}</strong>
+                      </div>
+                      <div>
+                        <span>Cancha</span>
+                        <strong>{match.court || '—'}</strong>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
       </div>
+
+      {selectedMatch ? (
+        <div className="modal-backdrop" onClick={() => setSelectedMatch(null)}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3>Detalle del partido</h3>
+                <p>Ronda {selectedMatch.round_number} • Partido {selectedMatch.match_number}</p>
+              </div>
+              <button className="ghost-button" type="button" onClick={() => setSelectedMatch(null)}>
+                Cerrar
+              </button>
+            </div>
+
+            <div className="modal-body match-detail-body">
+              <div className="match-detail-grid">
+                <div>
+                  <span>Torneo</span>
+                  <strong>{selectedMatch.tournament_category?.tournament?.name || '—'}</strong>
+                </div>
+                <div>
+                  <span>Categoría</span>
+                  <strong>{selectedMatch.tournament_category?.category?.display_name || selectedMatch.tournament_category?.category?.name || '—'}</strong>
+                </div>
+                <div>
+                  <span>Estado</span>
+                  <strong>{selectedMatch.status?.label || '—'}</strong>
+                </div>
+                <div>
+                  <span>Cancha</span>
+                  <strong>{selectedMatch.court || '—'}</strong>
+                </div>
+                <div>
+                  <span>No antes de</span>
+                  <strong>{formatDateTime(selectedMatch.not_before_at)}</strong>
+                </div>
+                <div>
+                  <span>Programado</span>
+                  <strong>{formatDateTime(selectedMatch.scheduled_at)}</strong>
+                </div>
+                <div>
+                  <span>Duración estimada</span>
+                  <strong>{selectedMatch.estimated_duration_minutes ? `${selectedMatch.estimated_duration_minutes} min` : '—'}</strong>
+                </div>
+                <div>
+                  <span>Ganador</span>
+                  <strong>{getTeamLabel(selectedMatch.winner_registration)}</strong>
+                </div>
+              </div>
+
+              <div className="match-detail-section">
+                <h4>Participantes</h4>
+                <p><strong>Pareja A:</strong> {getTeamLabel(selectedMatch.registration_a)}</p>
+                <p><strong>Pareja B:</strong> {getTeamLabel(selectedMatch.registration_b)}</p>
+              </div>
+
+              <div className="match-detail-section">
+                <h4>Marcador</h4>
+                <pre className="match-score-box">
+                  {selectedMatch.score_json
+                    ? JSON.stringify(selectedMatch.score_json, null, 2)
+                    : 'Sin marcador registrado.'}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

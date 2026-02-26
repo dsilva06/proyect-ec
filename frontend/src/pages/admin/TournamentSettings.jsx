@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import DatePicker from '../../components/shared/DatePicker'
 import DateTimePicker from '../../components/shared/DateTimePicker'
 import { adminCategoriesApi } from '../../features/categories/api'
@@ -18,7 +19,6 @@ const initialTournamentForm = {
   registration_open_at: '',
   registration_close_at: '',
   day_start_time: '',
-  day_end_time: '',
   match_duration_minutes: '',
   courts_count: '',
   city: '',
@@ -32,14 +32,33 @@ const GROUP_LABELS = {
   mixto: 'Mixto',
 }
 
+const TOURNAMENT_BOARD_COLUMNS = [
+  { key: 'planning', label: 'Planificación' },
+  { key: 'registration', label: 'Inscripciones' },
+  { key: 'live', label: 'En juego' },
+  { key: 'closed', label: 'Cerrados' },
+]
+
+const resolveTournamentBoardColumn = (statusCode) => {
+  const code = String(statusCode || '').toLowerCase()
+
+  if (!code || code === 'draft' || code === 'created') return 'planning'
+  if (code === 'registration_open' || code === 'registration_closed') return 'registration'
+  if (code === 'in_progress') return 'live'
+  if (code === 'published' || code === 'completed' || code === 'cancelled') return 'closed'
+
+  return 'planning'
+}
+
 
 export default function TournamentSettings() {
   const [tournaments, setTournaments] = useState([])
   const [categories, setCategories] = useState([])
   const [statuses, setStatuses] = useState([])
   const [form, setForm] = useState(initialTournamentForm)
-  const [view, setView] = useState('create')
-  const [activeTournamentId, setActiveTournamentId] = useState(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [selectedTournamentId, setSelectedTournamentId] = useState(null)
+  const [search, setSearch] = useState('')
   const [categorySelection, setCategorySelection] = useState([])
   const [categoryDefaults, setCategoryDefaults] = useState({
     max_teams: 32,
@@ -63,17 +82,10 @@ export default function TournamentSettings() {
     [statuses],
   )
 
-  const activeTournaments = useMemo(() => {
-    const activeCodes = new Set(['registration_open', 'registration_closed', 'in_progress', 'published'])
-    return tournaments.filter((tournament) => activeCodes.has(tournament.status?.code))
-  }, [tournaments])
-
-  const activeTournament = useMemo(() => {
-    if (!activeTournamentId) {
-      return activeTournaments[0] || null
-    }
-    return activeTournaments.find((tournament) => String(tournament.id) === String(activeTournamentId)) || null
-  }, [activeTournaments, activeTournamentId])
+  const selectedTournament = useMemo(
+    () => tournaments.find((tournament) => String(tournament.id) === String(selectedTournamentId)) || null,
+    [tournaments, selectedTournamentId],
+  )
 
   const categoriesByGroup = useMemo(() => {
     return categories.reduce((acc, category) => {
@@ -86,6 +98,36 @@ export default function TournamentSettings() {
     }, {})
   }, [categories])
 
+  const filteredTournaments = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) return tournaments
+
+    return tournaments.filter((tournament) => {
+      const base = `${tournament.name || ''} ${tournament.city || ''} ${tournament.venue_name || ''} ${tournament.status?.label || ''}`.toLowerCase()
+      if (base.includes(term)) return true
+
+      return (tournament.categories || []).some((category) =>
+        `${category.category?.display_name || ''} ${category.category?.name || ''}`.toLowerCase().includes(term))
+    })
+  }, [tournaments, search])
+
+  const tournamentsByColumn = useMemo(() => {
+    const buckets = new Map()
+    TOURNAMENT_BOARD_COLUMNS.forEach((column) => buckets.set(column.key, []))
+
+    filteredTournaments.forEach((tournament) => {
+      const column = resolveTournamentBoardColumn(tournament.status?.code)
+      const list = buckets.get(column)
+      if (list) list.push(tournament)
+    })
+
+    for (const list of buckets.values()) {
+      list.sort((a, b) => String(a.start_date || '').localeCompare(String(b.start_date || '')))
+    }
+
+    return buckets
+  }, [filteredTournaments])
+
   const load = async () => {
     try {
       const [tournamentsData, categoriesData, statusesData] = await Promise.all([
@@ -96,20 +138,12 @@ export default function TournamentSettings() {
       setTournaments(tournamentsData)
       setCategories(categoriesData)
       setStatuses(statusesData)
-      if (tournamentsData.length === 0) {
-        setView('create')
-      } else {
-        const activeCodes = new Set(['registration_open', 'registration_closed', 'in_progress', 'published'])
-        const hasActive = tournamentsData.some((tournament) => activeCodes.has(tournament.status?.code))
-        setView(hasActive ? 'active' : 'all')
-      }
-      setActiveTournamentId((current) => {
-        if (current) return current
-        const active = tournamentsData.find((tournament) => {
-          const activeCodes = new Set(['registration_open', 'registration_closed', 'in_progress', 'published'])
-          return activeCodes.has(tournament.status?.code)
-        })
-        return active?.id ?? null
+      setIsCreateOpen((current) => (tournamentsData.length === 0 ? true : current))
+      setSelectedTournamentId((current) => {
+        if (current && tournamentsData.some((tournament) => String(tournament.id) === String(current))) {
+          return current
+        }
+        return tournamentsData[0]?.id ?? null
       })
     } catch (err) {
       setError(err?.message || 'No pudimos cargar los torneos.')
@@ -174,6 +208,8 @@ export default function TournamentSettings() {
       setForm(initialTournamentForm)
       setCategorySelection([])
       setMessage('Torneo creado correctamente.')
+      setSelectedTournamentId(tournament.id)
+      setIsCreateOpen(false)
       await load()
     } catch (err) {
       setError(err?.data?.message || err?.message || 'No pudimos crear el torneo.')
@@ -329,16 +365,67 @@ export default function TournamentSettings() {
     return startLabel || endLabel || 'TBD'
   }
 
+  const openTournamentModal = (tournamentId) => {
+    setSelectedTournamentId(tournamentId)
+  }
+
+  const closeTournamentModal = () => {
+    setSelectedTournamentId(null)
+  }
+
+  const renderTournamentPreviewCard = (tournament) => {
+    const categoryCount = tournament.categories?.length || 0
+
+    return (
+      <article
+        key={tournament.id}
+        className="registrations-kanban-card tournaments-trello-card"
+        role="button"
+        tabIndex={0}
+        onClick={() => openTournamentModal(tournament.id)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            openTournamentModal(tournament.id)
+          }
+        }}
+      >
+        <div className="registrations-trello-card-head">
+          <strong title={tournament.name}>{tournament.name}</strong>
+          <span className="tag muted">{tournament.status?.label || 'Sin estado'}</span>
+        </div>
+        <span className="muted registrations-trello-players">
+          {tournament.city || 'Ciudad'} • {tournament.venue_name || 'Sede'}
+        </span>
+        <div className="registrations-kanban-meta">
+          <div>
+            <span className="muted">Fechas</span>
+            <strong>{formatRange(tournament.start_date, tournament.end_date, formatDateShort)}</strong>
+          </div>
+          <div>
+            <span className="muted">Inscripciones</span>
+            <strong>{formatRange(tournament.registration_open_at, tournament.registration_close_at, formatDateTimeShort)}</strong>
+          </div>
+        </div>
+        <div className="registrations-trello-card-foot">
+          <span className="registrations-trello-category">{tournament.mode === 'pro' ? 'PRO' : 'Amateur'}</span>
+          <span className="tag muted">{categoryCount} categorías</span>
+        </div>
+      </article>
+    )
+  }
+
   const renderTournamentCard = (tournament) => {
     const categoryForm = categoryForms[tournament.id] || {}
     return (
-      <article key={tournament.id} className="tournament-card">
+      <article key={tournament.id} className="tournament-card settings-tournament-card">
         <div className="tournament-card-header">
           <div>
             <h3>{tournament.name}</h3>
             <p>{tournament.city || 'Ciudad'} • {tournament.venue_name || 'Sede'}</p>
           </div>
           <select
+            className="status-select"
             value={tournament.status?.id || ''}
             onChange={(event) => handleStatusChange(tournament.id, event.target.value)}
           >
@@ -367,12 +454,12 @@ export default function TournamentSettings() {
           </div>
         </div>
 
-        <div className="panel-card">
+        <div className="panel-card tournament-editor-card">
           <div className="panel-header">
             <h4>Editar torneo</h4>
           </div>
-          <div className="form-grid">
-            <label>
+          <div className="form-grid tournament-edit-grid">
+            <label className="field-span-2">
               Descripción
               <textarea
                 value={tournamentEdits[tournament.id]?.description ?? tournament.description ?? ''}
@@ -411,7 +498,7 @@ export default function TournamentSettings() {
                 }
               />
             </label>
-            <label>
+            <label className="field-span-2">
               Dirección
               <input
                 type="text"
@@ -495,7 +582,7 @@ export default function TournamentSettings() {
                 onChange={(event) => handleTournamentEdit(tournament.id, 'courts_count', event.target.value)}
               />
             </label>
-            <div className="form-actions">
+            <div className="form-actions field-span-2">
               <button
                 className="secondary-button"
                 type="button"
@@ -514,15 +601,18 @@ export default function TournamentSettings() {
           </div>
         </div>
 
-        <div>
-          <h4>Categorías del torneo</h4>
+        <div className="panel-card tournament-categories-card">
+          <div className="panel-header">
+            <h4>Categorías del torneo</h4>
+            <span className="tag muted">{tournament.categories?.length || 0}</span>
+          </div>
           {tournament.categories?.length ? (
-            <div className="registration-list">
+            <div className="registration-list tournament-category-list">
               {tournament.categories.map((category) => {
                 const edits = categoryEdits[category.id] || {}
                 return (
-                  <div key={category.id} className="registration-item">
-                    <div>
+                  <div key={category.id} className="registration-item tournament-category-item">
+                    <div className="tournament-category-name">
                       <strong>{category.category?.display_name || category.category?.name}</strong>
                     </div>
                     <div>
@@ -609,7 +699,13 @@ export default function TournamentSettings() {
                         }
                       />
                     </div>
-                    <div className="form-actions">
+                    <div className="form-actions category-row-actions">
+                      <Link
+                        className="ghost-button"
+                        to={`/admin/wildcards?tournament_id=${tournament.id}&tournament_category_id=${category.id}`}
+                      >
+                        Crear wildcard
+                      </Link>
                       <button
                         className="secondary-button"
                         type="button"
@@ -634,12 +730,12 @@ export default function TournamentSettings() {
           )}
         </div>
 
-        <div className="panel-card">
+        <div className="panel-card tournament-add-category-card">
           <div className="panel-header">
             <h4>Agregar categoría</h4>
           </div>
-          <div className="form-grid">
-            <label>
+          <div className="form-grid add-category-grid">
+            <label className="field-span-2">
               Categoría
               <select
                 value={categoryForm.category_id || ''}
@@ -743,7 +839,7 @@ export default function TournamentSettings() {
                 }
               />
             </label>
-            <div className="form-actions">
+            <div className="form-actions field-span-2">
               <button
                 className="primary-button"
                 type="button"
@@ -759,58 +855,48 @@ export default function TournamentSettings() {
   }
 
   return (
-    <section className="admin-page">
+    <section className="admin-page tournament-settings-page tournaments-trello-page">
       <div className="admin-page-header">
         <div>
           <h3>Torneos</h3>
-          <p>Crea y configura torneos, categorías y fechas clave.</p>
+          <p>Vista tipo Trello con resumen por torneo y edición completa en modal.</p>
         </div>
         <div className="admin-page-actions">
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => setIsCreateOpen((current) => !current)}
+          >
+            {isCreateOpen ? 'Cerrar creación' : 'Crear torneo'}
+          </button>
           <button className="secondary-button" type="button" onClick={load}>
             Actualizar
           </button>
+          <input
+            type="text"
+            value={search}
+            placeholder="Buscar torneo, ciudad, sede o categoría..."
+            onChange={(event) => setSearch(event.target.value)}
+          />
         </div>
       </div>
 
-      {error && <div className="empty-state">{error}</div>}
+      {error && <div className="form-message error">{error}</div>}
+      {message && <div className="form-message success">{message}</div>}
 
-      <div className="admin-tabs">
-        <button
-          className={`admin-tab${view === 'create' ? ' active' : ''}`}
-          type="button"
-          onClick={() => setView('create')}
-        >
-          Crear torneo
-        </button>
-        <button
-          className={`admin-tab${view === 'active' ? ' active' : ''}`}
-          type="button"
-          onClick={() => setView('active')}
-        >
-          Torneo activo
-        </button>
-        <button
-          className={`admin-tab${view === 'all' ? ' active' : ''}`}
-          type="button"
-          onClick={() => setView('all')}
-        >
-          Todos los torneos
-        </button>
-      </div>
-
-      {view === 'create' && (
+      {isCreateOpen && (
         <div className="admin-grid">
-          <div className="panel-card">
+          <div className="panel-card tournament-create-card">
             <div className="panel-header">
               <h4>Crear torneo</h4>
               <span className="tag muted">Admin</span>
             </div>
-            <form className="form-grid" onSubmit={handleCreateTournament}>
+            <form className="form-grid tournament-create-grid" onSubmit={handleCreateTournament}>
               <label>
                 Nombre del torneo
                 <input type="text" value={form.name} onChange={handleTournamentChange('name')} />
               </label>
-              <label>
+              <label className="field-span-2">
                 Descripción
                 <textarea value={form.description} onChange={handleTournamentChange('description')} />
               </label>
@@ -833,7 +919,7 @@ export default function TournamentSettings() {
                   onChange={handleTournamentChange('venue_name')}
                 />
               </label>
-              <label>
+              <label className="field-span-2">
                 Dirección
                 <input
                   type="text"
@@ -872,14 +958,6 @@ export default function TournamentSettings() {
                 />
               </label>
               <label>
-                Hora fin día
-                <input
-                  type="time"
-                  value={form.day_end_time}
-                  onChange={handleTournamentChange('day_end_time')}
-                />
-              </label>
-              <label>
                 Duración estimada (min)
                 <input
                   type="number"
@@ -897,12 +975,12 @@ export default function TournamentSettings() {
                   onChange={handleTournamentChange('courts_count')}
                 />
               </label>
-              <div className="panel-card">
+              <div className="panel-card tournament-default-categories field-span-2">
                 <div className="panel-header">
                   <h4>Categorías del torneo</h4>
                   <span className="tag muted">{categorySelection.length} seleccionadas</span>
                 </div>
-                <div className="form-grid">
+                <div className="form-grid category-defaults-grid">
                   <label>
                     Max equipos (default)
                     <input
@@ -971,16 +1049,16 @@ export default function TournamentSettings() {
                       onChange={handleCategoryDefaultsChange('max_fep_rank')}
                     />
                   </label>
-                  <div className="registration-list">
+                  <div className="registration-list category-selection-list field-span-2">
                     {Object.entries(categoriesByGroup).map(([group, items]) => (
-                      <div key={group} className="registration-item">
+                      <div key={group} className="registration-item category-group-item">
                         <div>
                           <strong>{GROUP_LABELS[group] || 'Otros'}</strong>
                           <span>{items.length} categorías</span>
                         </div>
-                        <div className="form-actions">
+                        <div className="category-checkbox-group">
                           {items.map((category) => (
-                            <label key={category.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <label key={category.id} className="category-checkbox">
                               <input
                                 type="checkbox"
                                 checked={categorySelection.includes(category.id)}
@@ -995,78 +1073,55 @@ export default function TournamentSettings() {
                   </div>
                 </div>
               </div>
-              <div className="form-actions">
+              <div className="form-actions field-span-2">
                 <button className="primary-button" type="submit">Crear torneo</button>
               </div>
             </form>
-            {error && <p className="form-message error">{error}</p>}
-            {message && <p className="form-message success">{message}</p>}
           </div>
         </div>
       )}
 
-      {view === 'active' && (
-        <div className="active-layout">
-          <div className="panel-card active-list">
-            <div className="panel-header">
-              <h4>Torneos activos</h4>
-              <span className="tag muted">{activeTournaments.length}</span>
-            </div>
-            {activeTournaments.length === 0 ? (
-              <div className="empty-state">No hay torneos activos todavía.</div>
-            ) : (
-              <div className="registration-list">
-                {activeTournaments.map((tournament) => (
-                  <button
-                    key={tournament.id}
-                    type="button"
-                    className={`active-item${String(activeTournamentId) === String(tournament.id) ? ' active' : ''}`}
-                    onClick={() => setActiveTournamentId(tournament.id)}
-                  >
-                    <div>
-                      <strong>{tournament.name}</strong>
-                      <span>{tournament.city || 'Ciudad'} • {tournament.venue_name || 'Sede'}</span>
-                    </div>
-                    <div>
-                      <span>Fechas</span>
-                      <strong>{formatRange(tournament.start_date, tournament.end_date, formatDateShort)}</strong>
-                    </div>
-                    <div>
-                      <span>Inscripciones</span>
-                      <strong>
-                        {formatRange(
-                          tournament.registration_open_at,
-                          tournament.registration_close_at,
-                          formatDateTimeShort,
-                        )}
-                      </strong>
-                    </div>
-                  </button>
-                ))}
+      {filteredTournaments.length === 0 ? (
+        <div className="empty-state">No hay torneos para mostrar con ese filtro.</div>
+      ) : (
+        <div className="registrations-kanban-board tournaments-trello-board">
+          {TOURNAMENT_BOARD_COLUMNS.map((column) => {
+            const items = tournamentsByColumn.get(column.key) || []
+            return (
+              <section key={column.key} className="registrations-kanban-column tournaments-trello-column">
+                <div className="registrations-kanban-column-header">
+                  <h5>{column.label}</h5>
+                  <span className="tag muted">{items.length}</span>
+                </div>
+                <div className="registrations-kanban-column-body">
+                  {items.length === 0
+                    ? <div className="registrations-kanban-empty">Sin torneos en esta etapa.</div>
+                    : items.map((tournament) => renderTournamentPreviewCard(tournament))}
+                </div>
+              </section>
+            )
+          })}
+        </div>
+      )}
+
+      {selectedTournament ? (
+        <div className="modal-backdrop" onClick={closeTournamentModal}>
+          <div className="modal-card tournaments-settings-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h4>{selectedTournament.name}</h4>
+                <p className="muted">Edición completa de torneo y categorías</p>
               </div>
-            )}
-          </div>
-          <div className="active-detail">
-            {activeTournament ? (
-              renderTournamentCard(activeTournament)
-            ) : (
-              <div className="empty-state">Selecciona un torneo activo.</div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {view === 'all' && (
-        <div className="admin-stack">
-          {tournaments.length === 0 ? (
-            <div className="empty-state">Aún no hay torneos creados.</div>
-          ) : (
-            <div className="tournament-list">
-              {tournaments.map((tournament) => renderTournamentCard(tournament))}
+              <button className="ghost-button" type="button" onClick={closeTournamentModal}>
+                Cerrar
+              </button>
             </div>
-          )}
+            <div className="modal-body tournaments-settings-modal-body">
+              {renderTournamentCard(selectedTournament)}
+            </div>
+          </div>
         </div>
-      )}
+      ) : null}
     </section>
   )
 }
