@@ -31,6 +31,20 @@ class BracketController extends Controller
             $query->where('tournament_category_id', $request->query('tournament_category_id'));
         }
 
+        if ($request->filled('tournament_id')) {
+            $tournamentId = $request->query('tournament_id');
+            $query->whereHas('tournamentCategory', function ($builder) use ($tournamentId) {
+                $builder->where('tournament_id', $tournamentId);
+            });
+        }
+
+        if ($request->filled('category_id')) {
+            $categoryId = $request->query('category_id');
+            $query->whereHas('tournamentCategory', function ($builder) use ($categoryId) {
+                $builder->where('category_id', $categoryId);
+            });
+        }
+
         return BracketResource::collection($query->get());
     }
 

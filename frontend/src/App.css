@@ -2676,6 +2676,12 @@ main,
   gap: 8px;
 }
 
+.bracket-node-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .bracket-node-status {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -2685,6 +2691,23 @@ main,
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: rgba(255, 255, 255, 0.74);
+}
+
+.bracket-node-action {
+  border: 1px solid rgba(255, 154, 61, 0.38);
+  background: rgba(255, 154, 61, 0.16);
+  color: #ffd3a0;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.bracket-node-action:hover {
+  border-color: rgba(255, 154, 61, 0.56);
+  background: rgba(255, 154, 61, 0.24);
 }
 
 .bracket-team {
@@ -2804,6 +2827,106 @@ main,
 
 .bracket-panel {
   margin-top: 12px;
+}
+
+.draws-page {
+  gap: 18px;
+}
+
+.draws-toolbar-card {
+  padding: 16px 20px;
+}
+
+.draws-toolbar {
+  align-items: end;
+}
+
+.draws-toolbar label {
+  min-width: 270px;
+}
+
+.draws-main-grid {
+  grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.draws-create-card {
+  position: sticky;
+  top: 24px;
+}
+
+.draws-brackets-card {
+  min-width: 0;
+}
+
+.draws-bracket-list {
+  display: grid;
+  gap: 18px;
+}
+
+.draws-bracket-item {
+  padding: 18px;
+  gap: 12px;
+}
+
+.draws-bracket-item .panel-header h5 {
+  margin: 0;
+}
+
+.draws-bracket-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.draws-bracket-view {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+}
+
+.score-modal {
+  width: min(740px, 100%);
+}
+
+.score-teams {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 9, 17, 0.72);
+}
+
+.score-teams p {
+  margin: 0;
+}
+
+.score-grid {
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+}
+
+@media (max-width: 900px) {
+  .draws-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .draws-create-card {
+    position: static;
+  }
+
+  .draws-toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .draws-toolbar label {
+    min-width: 0;
+  }
+
+  .score-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .draw-focus-page {

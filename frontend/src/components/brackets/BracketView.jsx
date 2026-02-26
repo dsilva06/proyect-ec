@@ -171,7 +171,7 @@ const computeLayout = (rounds) => {
   }
 }
 
-export default function BracketView({ bracket, onMatchClick }) {
+export default function BracketView({ bracket, onMatchClick, matchActionLabel = '' }) {
   const { rounds, roundsCount } = useMemo(() => {
     const drawSize = getDrawSize(bracket)
     if (!drawSize) return { rounds: [], roundsCount: 0 }
@@ -249,20 +249,22 @@ export default function BracketView({ bracket, onMatchClick }) {
                 const matchTime = match.not_before_at || match.scheduled_at
                 const hasClick = typeof onMatchClick === 'function'
                 const isPlaceholder = Boolean(match.is_placeholder && !match.id)
+                const canOpenMatch = hasClick && !isPlaceholder && Boolean(match.id)
+                const showActionButton = canOpenMatch && Boolean(matchActionLabel)
                 const statusLabel = match.status?.label || (isPlaceholder ? 'Pendiente' : 'Programado')
 
                 return (
                   <div
                     key={`match-${roundIndex}-${match.match_number}`}
-                    className={`bracket-node ${hasClick ? 'is-clickable' : ''} ${isPlaceholder ? 'is-placeholder' : ''}`}
+                    className={`bracket-node ${canOpenMatch ? 'is-clickable' : ''} ${isPlaceholder ? 'is-placeholder' : ''}`}
                     style={{ left: `${x}px`, top: `${y}px`, width: `${CARD_WIDTH}px`, height: `${CARD_HEIGHT}px` }}
                     onClick={() => {
-                      if (hasClick) onMatchClick(match)
+                      if (canOpenMatch) onMatchClick(match)
                     }}
-                    role={hasClick ? 'button' : undefined}
-                    tabIndex={hasClick ? 0 : undefined}
+                    role={canOpenMatch ? 'button' : undefined}
+                    tabIndex={canOpenMatch ? 0 : undefined}
                     onKeyDown={(event) => {
-                      if (!hasClick) return
+                      if (!canOpenMatch) return
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault()
                         onMatchClick(match)
@@ -271,7 +273,21 @@ export default function BracketView({ bracket, onMatchClick }) {
                   >
                     <div className="bracket-node-top">
                       <span className="bracket-match-index">Partido {match.match_number}</span>
-                      <span className="bracket-node-status">{statusLabel}</span>
+                      <div className="bracket-node-tools">
+                        <span className="bracket-node-status">{statusLabel}</span>
+                        {showActionButton ? (
+                          <button
+                            className="bracket-node-action"
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              onMatchClick(match)
+                            }}
+                          >
+                            {matchActionLabel}
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div

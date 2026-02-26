@@ -5,7 +5,6 @@ import { adminTournamentsApi } from '../../features/tournaments/api'
 import { statusesApi } from '../../features/statuses/api'
 import { cleanPayload } from '../../utils/cleanPayload'
 import BracketView from '../../components/brackets/BracketView'
-import DateTimePicker from '../../components/shared/DateTimePicker'
 
 const initialForm = {
   tournament_id: '',
@@ -13,34 +12,91 @@ const initialForm = {
   status_id: '',
 }
 
+const getTeamLabel = (registration) => registration?.team?.display_name || 'Por definir'
+
+const hasGeneratedBracket = (bracket) => ((bracket?.matches?.length || 0) > 0 || (bracket?.slots?.length || 0) > 0)
+
+const toNumberOrNull = (value) => {
+  if (value === '' || value === null || value === undefined) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+const buildInitialScoreForm = (match) => {
+  const sets = Array.isArray(match?.score_json?.sets) ? match.score_json.sets : []
+
+  return {
+    set1_a: sets[0]?.a ?? '',
+    set1_b: sets[0]?.b ?? '',
+    set2_a: sets[1]?.a ?? '',
+    set2_b: sets[1]?.b ?? '',
+    set3_a: sets[2]?.a ?? '',
+    set3_b: sets[2]?.b ?? '',
+    winner_registration_id: match?.winner_registration?.id ? String(match.winner_registration.id) : '',
+  }
+}
+
+const buildScoreSets = (scoreForm) => [
+  {
+    a: toNumberOrNull(scoreForm.set1_a),
+    b: toNumberOrNull(scoreForm.set1_b),
+  },
+  {
+    a: toNumberOrNull(scoreForm.set2_a),
+    b: toNumberOrNull(scoreForm.set2_b),
+  },
+  {
+    a: toNumberOrNull(scoreForm.set3_a),
+    b: toNumberOrNull(scoreForm.set3_b),
+  },
+]
+
+const resolveWinnerFromSets = (match, sets) => {
+  let winsA = 0
+  let winsB = 0
+
+  sets.forEach((set) => {
+    if (set.a === null || set.b === null) return
+    if (set.a > set.b) winsA += 1
+    if (set.b > set.a) winsB += 1
+  })
+
+  if (winsA === winsB) return null
+
+  return winsA > winsB
+    ? match?.registration_a?.id ?? null
+    : match?.registration_b?.id ?? null
+}
+
 export default function Draws() {
   const [brackets, setBrackets] = useState([])
   const [tournaments, setTournaments] = useState([])
   const [statuses, setStatuses] = useState([])
   const [form, setForm] = useState(initialForm)
+  const [boardTournamentId, setBoardTournamentId] = useState('')
   const [error, setError] = useState('')
-  const [activeBracketId, setActiveBracketId] = useState(null)
-  const [scheduleMatch, setScheduleMatch] = useState(null)
-  const [scheduleForm, setScheduleForm] = useState({
-    scheduled_at: '',
-    court: '',
-    estimated_duration_minutes: '',
-    status_id: '',
-  })
-  const [matchError, setMatchError] = useState('')
+  const [message, setMessage] = useState('')
+  const [scoreMatch, setScoreMatch] = useState(null)
+  const [scoreForm, setScoreForm] = useState(buildInitialScoreForm(null))
+  const [scoreError, setScoreError] = useState('')
 
-  const selectedTournament = useMemo(
-    () => tournaments.find((tournament) => String(tournament.id) === String(form.tournament_id)),
+  const selectedBoardTournament = useMemo(
+    () => tournaments.find((tournament) => String(tournament.id) === String(boardTournamentId)) || null,
+    [tournaments, boardTournamentId],
+  )
+
+  const selectedCreateTournament = useMemo(
+    () => tournaments.find((tournament) => String(tournament.id) === String(form.tournament_id)) || null,
     [tournaments, form.tournament_id],
   )
 
   const categoryOptions = useMemo(() => {
-    if (!selectedTournament) return []
-    return (selectedTournament.categories || []).map((category) => ({
+    if (!selectedCreateTournament) return []
+    return (selectedCreateTournament.categories || []).map((category) => ({
       id: category.id,
-      label: `${category.category?.display_name || category.category?.name || 'Categoría'}`,
+      label: `${category.category?.display_name || category.category?.name || 'Categoria'}`,
     }))
-  }, [selectedTournament])
+  }, [selectedCreateTournament])
 
   const statusOptions = useMemo(
     () => statuses.filter((status) => status.module === 'bracket'),
@@ -52,33 +108,64 @@ export default function Draws() {
     [statuses],
   )
 
-  const activeBracket = useMemo(
-    () => brackets.find((bracket) => bracket.id === activeBracketId),
-    [brackets, activeBracketId],
+  const completedMatchStatusId = useMemo(
+    () => matchStatusOptions.find((status) => String(status.code) === 'completed')?.id || null,
+    [matchStatusOptions],
   )
 
-  const hasGeneratedBracket = (bracket) => ((bracket?.matches?.length || 0) > 0 || (bracket?.slots?.length || 0) > 0)
-
-  const isFocusMode = useMemo(() => hasGeneratedBracket(activeBracket), [activeBracket])
-
-  const load = async () => {
+  const loadMeta = async () => {
     try {
-      const [bracketsData, tournamentsData, statusesData] = await Promise.all([
-        adminBracketsApi.list(),
+      setError('')
+      const [tournamentsData, statusesData] = await Promise.all([
         adminTournamentsApi.list(),
         statusesApi.list(),
       ])
-      setBrackets(bracketsData)
+
       setTournaments(tournamentsData)
       setStatuses(statusesData)
+
+      if (!boardTournamentId && tournamentsData.length > 0) {
+        const firstId = String(tournamentsData[0].id)
+        setBoardTournamentId(firstId)
+      }
+    } catch (err) {
+      setError(err?.message || 'No pudimos cargar el modulo de cuadros.')
+    }
+  }
+
+  const loadBrackets = async (tournamentId) => {
+    if (!tournamentId) {
+      setBrackets([])
+      return
+    }
+
+    try {
+      setError('')
+      const data = await adminBracketsApi.list(cleanPayload({ tournament_id: tournamentId }))
+      setBrackets(data)
     } catch (err) {
       setError(err?.message || 'No pudimos cargar los cuadros.')
     }
   }
 
   useEffect(() => {
-    load()
+    loadMeta()
   }, [])
+
+  useEffect(() => {
+    if (!boardTournamentId) {
+      setBrackets([])
+      return
+    }
+
+    loadBrackets(boardTournamentId)
+  }, [boardTournamentId])
+
+  useEffect(() => {
+    if (!form.tournament_id && boardTournamentId) {
+      setForm((prev) => ({ ...prev, tournament_id: boardTournamentId }))
+    }
+  }, [form.tournament_id, boardTournamentId])
 
   const handleChange = (field) => (event) => {
     const value = event.target.value
@@ -92,13 +179,17 @@ export default function Draws() {
   const handleCreate = async (event) => {
     event.preventDefault()
     setError('')
+    setMessage('')
+
     try {
       await adminBracketsApi.create({
         ...cleanPayload(form),
         status_id: form.status_id || statusOptions?.[0]?.id,
       })
-      setForm(initialForm)
-      await load()
+
+      setForm((prev) => ({ ...initialForm, tournament_id: prev.tournament_id || boardTournamentId }))
+      setMessage('Cuadro creado correctamente.')
+      await loadBrackets(boardTournamentId)
     } catch (err) {
       setError(err?.message || 'No pudimos crear el cuadro.')
     }
@@ -106,17 +197,19 @@ export default function Draws() {
 
   const handleGenerate = async (bracket) => {
     setError('')
+    setMessage('')
+
     try {
       if ((bracket.slots?.length || 0) > 0 || (bracket.matches?.length || 0) > 0) {
         const confirmRegenerate = window.confirm(
-          'Esto borrará el cuadro actual y generará uno nuevo. ¿Deseas continuar?',
+          'Esto borrara el cuadro actual y generara uno nuevo. Deseas continuar?',
         )
         if (!confirmRegenerate) return
       }
 
       await adminBracketsApi.generate(bracket.id)
-      await load()
-      setActiveBracketId(bracket.id)
+      setMessage('Cuadro generado.')
+      await loadBrackets(boardTournamentId)
     } catch (err) {
       setError(err?.message || 'No pudimos generar el cuadro.')
     }
@@ -124,150 +217,107 @@ export default function Draws() {
 
   const handleDelete = async (bracket) => {
     setError('')
+    setMessage('')
+
     const confirmDelete = window.confirm(
-      'Esto eliminará el cuadro, sus matches y slots. ¿Deseas continuar?',
+      'Esto eliminara el cuadro, sus matches y slots. Deseas continuar?',
     )
     if (!confirmDelete) return
 
     try {
       await adminBracketsApi.remove(bracket.id)
-      if (activeBracketId === bracket.id) {
-        setActiveBracketId(null)
-      }
-      await load()
+      setMessage('Cuadro eliminado.')
+      await loadBrackets(boardTournamentId)
     } catch (err) {
       setError(err?.message || 'No pudimos eliminar el cuadro.')
     }
   }
 
-  const handleMatchClick = (match) => {
-    setMatchError('')
-    setScheduleMatch(match)
-    setScheduleForm({
-      scheduled_at: match.not_before_at || match.scheduled_at || '',
-      court: match.court || '',
-      estimated_duration_minutes: match.estimated_duration_minutes || '',
-      status_id: match.status?.id || '',
-    })
+  const openScoreModal = (match) => {
+    if (!match?.id) return
+
+    setScoreError('')
+    setScoreMatch(match)
+    setScoreForm(buildInitialScoreForm(match))
   }
 
-  const handleScheduleChange = (field) => (valueOrEvent) => {
-    const value = valueOrEvent?.target ? valueOrEvent.target.value : valueOrEvent
-    setScheduleForm((prev) => ({ ...prev, [field]: value }))
+  const closeScoreModal = () => {
+    setScoreMatch(null)
+    setScoreForm(buildInitialScoreForm(null))
+    setScoreError('')
   }
 
-  const handleScheduleSave = async () => {
-    if (!scheduleMatch) return
-    setMatchError('')
+  const handleScoreChange = (field) => (event) => {
+    setScoreForm((prev) => ({ ...prev, [field]: event.target.value }))
+  }
+
+  const handleSaveScore = async () => {
+    if (!scoreMatch) return
+
+    const sets = buildScoreSets(scoreForm)
+    const winnerFromScore = resolveWinnerFromSets(scoreMatch, sets)
+    const selectedWinner = toNumberOrNull(scoreForm.winner_registration_id)
+    const winnerId = selectedWinner || winnerFromScore
+
+    if (!winnerId) {
+      setScoreError('Define el ganador con el marcador o selecciona la pareja ganadora.')
+      return
+    }
+
+    const payload = {
+      score_json: { sets },
+      winner_registration_id: winnerId,
+    }
+
+    if (completedMatchStatusId) {
+      payload.status_id = completedMatchStatusId
+    }
+
     try {
-      const payload = {
-        scheduled_at: scheduleForm.scheduled_at || null,
-        court: scheduleForm.court || null,
-        estimated_duration_minutes: scheduleForm.estimated_duration_minutes
-          ? Number(scheduleForm.estimated_duration_minutes)
-          : null,
-      }
-      if (scheduleForm.status_id) {
-        payload.status_id = scheduleForm.status_id
-      }
-
-      await adminMatchesApi.update(scheduleMatch.id, payload)
-      setScheduleMatch(null)
-      await load()
+      setScoreError('')
+      await adminMatchesApi.update(scoreMatch.id, payload)
+      setMessage('Score guardado. El ganador avanzara automaticamente en la llave.')
+      closeScoreModal()
+      await loadBrackets(boardTournamentId)
     } catch (err) {
-      setMatchError(err?.data?.message || err?.message || 'No pudimos actualizar el partido.')
+      setScoreError(err?.data?.message || err?.message || 'No pudimos guardar el score.')
     }
   }
 
-  const scheduleModal = scheduleMatch ? (
-    <div className="modal-backdrop" onClick={() => setScheduleMatch(null)}>
-      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
-          <div>
-            <h3>Programar partido</h3>
-            <p>
-              Ronda {scheduleMatch.round_number} • Partido {scheduleMatch.match_number}
-            </p>
-          </div>
-          <button className="ghost-button" type="button" onClick={() => setScheduleMatch(null)}>
-            Cerrar
-          </button>
-        </div>
-        <div className="modal-body">
-          <div className="form-grid">
-            <label>
-              No antes de
-              <DateTimePicker value={scheduleForm.scheduled_at} onChange={handleScheduleChange('scheduled_at')} />
-            </label>
-            <label>
-              Cancha
-              <input type="text" value={scheduleForm.court} onChange={handleScheduleChange('court')} />
-            </label>
-            <label>
-              Duración estimada (min)
-              <input
-                type="number"
-                min="10"
-                value={scheduleForm.estimated_duration_minutes}
-                onChange={handleScheduleChange('estimated_duration_minutes')}
-              />
-            </label>
-            <label>
-              Estado
-              <select value={scheduleForm.status_id} onChange={handleScheduleChange('status_id')}>
-                <option value="">Selecciona</option>
-                {matchStatusOptions.map((status) => (
-                  <option key={status.id} value={status.id}>{status.label}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="form-actions">
-            <button className="primary-button" type="button" onClick={handleScheduleSave}>
-              Guardar
-            </button>
-          </div>
-          {matchError && <p className="form-message error">{matchError}</p>}
-        </div>
-      </div>
-    </div>
-  ) : null
-
-  if (isFocusMode) {
-    return (
-      <section className="admin-page draw-focus-page">
-        <div className="draw-focus-shell">
-          <button
-            type="button"
-            className="draw-focus-back"
-            onClick={() => setActiveBracketId(null)}
-            aria-label="Volver a cuadros"
-          >
-            ‹
-          </button>
-          <div className="draw-focus-board">
-            <BracketView bracket={activeBracket} onMatchClick={handleMatchClick} />
-          </div>
-          {error ? <p className="form-message error">{error}</p> : null}
-        </div>
-        {scheduleModal}
-      </section>
-    )
-  }
-
   return (
-    <section className="admin-page">
+    <section className="admin-page draws-page">
       <div className="admin-page-header">
         <div>
           <h3>Cuadros</h3>
-          <p>Gestiona cuadros por categoría y publica resultados.</p>
+          <p>Trabaja varios cuadros en paralelo, filtrados por torneo, con carga de score por partido.</p>
         </div>
       </div>
 
-      <div className="admin-grid">
-        <div className="panel-card">
+      <div className="panel-card draws-toolbar-card">
+        <div className="admin-page-actions draws-toolbar">
+          <label>
+            Torneo (filtro)
+            <select value={boardTournamentId} onChange={(event) => setBoardTournamentId(event.target.value)}>
+              <option value="">Selecciona un torneo</option>
+              {tournaments.map((tournament) => (
+                <option key={tournament.id} value={tournament.id}>{tournament.name}</option>
+              ))}
+            </select>
+          </label>
+          <button className="secondary-button" type="button" onClick={loadMeta}>
+            Actualizar torneos
+          </button>
+          <button className="secondary-button" type="button" onClick={() => loadBrackets(boardTournamentId)} disabled={!boardTournamentId}>
+            Actualizar cuadros
+          </button>
+        </div>
+      </div>
+
+      <div className="admin-grid draws-main-grid">
+        <div className="panel-card draws-create-card">
           <div className="panel-header">
             <h4>Crear cuadro</h4>
+            <span className="tag muted">Eliminacion directa</span>
           </div>
           <form className="form-grid" onSubmit={handleCreate}>
             <label>
@@ -282,7 +332,7 @@ export default function Draws() {
               </select>
             </label>
             <label>
-              Categoría del torneo
+              Categoria del torneo
               <select value={form.tournament_category_id} onChange={handleChange('tournament_category_id')}>
                 <option value="">Selecciona</option>
                 {categoryOptions.length === 0 ? (
@@ -294,12 +344,6 @@ export default function Draws() {
                 )}
               </select>
             </label>
-            <div className="registration-item">
-              <div>
-                <span>Formato</span>
-                <strong>Eliminación directa</strong>
-              </div>
-            </div>
             <label>
               Estado
               <select value={form.status_id} onChange={handleChange('status_id')}>
@@ -313,67 +357,139 @@ export default function Draws() {
               <button className="primary-button" type="submit">Crear cuadro</button>
             </div>
           </form>
-          {error && <p className="form-message error">{error}</p>}
         </div>
 
-        <div className="panel-card">
+        <div className="panel-card draws-brackets-card">
           <div className="panel-header">
-            <h4>Cuadros existentes</h4>
+            <h4>
+              Cuadros del torneo
+              {selectedBoardTournament ? `: ${selectedBoardTournament.name}` : ''}
+            </h4>
             <span className="tag muted">{brackets.length}</span>
           </div>
-          {brackets.length === 0 ? (
-            <div className="empty-state">No hay cuadros todavía.</div>
+
+          {!boardTournamentId ? (
+            <div className="empty-state">Selecciona un torneo para trabajar sus cuadros.</div>
+          ) : brackets.length === 0 ? (
+            <div className="empty-state">No hay cuadros para este torneo.</div>
           ) : (
-            <div className="registration-list">
+            <div className="draws-bracket-list">
               {brackets.map((bracket) => (
-                <div key={bracket.id} className="registration-item bracket-item">
-                  <div>
-                    <strong>{bracket.tournament_category?.category?.display_name || bracket.tournament_category?.category?.name || 'Categoría'}</strong>
-                    <span>{bracket.tournament_category?.tournament?.name || 'Torneo'}</span>
-                    <span>Eliminación directa</span>
-                  </div>
-                  <div>
-                    <span>Estado</span>
-                    <strong>{bracket.status?.label || '—'}</strong>
-                  </div>
-                  <div>
-                    <span>Slots</span>
-                    <strong>{bracket.slots?.length || 0}</strong>
-                  </div>
-                  <div className="form-actions">
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={() => handleGenerate(bracket)}
-                    >
-                      Generar cuadro
-                    </button>
-                    {bracket.status?.code === 'draft' ? (
-                      <button
-                        className="ghost-button"
-                        type="button"
-                        onClick={() => handleDelete(bracket)}
-                      >
-                        Eliminar cuadro
+                <article key={bracket.id} className="panel-card draws-bracket-item">
+                  <div className="panel-header">
+                    <div>
+                      <h5>{bracket.tournament_category?.category?.display_name || bracket.tournament_category?.category?.name || 'Categoria'}</h5>
+                      <p className="muted">{bracket.status?.label || 'Sin estado'}</p>
+                    </div>
+                    <div className="form-actions">
+                      <button className="secondary-button" type="button" onClick={() => handleGenerate(bracket)}>
+                        Generar
                       </button>
-                    ) : null}
-                    <button
-                      className="ghost-button"
-                      type="button"
-                      onClick={() => setActiveBracketId(bracket.id)}
-                      disabled={!hasGeneratedBracket(bracket)}
-                    >
-                      {hasGeneratedBracket(bracket) ? 'Ver cuadro' : 'Genera para ver'}
-                    </button>
+                      {bracket.status?.code === 'draft' ? (
+                        <button className="ghost-button" type="button" onClick={() => handleDelete(bracket)}>
+                          Eliminar
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
+
+                  <div className="draws-bracket-meta">
+                    <span className="tag muted">Slots: {bracket.slots?.length || 0}</span>
+                    <span className="tag muted">Matches: {bracket.matches?.length || 0}</span>
+                  </div>
+
+                  {hasGeneratedBracket(bracket) ? (
+                    <div className="draws-bracket-view">
+                      <BracketView
+                        bracket={bracket}
+                        onMatchClick={openScoreModal}
+                        matchActionLabel="Score"
+                      />
+                    </div>
+                  ) : (
+                    <div className="empty-state">Genera el cuadro para comenzar a cargar resultados.</div>
+                  )}
+                </article>
               ))}
             </div>
           )}
         </div>
       </div>
 
-      {scheduleModal}
+      {error && <p className="form-message error">{error}</p>}
+      {message && <p className="form-message success">{message}</p>}
+
+      {scoreMatch ? (
+        <div className="modal-backdrop" onClick={closeScoreModal}>
+          <div className="modal-card score-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3>Score del partido</h3>
+                <p>Ronda {scoreMatch.round_number} • Partido {scoreMatch.match_number}</p>
+              </div>
+              <button className="ghost-button" type="button" onClick={closeScoreModal}>
+                Cerrar
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="score-teams">
+                <p><strong>Pareja A:</strong> {getTeamLabel(scoreMatch.registration_a)}</p>
+                <p><strong>Pareja B:</strong> {getTeamLabel(scoreMatch.registration_b)}</p>
+              </div>
+
+              <div className="form-grid score-grid">
+                <label>
+                  Set 1 - A
+                  <input type="number" min="0" value={scoreForm.set1_a} onChange={handleScoreChange('set1_a')} />
+                </label>
+                <label>
+                  Set 1 - B
+                  <input type="number" min="0" value={scoreForm.set1_b} onChange={handleScoreChange('set1_b')} />
+                </label>
+                <label>
+                  Set 2 - A
+                  <input type="number" min="0" value={scoreForm.set2_a} onChange={handleScoreChange('set2_a')} />
+                </label>
+                <label>
+                  Set 2 - B
+                  <input type="number" min="0" value={scoreForm.set2_b} onChange={handleScoreChange('set2_b')} />
+                </label>
+                <label>
+                  Set 3 - A
+                  <input type="number" min="0" value={scoreForm.set3_a} onChange={handleScoreChange('set3_a')} />
+                </label>
+                <label>
+                  Set 3 - B
+                  <input type="number" min="0" value={scoreForm.set3_b} onChange={handleScoreChange('set3_b')} />
+                </label>
+                <label className="field-span-2">
+                  Ganador
+                  <select
+                    value={scoreForm.winner_registration_id}
+                    onChange={handleScoreChange('winner_registration_id')}
+                  >
+                    <option value="">Automatico por score</option>
+                    {scoreMatch.registration_a?.id ? (
+                      <option value={scoreMatch.registration_a.id}>Pareja A - {getTeamLabel(scoreMatch.registration_a)}</option>
+                    ) : null}
+                    {scoreMatch.registration_b?.id ? (
+                      <option value={scoreMatch.registration_b.id}>Pareja B - {getTeamLabel(scoreMatch.registration_b)}</option>
+                    ) : null}
+                  </select>
+                </label>
+              </div>
+
+              <div className="form-actions">
+                <button className="primary-button" type="button" onClick={handleSaveScore}>
+                  Guardar score
+                </button>
+              </div>
+              <p className="muted">Al guardar, el ganador avanza automaticamente a la siguiente fase de la llave.</p>
+              {scoreError && <p className="form-message error">{scoreError}</p>}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }
