@@ -1,0 +1,14 @@
+<svg width="820" height="240" viewBox="0 0 820 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="820" height="240" fill="none"/>
+  <g transform="translate(26,28)">
+    <circle cx="76" cy="76" r="68" fill="#B7CE4F"/>
+    <path d="M24 54C42 42 63 40 88 44C106 47 122 53 128 58" stroke="#080C36" stroke-width="10" stroke-linecap="round"/>
+    <path d="M26 98C44 111 66 114 90 111C108 109 122 104 127 100" stroke="#080C36" stroke-width="10" stroke-linecap="round"/>
+    <path d="M72 14C65 34 64 53 70 73C74 88 79 102 77 128" stroke="#080C36" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(180,34)">
+    <text x="0" y="106" fill="#EFEBD3" font-family="Space Grotesk, Nunito, Arial, sans-serif" font-size="132" font-weight="700" letter-spacing="-2">stars</text>
+    <text x="6" y="162" fill="#EFEBD3" fill-opacity="0.95" font-family="Space Grotesk, Arial, sans-serif" font-size="40" font-weight="500" letter-spacing="11">PADEL TOUR</text>
+  </g>
+</svg>
