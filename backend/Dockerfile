@@ -16,6 +16,7 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-d
 
 COPY ./docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf
+COPY ./docker/ca-certificate.crt /etc/ssl/certs/ca-certificate.crt
 
 RUN mkdir -p storage bootstrap/cache \
  && chown -R www-data:www-data storage bootstrap/cache
