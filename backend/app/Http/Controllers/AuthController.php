@@ -32,6 +32,7 @@ class AuthController extends Controller
             [
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
+                'dni' => $validated['dni'] ?? null,
                 'province_state' => $validated['province_state'] ?? 'Unknown',
                 'ranking_source' => 'NONE',
                 'ranking_value' => null,

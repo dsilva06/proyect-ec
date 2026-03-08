@@ -18,6 +18,7 @@ class RegisterRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
+            'dni' => ['required', 'string', 'max:50', Rule::unique('player_profiles', 'dni')],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['nullable', 'string', 'max:50', Rule::unique('users', 'phone')],
             'province_state' => ['nullable', 'string', 'max:100'],
