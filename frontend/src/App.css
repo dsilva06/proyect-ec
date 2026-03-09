@@ -665,11 +665,36 @@ main,
 }
 
 .admin-shell {
+  --font-admin-heading: 'Humane Bold', var(--font-display);
+  --font-admin-body: 'Humane Light', var(--font-body);
+  --font-admin-ui: 'Rounded Elegance', var(--font-body);
   padding: 32px 6vw 60px;
   width: min(1600px, 100%);
   margin: 0 auto;
   display: grid;
   gap: 24px;
+  font-family: var(--font-admin-body);
+}
+
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-shell h5,
+.admin-shell h6,
+.admin-shell strong {
+  font-family: var(--font-admin-heading);
+}
+
+.admin-shell button,
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea,
+.admin-shell .tag,
+.admin-shell .admin-nav a,
+.admin-shell .admin-tab,
+.admin-shell label {
+  font-family: var(--font-admin-ui);
 }
 
 .admin-header {

@@ -13,7 +13,7 @@ use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\Admin\WildcardController as AdminWildcardController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'is_admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'active_user', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/tournaments', [TournamentController::class, 'index']);
     Route::post('/tournaments', [TournamentController::class, 'store']);
     Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);

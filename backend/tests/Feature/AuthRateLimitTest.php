@@ -21,6 +21,37 @@ class AuthRateLimitTest extends TestCase
         $this->postJson('/api/auth/login', [
             'email' => 'rate-limit@example.com',
             'password' => 'wrong-password',
-        ])->assertStatus(429);
+        ])
+            ->assertStatus(429)
+            ->assertJson([
+                'message' => 'Too many requests',
+            ]);
+    }
+
+    public function test_register_endpoint_is_rate_limited(): void
+    {
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this->postJson('/api/auth/register', [
+                'first_name' => 'Rate',
+                'last_name' => 'Limited',
+                'dni' => 'DNI-'.$attempt,
+                'email' => "rate-register-{$attempt}@example.com",
+                'password' => 'Password123!',
+                'password_confirmation' => 'Password123!',
+            ])->assertStatus(201);
+        }
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Rate',
+            'last_name' => 'Limited',
+            'dni' => 'DNI-999',
+            'email' => 'rate-register-overflow@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertStatus(429)
+            ->assertJson([
+                'message' => 'Too many requests',
+            ]);
     }
 }

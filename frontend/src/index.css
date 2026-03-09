@@ -2,6 +2,27 @@
 @import './styles/tokens.css';
 @import './styles/base.css';
 
+@font-face {
+  font-family: 'Humane Bold';
+  src: local('Humane Bold'), local('Humane-Bold'), local('Humane');
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Humane Light';
+  src: local('Humane Light'), local('Humane-Light'), local('Humane');
+  font-style: normal;
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Rounded Elegance';
+  src: local('Rounded Elegance'), local('Rounded-Elegance'), local('Rounded Elegance Regular');
+  font-style: normal;
+  font-weight: 400;
+}
+
 :root {
   --font-display: 'Fraunces', serif;
   --font-body: 'Space Grotesk', sans-serif;

@@ -8,9 +8,13 @@ use App\Models\Tournament;
 use App\Policies\PaymentPolicy;
 use App\Policies\RegistrationPolicy;
 use App\Policies\TournamentPolicy;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,5 +35,25 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Registration::class, RegistrationPolicy::class);
         Gate::policy(Payment::class, PaymentPolicy::class);
         Gate::policy(Tournament::class, TournamentPolicy::class);
+
+        RateLimiter::for('auth-login', function (Request $request) {
+            $email = Str::lower((string) $request->input('email'));
+            $ip = (string) $request->ip();
+
+            return Limit::perMinute(10)
+                ->by($email.'|'.$ip);
+        });
+
+        RateLimiter::for('auth-register', function (Request $request) {
+            return Limit::perMinute(5)
+                ->by((string) $request->ip());
+        });
+
+        RateLimiter::for('auth-session', function (Request $request) {
+            $userId = $request->user()?->getAuthIdentifier() ?? 'guest';
+
+            return Limit::perMinute(60)
+                ->by((string) $userId.'|'.(string) $request->ip());
+        });
     }
 }

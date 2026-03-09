@@ -3,11 +3,31 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $firstName = trim((string) $this->input('first_name'));
+        $lastName = trim((string) $this->input('last_name'));
+        $dni = trim((string) $this->input('dni'));
+        $email = trim((string) $this->input('email'));
+        $phone = trim((string) $this->input('phone', ''));
+        $provinceState = trim((string) $this->input('province_state', ''));
+
+        $this->merge([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'dni' => $dni,
+            'email' => Str::lower($email),
+            'phone' => $phone !== '' ? $phone : null,
+            'province_state' => $provinceState !== '' ? $provinceState : null,
+        ]);
+    }
+
     public function authorize(): bool
     {
         return true;
