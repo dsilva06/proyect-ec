@@ -11,6 +11,7 @@ export default function Register() {
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
+    dni: '',
     email: '',
     phone: '',
     password: '',
@@ -120,6 +121,16 @@ export default function Register() {
                     placeholder="Apellido"
                     value={form.last_name}
                     onChange={(event) => setForm({ ...form, last_name: event.target.value })}
+                    required
+                  />
+                </label>
+                <label>
+                  DNI
+                  <input
+                    type="text"
+                    placeholder="Ej: 12345678"
+                    value={form.dni}
+                    onChange={(event) => setForm({ ...form, dni: event.target.value })}
                     required
                   />
                 </label>
