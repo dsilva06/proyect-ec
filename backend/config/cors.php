@@ -1,11 +1,15 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+
+    'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://localhost:5175'))),
+    'allowed_origins' => [
+        'https://www.estarspadeltour.com',
+        'https://estarspadeltour.com',
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -15,5 +19,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
+
 ];
