@@ -1003,6 +1003,68 @@ main,
   gap: 12px;
 }
 
+.category-selection-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.category-selection-search {
+  flex: 1 1 300px;
+}
+
+.category-selection-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.category-selection-actions .secondary-button,
+.category-selection-actions .ghost-button {
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+}
+
+.category-group-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(8, 11, 26, 0.58);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.category-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.category-group-summary {
+  display: grid;
+  gap: 4px;
+}
+
+.category-group-summary span {
+  color: var(--color-muted);
+  font-size: 0.82rem;
+}
+
+.category-group-toggle {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
 .category-group-item {
   grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
   align-items: start;
@@ -1010,7 +1072,7 @@ main,
 
 .category-checkbox-group {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 10px;
 }
 
@@ -1023,6 +1085,69 @@ main,
 .category-checkbox input {
   width: auto;
   margin: 0;
+}
+
+.category-chip {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(7, 9, 17, 0.58);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.category-chip:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.category-chip.is-selected {
+  border-color: rgba(183, 207, 79, 0.68);
+  background: rgba(183, 207, 79, 0.14);
+}
+
+.category-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.category-chip-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: rgba(239, 231, 211, 0.88);
+  flex-shrink: 0;
+}
+
+.category-chip.is-selected .category-chip-mark {
+  border-color: rgba(183, 207, 79, 0.9);
+  background: rgba(183, 207, 79, 0.25);
+  color: #e9f7ae;
+}
+
+.category-selection-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-selection-pill {
+  border: 1px solid rgba(183, 207, 79, 0.58);
+  border-radius: 999px;
+  background: rgba(183, 207, 79, 0.16);
+  color: rgba(239, 231, 211, 0.92);
+  font-size: 0.75rem;
+  padding: 6px 10px;
 }
 
 .tournament-settings-page textarea {
@@ -1052,6 +1177,24 @@ main,
   .tournaments-trello-page .admin-page-actions input {
     min-width: 0;
     width: 100%;
+  }
+
+  .category-selection-toolbar {
+    align-items: stretch;
+  }
+
+  .category-selection-search {
+    flex: 1 1 100%;
+  }
+
+  .category-selection-actions {
+    width: 100%;
+  }
+
+  .category-selection-actions .secondary-button,
+  .category-selection-actions .ghost-button {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
 

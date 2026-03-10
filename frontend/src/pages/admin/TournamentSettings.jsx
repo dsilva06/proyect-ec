@@ -61,6 +61,7 @@ export default function TournamentSettings() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [selectedTournamentId, setSelectedTournamentId] = useState(null)
   const [search, setSearch] = useState('')
+  const [categorySearch, setCategorySearch] = useState('')
   const [categorySelection, setCategorySelection] = useState([])
   const [categoryDefaults, setCategoryDefaults] = useState({
     max_teams: 32,
@@ -99,6 +100,34 @@ export default function TournamentSettings() {
       return acc
     }, {})
   }, [categories])
+
+  const categoriesById = useMemo(
+    () => categories.reduce((acc, category) => ({ ...acc, [category.id]: category }), {}),
+    [categories],
+  )
+
+  const normalizedCategorySearch = categorySearch.trim().toLowerCase()
+
+  const visibleCategoriesByGroup = useMemo(() => {
+    if (!normalizedCategorySearch) return categoriesByGroup
+
+    return Object.entries(categoriesByGroup).reduce((acc, [group, items]) => {
+      const filteredItems = items.filter((category) =>
+        `${category.display_name || ''} ${category.name || ''}`.toLowerCase().includes(normalizedCategorySearch))
+      if (filteredItems.length) {
+        acc[group] = filteredItems
+      }
+      return acc
+    }, {})
+  }, [categoriesByGroup, normalizedCategorySearch])
+
+  const visibleCategoryIds = useMemo(
+    () =>
+      Object.values(visibleCategoriesByGroup)
+        .flat()
+        .map((category) => category.id),
+    [visibleCategoriesByGroup],
+  )
 
   const filteredTournaments = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -173,6 +202,29 @@ export default function TournamentSettings() {
     })
   }
 
+  const addCategorySelection = (ids) => {
+    if (!ids.length) return
+    setCategorySelection((prev) => [...new Set([...prev, ...ids])])
+  }
+
+  const removeCategorySelection = (ids) => {
+    if (!ids.length) return
+    setCategorySelection((prev) => prev.filter((id) => !ids.includes(id)))
+  }
+
+  const toggleGroupCategorySelection = (groupIds) => {
+    if (!groupIds.length) return
+    const allSelected = groupIds.every((id) => categorySelection.includes(id))
+    if (allSelected) {
+      removeCategorySelection(groupIds)
+      return
+    }
+    addCategorySelection(groupIds)
+  }
+
+  const selectVisibleCategories = () => addCategorySelection(visibleCategoryIds)
+  const clearVisibleCategories = () => removeCategorySelection(visibleCategoryIds)
+
   const handleCategoryDefaultsChange = (field) => (event) => {
     setCategoryDefaults((prev) => ({ ...prev, [field]: event.target.value }))
   }
@@ -209,6 +261,7 @@ export default function TournamentSettings() {
 
       setForm(initialTournamentForm)
       setCategorySelection([])
+      setCategorySearch('')
       setMessage('Torneo creado correctamente.')
       setSelectedTournamentId(tournament.id)
       setIsCreateOpen(false)
@@ -1115,28 +1168,94 @@ export default function TournamentSettings() {
                       onChange={handleCategoryDefaultsChange('max_fep_rank')}
                     />
                   </label>
-                  <div className="registration-list category-selection-list field-span-2">
-                    {Object.entries(categoriesByGroup).map(([group, items]) => (
-                      <div key={group} className="registration-item category-group-item">
-                        <div>
-                          <strong>{GROUP_LABELS[group] || 'Otros'}</strong>
-                          <span>{items.length} categorías</span>
-                        </div>
-                        <div className="category-checkbox-group">
-                          {items.map((category) => (
-                            <label key={category.id} className="category-checkbox">
-                              <input
-                                type="checkbox"
-                                checked={categorySelection.includes(category.id)}
-                                onChange={() => toggleCategorySelection(category.id)}
-                              />
-                              <span>{category.display_name || category.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="category-selection-toolbar field-span-2">
+                    <label className="category-selection-search">
+                      Buscar categoría
+                      <input
+                        type="text"
+                        value={categorySearch}
+                        placeholder="Ej: Open, 1era, Mixto..."
+                        onChange={(event) => setCategorySearch(event.target.value)}
+                      />
+                    </label>
+                    <div className="category-selection-actions">
+                      <button className="secondary-button" type="button" onClick={selectVisibleCategories}>
+                        Seleccionar visibles
+                      </button>
+                      <button className="ghost-button" type="button" onClick={clearVisibleCategories}>
+                        Limpiar visibles
+                      </button>
+                      <button className="ghost-button" type="button" onClick={() => setCategorySelection([])}>
+                        Limpiar todo
+                      </button>
+                    </div>
                   </div>
+                  <div className="registration-list category-selection-list field-span-2">
+                    {Object.entries(visibleCategoriesByGroup).length === 0 ? (
+                      <div className="empty-state">
+                        No hay categorías que coincidan con esa búsqueda.
+                      </div>
+                    ) : Object.entries(visibleCategoriesByGroup).map(([group, items]) => {
+                      const groupIds = items.map((category) => category.id)
+                      const selectedInGroup = groupIds.filter((id) => categorySelection.includes(id)).length
+                      const allSelected = groupIds.length > 0 && selectedInGroup === groupIds.length
+                      return (
+                        <div key={group} className="category-group-card">
+                          <div className="category-group-head">
+                            <div className="category-group-summary">
+                              <strong>{GROUP_LABELS[group] || 'Otros'}</strong>
+                              <span>{selectedInGroup}/{items.length} seleccionadas</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="ghost-button category-group-toggle"
+                              onClick={() => toggleGroupCategorySelection(groupIds)}
+                            >
+                              {allSelected ? 'Limpiar grupo' : 'Seleccionar grupo'}
+                            </button>
+                          </div>
+                          <div className="category-checkbox-group">
+                            {items.map((category) => {
+                              const selected = categorySelection.includes(category.id)
+                              return (
+                                <label
+                                  key={category.id}
+                                  className={`category-chip ${selected ? 'is-selected' : ''}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selected}
+                                    onChange={() => toggleCategorySelection(category.id)}
+                                  />
+                                  <span className="category-chip-mark">{selected ? '✓' : '+'}</span>
+                                  <span>{category.display_name || category.name}</span>
+                                </label>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {categorySelection.length > 0 ? (
+                    <div className="category-selection-preview field-span-2">
+                      {categorySelection.map((categoryId) => {
+                        const category = categoriesById[categoryId]
+                        if (!category) return null
+                        return (
+                          <button
+                            key={categoryId}
+                            type="button"
+                            className="category-selection-pill"
+                            onClick={() => toggleCategorySelection(categoryId)}
+                            title="Quitar categoría"
+                          >
+                            {category.display_name || category.name} ✕
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               </div>
               <div className="form-actions field-span-2">
