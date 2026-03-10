@@ -3,16 +3,14 @@
 @import './styles/base.css';
 
 @font-face {
-  font-family: 'Humane Bold';
-  src: local('Humane Bold'), local('Humane-Bold'), local('Humane');
-  font-style: normal;
+  font-family: 'Humane';
+  src: url('/fonts/Humane-Bold.woff2') format('woff2');
   font-weight: 700;
 }
 
 @font-face {
-  font-family: 'Humane Light';
-  src: local('Humane Light'), local('Humane-Light'), local('Humane');
-  font-style: normal;
+  font-family: 'Humane';
+  src: url('/fonts/Humane-Light.woff2') format('woff2');
   font-weight: 300;
 }
 

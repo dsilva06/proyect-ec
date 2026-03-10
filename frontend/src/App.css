@@ -665,8 +665,8 @@ main,
 }
 
 .admin-shell {
-  --font-admin-heading: 'Humane Bold', var(--font-display);
-  --font-admin-body: 'Humane Light', var(--font-body);
+  --font-admin-heading: 'Humane', var(--font-display);
+  --font-admin-body: 'Humane', var(--font-body);
   --font-admin-ui: 'Rounded Elegance', var(--font-body);
   padding: 32px 6vw 60px;
   width: min(1600px, 100%);
