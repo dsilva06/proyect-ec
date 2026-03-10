@@ -22,6 +22,7 @@ const initialTournamentForm = {
   match_duration_minutes: '',
   courts_count: '',
   prize_money: '',
+  prize_currency: 'USD',
   city: '',
   venue_name: '',
   venue_address: '',
@@ -366,14 +367,15 @@ export default function TournamentSettings() {
     return startLabel || endLabel || 'TBD'
   }
 
-  const formatMoney = (value) => {
+  const formatMoney = (value, currency = 'USD') => {
     if (value === null || value === undefined || value === '') return 'TBD'
     const amount = Number(value)
     if (!Number.isFinite(amount)) return 'TBD'
+    const resolvedCurrency = currency === 'EUR' ? 'EUR' : 'USD'
 
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: resolvedCurrency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount)
@@ -422,7 +424,7 @@ export default function TournamentSettings() {
           </div>
           <div>
             <span className="muted">Prize money</span>
-            <strong>{formatMoney(tournament.prize_money)}</strong>
+            <strong>{formatMoney(tournament.prize_money, tournament.prize_currency)}</strong>
           </div>
         </div>
         <div className="registrations-trello-card-foot">
@@ -472,7 +474,7 @@ export default function TournamentSettings() {
           </div>
           <div>
             <span>Prize money</span>
-            <strong>{formatMoney(tournament.prize_money)}</strong>
+            <strong>{formatMoney(tournament.prize_money, tournament.prize_currency)}</strong>
           </div>
         </div>
 
@@ -605,14 +607,25 @@ export default function TournamentSettings() {
               />
             </label>
             <label>
-              Prize money (USD)
+              Prize money
               <input
                 type="number"
                 min="0"
-                step="0.01"
+                step="1"
+                className="no-spinner"
                 value={tournamentEdits[tournament.id]?.prize_money ?? tournament.prize_money ?? ''}
                 onChange={(event) => handleTournamentEdit(tournament.id, 'prize_money', event.target.value)}
               />
+            </label>
+            <label>
+              Moneda premio
+              <select
+                value={tournamentEdits[tournament.id]?.prize_currency ?? tournament.prize_currency ?? 'USD'}
+                onChange={(event) => handleTournamentEdit(tournament.id, 'prize_currency', event.target.value)}
+              >
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
             </label>
             <div className="form-actions field-span-2">
               <button
@@ -1008,14 +1021,25 @@ export default function TournamentSettings() {
                 />
               </label>
               <label>
-                Prize money (USD)
+                Prize money
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
+                  className="no-spinner"
                   value={form.prize_money}
                   onChange={handleTournamentChange('prize_money')}
                 />
+              </label>
+              <label>
+                Moneda premio
+                <select
+                  value={form.prize_currency}
+                  onChange={handleTournamentChange('prize_currency')}
+                >
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
               </label>
               <div className="panel-card tournament-default-categories field-span-2">
                 <div className="panel-header">

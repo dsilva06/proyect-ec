@@ -105,7 +105,12 @@ class BracketController extends Controller
 
     public function generate(Request $request, Bracket $bracket)
     {
-        $bracket = app(BracketGenerationService::class)->generate($bracket);
+        $data = $request->validate([
+            'randomize' => ['nullable', 'boolean'],
+        ]);
+
+        $randomize = (bool) ($data['randomize'] ?? false);
+        $bracket = app(BracketGenerationService::class)->generate($bracket, $randomize);
 
         return new BracketResource($bracket);
     }

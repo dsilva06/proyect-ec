@@ -80,7 +80,9 @@ class BracketGenerationService
             ->values()
             ->all();
 
-        shuffle($remaining);
+        if ($randomize) {
+            shuffle($remaining);
+        }
 
         $slots = [];
         $seedMap = [];

@@ -20,6 +20,7 @@ class TournamentSummaryResource extends JsonResource
             'start_date' => optional($this->start_date)->toDateString(),
             'end_date' => optional($this->end_date)->toDateString(),
             'prize_money' => $this->prize_money,
+            'prize_currency' => $this->prize_currency,
             'status' => new StatusResource($this->whenLoaded('status')),
         ];
     }

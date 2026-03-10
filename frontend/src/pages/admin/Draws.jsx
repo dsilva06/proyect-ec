@@ -195,7 +195,7 @@ export default function Draws() {
     }
   }
 
-  const handleGenerate = async (bracket) => {
+  const handleGenerate = async (bracket, mode = 'manual') => {
     setError('')
     setMessage('')
 
@@ -207,8 +207,9 @@ export default function Draws() {
         if (!confirmRegenerate) return
       }
 
-      await adminBracketsApi.generate(bracket.id)
-      setMessage('Cuadro generado.')
+      const randomize = mode === 'randomize'
+      await adminBracketsApi.generate(bracket.id, { randomize })
+      setMessage(randomize ? 'Cuadro generado con randomize.' : 'Cuadro generado con sorteo manual.')
       await loadBrackets(boardTournamentId)
     } catch (err) {
       setError(err?.message || 'No pudimos generar el cuadro.')
@@ -382,8 +383,11 @@ export default function Draws() {
                       <p className="muted">{bracket.status?.label || 'Sin estado'}</p>
                     </div>
                     <div className="form-actions">
-                      <button className="secondary-button" type="button" onClick={() => handleGenerate(bracket)}>
-                        Generar
+                      <button className="secondary-button" type="button" onClick={() => handleGenerate(bracket, 'manual')}>
+                        Generar manual
+                      </button>
+                      <button className="primary-button" type="button" onClick={() => handleGenerate(bracket, 'randomize')}>
+                        Randomize
                       </button>
                       {bracket.status?.code === 'draft' ? (
                         <button className="ghost-button" type="button" onClick={() => handleDelete(bracket)}>

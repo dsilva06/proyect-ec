@@ -31,6 +31,7 @@ class Tournament extends Model
         'match_duration_minutes',
         'courts_count',
         'prize_money',
+        'prize_currency',
         'created_by',
     ];
 

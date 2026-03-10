@@ -36,6 +36,7 @@ class StoreTournamentRequest extends FormRequest
             'match_duration_minutes' => ['nullable', 'integer', 'min:20'],
             'courts_count' => ['nullable', 'integer', 'min:1', 'max:64'],
             'prize_money' => ['nullable', 'numeric', 'min:0'],
+            'prize_currency' => ['nullable', 'in:USD,EUR'],
         ];
     }
 
