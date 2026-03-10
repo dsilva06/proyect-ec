@@ -18,8 +18,35 @@ function buildQuery(params) {
   return query ? `?${query}` : ''
 }
 
+const MESSAGE_TRANSLATIONS = {
+  'invalid credentials': 'Credenciales inválidas.',
+  'user is inactive': 'Tu usuario está inactivo. Contacta al administrador.',
+  'too many requests': 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
+  unauthorized: 'Tu sesión expiró. Inicia sesión nuevamente.',
+  forbidden: 'No tienes permisos para realizar esta acción.',
+  'resource not found': 'No se encontró el recurso solicitado.',
+  'route not found': 'No se encontró el recurso solicitado.',
+  'internal server error': 'Ocurrió un error interno. Intenta más tarde.',
+  'validation error': 'Revisa los datos ingresados.',
+}
+
+const GENERIC_BACKEND_MESSAGES = new Set([
+  'unauthorized',
+  'forbidden',
+  'resource not found',
+  'route not found',
+  'validation error',
+  'internal server error',
+  'too many requests',
+])
+
+function translateBackendMessage(rawMessage) {
+  const normalized = rawMessage.trim().toLowerCase()
+  return MESSAGE_TRANSLATIONS[normalized] || ''
+}
+
 const normalizeErrorMessage = (data, status) => {
-  const rawMessage = data?.message || ''
+  const rawMessage = typeof data?.message === 'string' ? data.message.trim() : ''
   const errors = data?.errors
 
   if (errors && typeof errors === 'object') {
@@ -33,10 +60,18 @@ const normalizeErrorMessage = (data, status) => {
     return 'La base de datos está desactualizada o incompleta. Ejecuta las migraciones e inténtalo de nuevo.'
   }
 
+  const translatedMessage = rawMessage ? translateBackendMessage(rawMessage) : ''
+  if (translatedMessage) return translatedMessage
+
+  if (rawMessage && !GENERIC_BACKEND_MESSAGES.has(rawMessage.toLowerCase())) {
+    return rawMessage
+  }
+
   if (status === 401) return 'Tu sesión expiró. Inicia sesión nuevamente.'
   if (status === 403) return 'No tienes permisos para realizar esta acción.'
   if (status === 404) return 'No se encontró el recurso solicitado.'
-  if (status === 422) return rawMessage || 'Revisa los datos ingresados.'
+  if (status === 422) return 'Revisa los datos ingresados.'
+  if (status === 429) return 'Demasiados intentos. Espera un momento e inténtalo de nuevo.'
   if (status >= 500) return 'Ocurrió un error interno. Intenta más tarde.'
 
   return rawMessage || 'No pudimos completar la solicitud.'
@@ -71,6 +106,25 @@ async function request(path, { method = 'GET', body, headers = {}, skipAuth = fa
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
+    const rawMessage = typeof data?.message === 'string' ? data.message.trim() : ''
+    if (typeof window !== 'undefined' && !skipAuth) {
+      const normalizedMessage = rawMessage.toLowerCase()
+      const shouldInvalidateSession =
+        response.status === 401 ||
+        (response.status === 403 && normalizedMessage === 'user is inactive')
+
+      if (shouldInvalidateSession) {
+        window.dispatchEvent(
+          new CustomEvent('auth:session-invalid', {
+            detail: {
+              status: response.status,
+              message: rawMessage || null,
+            },
+          }),
+        )
+      }
+    }
+
     const friendlyMessage = normalizeErrorMessage(data, response.status)
     const error = new Error(friendlyMessage)
     error.status = response.status

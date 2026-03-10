@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
+import { getHomeRouteForRole } from '../../auth/roleHelpers'
 
 export default function AdminRoute() {
   const { user, status } = useAuth()
@@ -8,12 +9,12 @@ export default function AdminRoute() {
     return <div style={{ padding: '24px' }}>Cargando...</div>
   }
 
-  if (!user) {
+  if (status !== 'authenticated' || !user || user.is_active === false) {
     return <Navigate to="/login" replace />
   }
 
   if (user.role !== 'admin') {
-    return <Navigate to="/player" replace />
+    return <Navigate to={getHomeRouteForRole(user)} replace />
   }
 
   return <Outlet />

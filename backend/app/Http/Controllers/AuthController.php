@@ -20,9 +20,7 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
-        $user = null;
-
-        DB::transaction(function () use ($validated, &$user): void {
+        $user = DB::transaction(function () use ($validated): User {
             $user = User::create([
                 'name' => trim($validated['first_name'].' '.$validated['last_name']),
                 'email' => $validated['email'],
@@ -54,14 +52,11 @@ class AuthController extends Controller
                 ->update([
                     'invited_user_id' => $user->id,
                 ]);
+
+            return $user;
         });
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'token' => $token,
-            'user' => new UserResource($user->load('playerProfile')),
-        ], 201);
+        return $this->authPayloadResponse($user, 201);
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -84,12 +79,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'token' => $token,
-            'user' => new UserResource($user->load('playerProfile')),
-        ]);
+        return $this->authPayloadResponse($user);
     }
 
     public function logout(Request $request): JsonResponse
@@ -108,5 +98,15 @@ class AuthController extends Controller
         return response()->json([
             'user' => new UserResource($user),
         ]);
+    }
+
+    private function authPayloadResponse(User $user, int $status = 200): JsonResponse
+    {
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'user' => new UserResource($user->load('playerProfile')),
+        ], $status);
     }
 }

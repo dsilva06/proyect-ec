@@ -60,6 +60,16 @@ class AuthSecurityTest extends TestCase
             ]);
     }
 
+    public function test_me_with_invalid_token_returns_unauthorized(): void
+    {
+        $this->withHeader('Authorization', 'Bearer invalid-token')
+            ->getJson('/api/auth/me')
+            ->assertStatus(401)
+            ->assertJson([
+                'message' => 'Unauthorized',
+            ]);
+    }
+
     public function test_login_rejects_inactive_user(): void
     {
         User::factory()->create([
@@ -88,6 +98,23 @@ class AuthSecurityTest extends TestCase
         Sanctum::actingAs($inactivePlayer);
 
         $this->getJson('/api/player/me')
+            ->assertStatus(403)
+            ->assertJson([
+                'message' => 'User is inactive',
+            ]);
+    }
+
+    public function test_inactive_user_with_token_cannot_access_auth_me_endpoint(): void
+    {
+        $inactivePlayer = User::factory()->create([
+            'role' => 'player',
+            'is_active' => false,
+        ]);
+
+        $token = $inactivePlayer->createToken('auth_token');
+
+        $this->withHeader('Authorization', 'Bearer '.$token->plainTextToken)
+            ->getJson('/api/auth/me')
             ->assertStatus(403)
             ->assertJson([
                 'message' => 'User is inactive',

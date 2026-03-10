@@ -3859,6 +3859,8 @@ textarea:focus-visible {
 .admin-shell h6 {
   font-family: var(--font-display);
   font-weight: 700;
+  letter-spacing: 0.03em;
+  font-stretch: 108%;
 }
 
 .brand-subtitle,
@@ -3885,6 +3887,8 @@ label,
 .admin-nav a,
 .admin-tab {
   font-family: var(--font-body);
+  letter-spacing: 0.014em;
+  font-stretch: 105%;
 }
 
 /* ESTARS readability and contrast pass */

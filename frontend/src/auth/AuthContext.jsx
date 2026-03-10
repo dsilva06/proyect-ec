@@ -39,55 +39,92 @@ export function AuthProvider({ children }) {
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState(null)
 
+  const clearAuth = useCallback(() => {
+    setStoredToken(null)
+    setStoredUser(null)
+    setUser(null)
+  }, [])
+
   const refresh = useCallback(async () => {
     const token = localStorage.getItem(TOKEN_KEY)
 
     if (!token) {
-      setStoredUser(null)
-      setUser(null)
+      clearAuth()
       setStatus('unauthenticated')
       return null
     }
 
     try {
       const data = await authApi.me()
+      if (!data?.user) {
+        throw new Error('Invalid auth payload')
+      }
+
+      setStoredUser(data.user)
+      setUser(data.user)
+      setStatus('authenticated')
+      setError(null)
+      return data.user
+    } catch (err) {
+      clearAuth()
+      setStatus('unauthenticated')
+      setError(err?.message || 'No pudimos validar la sesión.')
+      return null
+    }
+  }, [clearAuth])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  useEffect(() => {
+    const handleSessionInvalid = () => {
+      clearAuth()
+      setStatus('unauthenticated')
+    }
+
+    window.addEventListener('auth:session-invalid', handleSessionInvalid)
+    return () => {
+      window.removeEventListener('auth:session-invalid', handleSessionInvalid)
+    }
+  }, [clearAuth])
+
+  const login = useCallback(async (payload) => {
+    setError(null)
+    try {
+      const data = await authApi.login(payload)
+      if (!data?.token || !data?.user) {
+        throw new Error('Invalid auth payload')
+      }
+
+      setStoredToken(data.token)
       setStoredUser(data.user)
       setUser(data.user)
       setStatus('authenticated')
       return data.user
     } catch (err) {
-      setStoredUser(null)
-      setStoredToken(null)
-      setUser(null)
-      setStatus('unauthenticated')
+      setError(err?.message || 'No pudimos iniciar sesión.')
       throw err
     }
   }, [])
 
-  useEffect(() => {
-    refresh().catch(() => {
-      setStatus('unauthenticated')
-    })
-  }, [refresh])
-
-  const login = useCallback(async (payload) => {
-    setError(null)
-    const data = await authApi.login(payload)
-    setStoredToken(data.token)
-    setStoredUser(data.user)
-    setUser(data.user)
-    setStatus('authenticated')
-    return data.user
-  }, [])
-
   const register = useCallback(async (payload) => {
     setError(null)
-    const data = await authApi.register(payload)
-    setStoredToken(data.token)
-    setStoredUser(data.user)
-    setUser(data.user)
-    setStatus('authenticated')
-    return data.user
+    try {
+      const data = await authApi.register(payload)
+      if (!data?.token || !data?.user) {
+        throw new Error('Invalid auth payload')
+      }
+
+      setStoredToken(data.token)
+      setStoredUser(data.user)
+      setUser(data.user)
+      setStatus('authenticated')
+      return data.user
+    } catch (err) {
+      setError(err?.message || 'No pudimos completar el registro.')
+      throw err
+    }
   }, [])
 
   const logout = useCallback(async () => {
@@ -96,12 +133,11 @@ export function AuthProvider({ children }) {
     } catch (err) {
       // ignore logout errors
     } finally {
-      setStoredToken(null)
-      setStoredUser(null)
-      setUser(null)
+      clearAuth()
+      setError(null)
       setStatus('unauthenticated')
     }
-  }, [])
+  }, [clearAuth])
 
   const value = useMemo(() => ({
     user,
