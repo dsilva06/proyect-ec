@@ -3983,3 +3983,355 @@ label,
   background: rgba(8, 12, 56, 0.62);
   color: rgba(239, 231, 211, 0.98);
 }
+
+/* ESTARS modern polish layer: visual refresh only */
+:root {
+  --surface-glass-1: linear-gradient(150deg, rgba(15, 21, 86, 0.72), rgba(24, 7, 42, 0.68));
+  --surface-glass-2: linear-gradient(155deg, rgba(15, 21, 86, 0.82), rgba(26, 6, 40, 0.8));
+  --surface-border: rgba(239, 231, 211, 0.18);
+  --surface-border-strong: rgba(183, 207, 79, 0.5);
+  --surface-shadow: 0 18px 45px rgba(3, 6, 24, 0.45);
+  --surface-shadow-soft: 0 12px 28px rgba(4, 8, 28, 0.34);
+  --surface-highlight: rgba(255, 255, 255, 0.06);
+}
+
+.page::before {
+  background:
+    radial-gradient(54vw 54vw at -4% -16%, rgba(183, 207, 79, 0.18), transparent 56%),
+    radial-gradient(38vw 40vw at 108% -2%, rgba(255, 94, 51, 0.28), transparent 56%),
+    radial-gradient(34vw 34vw at 52% 108%, rgba(28, 120, 255, 0.12), transparent 62%),
+    linear-gradient(128deg, rgba(8, 12, 56, 0.99), rgba(24, 4, 36, 0.98));
+}
+
+.background-grid {
+  opacity: 0.28;
+  mix-blend-mode: screen;
+}
+
+.nav {
+  top: 12px;
+  border-radius: 26px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-glass-2);
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: blur(16px) saturate(135%);
+}
+
+.nav::after {
+  content: '';
+  position: absolute;
+  inset: 1px 1px auto;
+  height: 1px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--surface-highlight), transparent);
+  pointer-events: none;
+}
+
+.nav-links a {
+  font-size: 0.72rem;
+  letter-spacing: 0.11em;
+  border-color: rgba(239, 231, 211, 0.1);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.nav-links a:hover {
+  transform: translateY(-1px);
+}
+
+.hero-marquee {
+  position: relative;
+  border-radius: 999px;
+  border-color: var(--surface-border);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--surface-shadow-soft);
+}
+
+.hero-marquee::before,
+.hero-marquee::after {
+  content: '';
+  position: sticky;
+  top: 0;
+  width: 28px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-marquee::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(8, 12, 56, 0.88), transparent);
+}
+
+.hero-marquee::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(8, 12, 56, 0.88), transparent);
+}
+
+.hero {
+  gap: clamp(24px, 4vw, 62px);
+  align-items: stretch;
+}
+
+.hero-copy {
+  background:
+    radial-gradient(circle at 15% -20%, rgba(183, 207, 79, 0.12), transparent 52%),
+    radial-gradient(circle at 96% 100%, rgba(255, 94, 51, 0.14), transparent 54%),
+    var(--surface-glass-2);
+  border-color: var(--surface-border);
+  box-shadow: var(--surface-shadow);
+}
+
+.hero-copy h1 {
+  text-wrap: balance;
+  letter-spacing: 0.025em;
+  line-height: 0.9;
+}
+
+.hero-copy p {
+  max-width: 58ch;
+  text-wrap: pretty;
+  line-height: 1.68;
+}
+
+.hero-stats {
+  border: 1px solid var(--surface-border-strong);
+  background: linear-gradient(145deg, rgba(183, 207, 79, 0.18), rgba(183, 207, 79, 0.1));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.hero-card,
+.panel-card,
+.modal-card,
+.auth-card,
+.contact-form,
+.contact-panel,
+.admin-header,
+.admin-nav,
+.tournament-card,
+.registrations-trello-toolbar,
+.active-list-card {
+  background: var(--surface-glass-1);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--surface-shadow-soft);
+  backdrop-filter: blur(14px) saturate(120%);
+}
+
+.hero-card,
+.card,
+.step,
+.category,
+.schedule-item,
+.registration-item,
+.kpi-card,
+.dashboard-stat,
+.dashboard-category-card,
+.alert-card,
+.trend-card,
+.wildcard-item,
+.registrations-kanban-card {
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+
+.hero-card:hover,
+.card:hover,
+.step:hover,
+.category:hover,
+.schedule-item:hover,
+.wildcard-item:hover,
+.registrations-kanban-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 94, 51, 0.62);
+  box-shadow: 0 20px 34px rgba(3, 6, 24, 0.45);
+}
+
+.section-block {
+  overflow: hidden;
+  border-color: var(--surface-border);
+  box-shadow: var(--surface-shadow-soft);
+}
+
+.section-block::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 24%, transparent 72%, rgba(255, 255, 255, 0.02));
+  pointer-events: none;
+}
+
+.section-title h2 {
+  text-wrap: balance;
+  line-height: 0.93;
+}
+
+.section-title p {
+  max-width: 62ch;
+  text-wrap: pretty;
+  line-height: 1.66;
+}
+
+.card-header h3,
+.hero-card-header h3,
+.section-title h2,
+.admin-page-header h3,
+.panel-header h3,
+.panel-header h4,
+.panel-header h5 {
+  letter-spacing: 0.03em;
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button {
+  border-radius: 999px;
+  min-height: 46px;
+  padding-inline: 20px;
+  box-shadow: 0 10px 18px rgba(5, 8, 24, 0.3);
+}
+
+.primary-button {
+  background: linear-gradient(130deg, rgba(255, 95, 55, 1) 0%, rgba(255, 146, 74, 1) 55%, rgba(255, 189, 117, 1) 100%);
+  color: #170a14;
+  border-color: rgba(255, 146, 74, 0.9);
+}
+
+.primary-button:hover {
+  box-shadow: 0 16px 26px rgba(255, 95, 55, 0.42);
+}
+
+.secondary-button {
+  background: linear-gradient(145deg, rgba(183, 207, 79, 0.22), rgba(183, 207, 79, 0.1));
+  border-color: rgba(183, 207, 79, 0.62);
+}
+
+.ghost-button {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(239, 231, 211, 0.34);
+}
+
+.contact-form input,
+.contact-form textarea,
+.auth-card input,
+.registration-form input,
+.registration-form select,
+.registration-form textarea,
+.admin-page-actions select,
+.admin-page-actions input,
+.form-grid input,
+.form-grid select,
+.form-grid textarea,
+.panel-header input,
+.matches-search,
+.date-picker-input,
+.time-input,
+.registration-item input,
+.registration-item select,
+.registration-item textarea,
+.registrations-row input,
+.registrations-row select {
+  border-color: rgba(239, 231, 211, 0.28);
+  background: linear-gradient(160deg, rgba(8, 12, 56, 0.78), rgba(15, 7, 29, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus,
+.auth-card input:focus,
+.registration-form input:focus,
+.registration-form select:focus,
+.registration-form textarea:focus,
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus,
+.panel-header input:focus,
+.matches-search:focus,
+.date-picker-input:focus,
+.time-input:focus,
+.registration-item input:focus,
+.registration-item select:focus,
+.registration-item textarea:focus,
+.registrations-row input:focus,
+.registrations-row select:focus {
+  border-color: rgba(183, 207, 79, 0.76);
+  box-shadow: 0 0 0 3px rgba(183, 207, 79, 0.2);
+  outline: none;
+}
+
+.auth-standalone {
+  border: 1px solid var(--surface-border);
+  background: var(--surface-glass-2);
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.footer {
+  border: 1px solid var(--surface-border);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--surface-shadow-soft);
+}
+
+.reveal {
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (max-width: 980px) {
+  .nav {
+    top: 8px;
+    border-radius: 20px;
+    padding: 12px;
+  }
+
+  .hero {
+    gap: 20px;
+  }
+
+  .hero-copy {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero-marquee {
+    border-radius: 14px;
+  }
+
+  .hero-copy h1 {
+    letter-spacing: 0.015em;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .ghost-button {
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-card,
+  .card,
+  .step,
+  .category,
+  .schedule-item,
+  .wildcard-item,
+  .registrations-kanban-card,
+  .nav-links a,
+  .primary-button,
+  .secondary-button,
+  .ghost-button {
+    transition: none;
+  }
+
+  .hero-card:hover,
+  .card:hover,
+  .step:hover,
+  .category:hover,
+  .schedule-item:hover,
+  .wildcard-item:hover,
+  .registrations-kanban-card:hover {
+    transform: none;
+  }
+}
