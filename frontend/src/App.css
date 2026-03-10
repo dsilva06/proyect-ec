@@ -3091,3 +3091,476 @@ main,
   word-break: break-word;
   font-size: 0.85rem;
 }
+
+/* ESTARS brand redesign layer: visual overhaul, logic untouched */
+.page {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(24px, 3.6vw, 46px) clamp(16px, 5vw, 70px) 80px;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(50vw 55vw at -4% -12%, rgba(183, 207, 79, 0.14), transparent 52%),
+    radial-gradient(42vw 42vw at 104% 3%, rgba(255, 94, 51, 0.22), transparent 52%),
+    linear-gradient(120deg, rgba(8, 12, 56, 0.98), rgba(26, 0, 37, 0.98));
+}
+
+.background-orb {
+  width: clamp(260px, 38vw, 560px);
+  height: clamp(260px, 38vw, 560px);
+  filter: blur(34px);
+  opacity: 0.5;
+}
+
+.orb-one {
+  background: radial-gradient(circle at 40% 40%, rgba(183, 207, 79, 0.5), transparent 68%);
+}
+
+.orb-two {
+  background: radial-gradient(circle at 60% 40%, rgba(255, 94, 51, 0.5), transparent 68%);
+}
+
+.background-grid {
+  background-image:
+    linear-gradient(rgba(239, 231, 211, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239, 231, 211, 0.04) 1px, transparent 1px);
+  background-size: 88px 88px;
+  opacity: 0.24;
+}
+
+.nav,
+main,
+.footer {
+  width: min(1260px, 100%);
+}
+
+.nav {
+  position: sticky;
+  top: 14px;
+  z-index: 15;
+  padding: 14px 20px;
+  border: 1px solid rgba(239, 231, 211, 0.13);
+  border-radius: 22px;
+  background: linear-gradient(140deg, rgba(8, 12, 56, 0.86), rgba(26, 0, 37, 0.72));
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  gap: 2px;
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3vw, 2.7rem);
+  letter-spacing: 0.08em;
+  line-height: 0.98;
+  color: var(--color-white-chocolate);
+}
+
+.brand-subtitle {
+  color: rgba(239, 231, 211, 0.84);
+  letter-spacing: 0.22em;
+}
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nav-links a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: rgba(239, 231, 211, 0.86);
+  font-family: var(--font-body);
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.nav-links a:hover {
+  color: var(--color-midnight);
+  background: var(--color-june-bud);
+  border-color: var(--color-june-bud);
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button {
+  min-height: 44px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+}
+
+.primary-button {
+  background: linear-gradient(120deg, #ff5e33 0%, #ff8852 100%);
+  color: #180910;
+  border-color: rgba(255, 94, 51, 0.7);
+  box-shadow: 0 14px 26px rgba(255, 94, 51, 0.32);
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 32px rgba(255, 94, 51, 0.38);
+}
+
+.secondary-button {
+  background: rgba(183, 207, 79, 0.18);
+  color: var(--color-white-chocolate);
+  border-color: rgba(183, 207, 79, 0.55);
+}
+
+.secondary-button:hover {
+  background: rgba(183, 207, 79, 0.28);
+  border-color: rgba(183, 207, 79, 0.82);
+}
+
+.ghost-button {
+  background: rgba(239, 231, 211, 0.02);
+  color: rgba(239, 231, 211, 0.88);
+  border-color: rgba(239, 231, 211, 0.3);
+}
+
+.ghost-button:hover {
+  border-color: rgba(239, 231, 211, 0.58);
+  background: rgba(239, 231, 211, 0.08);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-june-bud);
+  outline-offset: 2px;
+}
+
+.hero {
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  gap: clamp(26px, 4vw, 56px);
+  align-items: stretch;
+  padding: clamp(38px, 7vw, 82px) 0 60px;
+}
+
+.hero-copy {
+  padding: clamp(22px, 3vw, 34px);
+  border-radius: 28px;
+  border: 1px solid rgba(239, 231, 211, 0.12);
+  background:
+    linear-gradient(160deg, rgba(8, 12, 56, 0.88), rgba(26, 0, 37, 0.8)),
+    radial-gradient(circle at 18% 20%, rgba(183, 207, 79, 0.08), transparent 55%);
+  box-shadow: 0 28px 48px rgba(4, 6, 24, 0.45);
+}
+
+.pill {
+  border: 1px solid rgba(183, 207, 79, 0.58);
+  background: rgba(183, 207, 79, 0.16);
+  color: rgba(239, 231, 211, 0.94);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+.hero-copy h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6.1rem);
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  max-width: 13ch;
+}
+
+.hero-copy p {
+  max-width: 56ch;
+  font-family: var(--font-body);
+  color: rgba(239, 231, 211, 0.84);
+  font-size: 1rem;
+}
+
+.hero-actions {
+  gap: 12px;
+}
+
+.hero-stats strong {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  color: var(--color-june-bud);
+  line-height: 0.9;
+}
+
+.hero-stats span {
+  font-family: var(--font-body);
+  color: rgba(239, 231, 211, 0.72);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.hero-card,
+.panel-card,
+.modal-card,
+.auth-card,
+.contact-form,
+.contact-panel {
+  border-radius: 22px;
+  border: 1px solid rgba(239, 231, 211, 0.14);
+  background: linear-gradient(160deg, rgba(10, 14, 61, 0.76), rgba(26, 0, 37, 0.76));
+  box-shadow: 0 18px 34px rgba(4, 6, 24, 0.35);
+}
+
+.hero-card {
+  padding: clamp(22px, 3vw, 30px);
+}
+
+.hero-card-header h3,
+.section-title h2,
+.card-header h3,
+.contact-panel h3,
+.auth-card h2,
+.admin-header h2,
+.admin-page-header h3,
+.panel-header h3,
+.panel-header h4,
+.panel-header h5 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.section {
+  padding: clamp(56px, 9vw, 100px) 0;
+}
+
+.section-title {
+  max-width: 760px;
+  margin-bottom: 34px;
+}
+
+.section-title h2 {
+  font-size: clamp(2.3rem, 5vw, 4rem);
+  line-height: 0.95;
+}
+
+.section-title p {
+  font-family: var(--font-body);
+  color: rgba(239, 231, 211, 0.76);
+}
+
+.card,
+.step,
+.category,
+.schedule-item,
+.registration-item,
+.kpi-card,
+.dashboard-stat,
+.dashboard-category-card,
+.alert-card,
+.trend-card,
+.registration-detail-panel,
+.registration-edit-panel,
+.wildcard-item,
+.registrations-kanban-card,
+.registrations-kanban-column,
+.matches-round-group {
+  border: 1px solid rgba(239, 231, 211, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(10, 14, 61, 0.64), rgba(26, 0, 37, 0.62));
+}
+
+.card:hover,
+.step:hover,
+.registrations-kanban-card:hover,
+.active-item:hover,
+.wildcard-item:hover {
+  border-color: rgba(255, 94, 51, 0.7);
+  box-shadow: 0 16px 24px rgba(255, 94, 51, 0.14);
+}
+
+.tag {
+  border: 1px solid rgba(239, 231, 211, 0.24);
+  background: rgba(239, 231, 211, 0.08);
+  color: rgba(239, 231, 211, 0.88);
+  font-family: var(--font-body);
+}
+
+.tag.muted {
+  border-color: rgba(183, 207, 79, 0.45);
+  background: rgba(183, 207, 79, 0.14);
+  color: rgba(239, 231, 211, 0.86);
+}
+
+.flow {
+  border: 1px solid rgba(239, 231, 211, 0.12);
+  background:
+    linear-gradient(150deg, rgba(8, 12, 56, 0.74), rgba(26, 0, 37, 0.74)),
+    radial-gradient(circle at 100% 0%, rgba(255, 94, 51, 0.08), transparent 60%);
+  border-radius: 26px;
+}
+
+.step-number {
+  color: var(--color-june-bud);
+  font-size: 1.34rem;
+}
+
+.contact-form label,
+.auth-card label,
+.form-grid label,
+.registration-form label {
+  font-family: var(--font-body);
+  color: rgba(239, 231, 211, 0.8);
+}
+
+.contact-form input,
+.contact-form textarea,
+.auth-card input,
+.registration-form input,
+.registration-form select,
+.registration-form textarea,
+.admin-page-actions select,
+.admin-page-actions input,
+.form-grid input,
+.form-grid select,
+.form-grid textarea,
+.panel-header input,
+.matches-search,
+.date-picker-input,
+.time-input,
+.registration-item input,
+.registration-item select,
+.registration-item textarea,
+.registrations-row input,
+.registrations-row select {
+  border: 1px solid rgba(239, 231, 211, 0.18);
+  background: rgba(8, 12, 56, 0.46);
+  color: var(--color-white-chocolate);
+  font-family: var(--font-body);
+}
+
+.footer {
+  margin-top: 42px;
+  padding: 22px 20px;
+  border: 1px solid rgba(239, 231, 211, 0.12);
+  border-radius: 18px;
+  background: rgba(8, 12, 56, 0.55);
+}
+
+.footer-links a {
+  color: rgba(239, 231, 211, 0.78);
+}
+
+.footer-links a:hover {
+  color: var(--color-june-bud);
+}
+
+.admin-shell {
+  --font-admin-heading: 'Humane', var(--font-display);
+  --font-admin-body: 'Rounded Elegance', var(--font-body);
+  --font-admin-ui: 'Rounded Elegance', var(--font-body);
+  width: min(1640px, 100%);
+  gap: 26px;
+  padding: clamp(24px, 3.5vw, 40px) clamp(14px, 4vw, 54px) 70px;
+}
+
+.admin-header {
+  border: 1px solid rgba(239, 231, 211, 0.14);
+  background: linear-gradient(145deg, rgba(8, 12, 56, 0.88), rgba(26, 0, 37, 0.8));
+  border-radius: 20px;
+  padding: 16px 18px;
+}
+
+.admin-nav {
+  padding: 8px;
+  border-radius: 18px;
+  border: 1px solid rgba(239, 231, 211, 0.12);
+  background: rgba(8, 12, 56, 0.52);
+}
+
+.admin-nav a {
+  font-family: var(--font-body);
+  color: rgba(239, 231, 211, 0.78);
+}
+
+.admin-nav a.active {
+  color: #130616;
+  border-color: rgba(183, 207, 79, 0.78);
+  background: var(--color-june-bud);
+}
+
+.admin-tab {
+  font-family: var(--font-body);
+  border-color: rgba(239, 231, 211, 0.24);
+  color: rgba(239, 231, 211, 0.88);
+}
+
+.admin-tab.active {
+  color: #130616;
+  background: var(--color-june-bud);
+  border-color: rgba(183, 207, 79, 0.8);
+}
+
+.registrations-header,
+.registrations-trello-toolbar,
+.draws-toolbar-card,
+.table-actions,
+.active-list-card {
+  border: 1px solid rgba(239, 231, 211, 0.14);
+  background: rgba(8, 12, 56, 0.7);
+}
+
+.empty-state {
+  border-style: solid;
+  border-color: rgba(183, 207, 79, 0.38);
+  color: rgba(239, 231, 211, 0.8);
+  background: rgba(183, 207, 79, 0.08);
+}
+
+.form-message.success {
+  color: var(--color-june-bud);
+}
+
+.form-message.error,
+.auth-error {
+  color: #ff8f74;
+}
+
+@media (max-width: 980px) {
+  .nav {
+    position: relative;
+    top: 0;
+    padding: 12px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    padding-top: 26px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.3rem, 12vw, 4.3rem);
+  }
+}
+
+@media (max-width: 760px) {
+  .brand-mark {
+    font-size: clamp(1.6rem, 11vw, 2.5rem);
+  }
+
+  .section-title h2 {
+    font-size: clamp(1.85rem, 10vw, 3rem);
+  }
+
+  .nav-links {
+    width: 100%;
+  }
+
+  .nav-links a {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}

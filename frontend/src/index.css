@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import './styles/tokens.css';
 @import './styles/base.css';
 
@@ -22,16 +22,21 @@
 }
 
 :root {
-  --font-display: 'Fraunces', serif;
-  --font-body: 'Space Grotesk', sans-serif;
-  --color-bg: #0a0c1a;
-  --color-surface: #121528;
-  --color-text: #f5f5f5;
-  --color-muted: rgba(255, 255, 255, 0.6);
-  --color-accent: #ffb36a;
+  --font-display: 'Humane', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --font-body: 'Rounded Elegance', 'Space Grotesk', 'Segoe UI', sans-serif;
+  --color-midnight: #080c38;
+  --color-dark-blue: #1a0025;
+  --color-portland-orange: #ff5e33;
+  --color-june-bud: #b7cf4f;
+  --color-white-chocolate: #efe7d3;
+  --color-bg: var(--color-midnight);
+  --color-surface: #110e34;
+  --color-text: var(--color-white-chocolate);
+  --color-muted: rgba(239, 231, 211, 0.68);
+  --color-accent: var(--color-portland-orange);
 
   font-family: var(--font-body);
-  line-height: 1.5;
+  line-height: 1.45;
   font-weight: 400;
   color: var(--color-text);
   background-color: var(--color-bg);
@@ -46,7 +51,10 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #1b2342 0%, #0a0c1a 60%);
+  background:
+    radial-gradient(70vw 70vw at 10% -10%, rgba(183, 207, 79, 0.1), transparent 55%),
+    radial-gradient(70vw 70vw at 95% -10%, rgba(255, 94, 51, 0.16), transparent 58%),
+    linear-gradient(145deg, #080c38 0%, #1a0025 100%);
   overflow-x: hidden;
   scroll-behavior: smooth;
 }
@@ -59,6 +67,8 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
   margin: 0;
 }
 
