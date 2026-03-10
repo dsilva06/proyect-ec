@@ -130,7 +130,14 @@ export default function Home() {
         </div>
       </header>
 
-      <main>
+      <div className="hero-marquee" aria-hidden="true">
+        <span>ESTARS PADEL TOUR</span>
+        <span>RANKED COMPETITION</span>
+        <span>LIVE DRAWS</span>
+        <span>ESTARS PADEL TOUR</span>
+      </div>
+
+      <main className="landing-main">
         <section className="hero reveal">
           <div className="hero-copy">
             <div className="pill">Web demo for players</div>
@@ -144,6 +151,20 @@ export default function Home() {
               <Link className="primary-button" to="/register">Create account</Link>
               <Link className="secondary-button" to="/login">Login</Link>
               <a className="ghost-button" href="#contact">Contact us</a>
+            </div>
+            <div className="hero-stats">
+              <div>
+                <strong>6</strong>
+                <span>Categories</span>
+              </div>
+              <div>
+                <strong>24h</strong>
+                <span>Support response</span>
+              </div>
+              <div>
+                <strong>Live</strong>
+                <span>Draw updates</span>
+              </div>
             </div>
           </div>
           <div className="hero-card">
@@ -172,8 +193,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="tournaments" className="section reveal">
+        <section id="tournaments" className="section section-block section-tone-ice reveal">
           <div className="section-title">
+            <span className="section-kicker">Live Event Layer</span>
             <h2>Current tournament</h2>
             <p>
               We are launching with a single tournament. More events will be
@@ -181,7 +203,7 @@ export default function Home() {
             </p>
           </div>
           <div className="card-grid">
-            <article className="card">
+            <article className="card card-featured">
               <div className="card-header">
                 <h3>Tournament name: TBD</h3>
                 <span className="tag muted">Announcing soon</span>
@@ -194,8 +216,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section flow reveal">
+        <section className="section flow section-block section-tone-solid reveal">
           <div className="section-title">
+            <span className="section-kicker">How It Works</span>
             <h2>Player flow</h2>
             <p>Every step is clear, fair, and fast.</p>
           </div>
@@ -210,8 +233,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="categories" className="section reveal">
+        <section id="categories" className="section section-block section-tone-ice reveal">
           <div className="section-title">
+            <span className="section-kicker">Divisions</span>
             <h2>Categories</h2>
             <p>Six divisions, clear rules, flexible capacity.</p>
           </div>
@@ -228,8 +252,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="schedule" className="section reveal">
+        <section id="schedule" className="section section-block section-tone-solid reveal">
           <div className="section-title">
+            <span className="section-kicker">Tournament Ops</span>
             <h2>Match schedule</h2>
             <p>Published once the draw is ready. Updated daily during play.</p>
           </div>
@@ -246,8 +271,9 @@ export default function Home() {
           <a className="primary-button" href="#contact">Ask for calendar link</a>
         </section>
 
-        <section id="contact" className="section contact reveal">
+        <section id="contact" className="section contact section-block section-tone-ice reveal">
           <div className="section-title">
+            <span className="section-kicker">Partnerships</span>
             <h2>Contact & partnerships</h2>
             <p>Let us know if you want to sponsor or collaborate.</p>
           </div>
