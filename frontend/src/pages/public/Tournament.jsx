@@ -52,6 +52,18 @@ const formatRange = (start, end, formatter) => {
   return startLabel || endLabel || 'TBD'
 }
 
+const formatMoney = (value) => {
+  if (value === null || value === undefined || value === '') return 'TBD'
+  const amount = Number(value)
+  if (!Number.isFinite(amount)) return 'TBD'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
 const resolveRegistrationErrorMessage = (err) => {
   const rankingMessage = err?.data?.errors?.ranking?.[0]
   if (rankingMessage) return rankingMessage
@@ -245,6 +257,10 @@ export default function Tournament() {
                     <span>Categorías</span>
                     <strong>{categories.length}</strong>
                   </div>
+                  <div>
+                    <span>Prize money</span>
+                    <strong>{formatMoney(tournament.prize_money)}</strong>
+                  </div>
                 </div>
                 <div className="tournament-actions">
                   {user ? (
@@ -303,6 +319,10 @@ export default function Tournament() {
                       <div>
                         <span>Inscripciones</span>
                         <strong>{formatRange(tournament.registration_open_at, tournament.registration_close_at, formatDateTimeShort)}</strong>
+                      </div>
+                      <div>
+                        <span>Prize money</span>
+                        <strong>{formatMoney(tournament.prize_money)}</strong>
                       </div>
                     </div>
 

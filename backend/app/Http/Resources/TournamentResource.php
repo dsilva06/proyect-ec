@@ -33,6 +33,7 @@ class TournamentResource extends JsonResource
             'day_end_time' => $this->day_end_time,
             'match_duration_minutes' => $this->match_duration_minutes,
             'courts_count' => $this->courts_count,
+            'prize_money' => $this->prize_money,
             'created_by' => $this->created_by,
             'categories' => TournamentCategoryResource::collection($this->whenLoaded('categories')),
             'created_at' => optional($this->created_at)->toIso8601String(),

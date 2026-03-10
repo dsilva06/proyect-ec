@@ -47,11 +47,11 @@
   --color-bg: var(--color-midnight);
   --color-surface: #110e34;
   --color-text: var(--color-white-chocolate);
-  --color-muted: rgba(239, 231, 211, 0.68);
+  --color-muted: rgba(239, 231, 211, 0.8);
   --color-accent: var(--color-portland-orange);
 
   font-family: var(--font-body);
-  line-height: 1.45;
+  line-height: 1.55;
   font-weight: 400;
   color: var(--color-text);
   background-color: var(--color-bg);
@@ -66,12 +66,18 @@
 body {
   margin: 0;
   min-height: 100vh;
+  font-size: 16px;
   background:
     radial-gradient(70vw 70vw at 10% -10%, rgba(183, 207, 79, 0.1), transparent 55%),
     radial-gradient(70vw 70vw at 95% -10%, rgba(255, 94, 51, 0.16), transparent 58%),
     linear-gradient(145deg, #080c38 0%, #1a0025 100%);
   overflow-x: hidden;
   scroll-behavior: smooth;
+}
+
+::selection {
+  color: #080c38;
+  background: #b7cf4f;
 }
 
 a {

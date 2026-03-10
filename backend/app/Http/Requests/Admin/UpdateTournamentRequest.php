@@ -35,6 +35,7 @@ class UpdateTournamentRequest extends FormRequest
             'day_end_time' => ['nullable', 'date_format:H:i', 'after:day_start_time'],
             'match_duration_minutes' => ['nullable', 'integer', 'min:20'],
             'courts_count' => ['nullable', 'integer', 'min:1', 'max:64'],
+            'prize_money' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 

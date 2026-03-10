@@ -30,6 +30,7 @@ class Tournament extends Model
         'day_end_time',
         'match_duration_minutes',
         'courts_count',
+        'prize_money',
         'created_by',
     ];
 
@@ -42,6 +43,7 @@ class Tournament extends Model
         'day_end_time' => 'string',
         'match_duration_minutes' => 'integer',
         'courts_count' => 'integer',
+        'prize_money' => 'decimal:2',
     ];
 
     public function circuit()

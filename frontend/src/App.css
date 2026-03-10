@@ -3862,9 +3862,8 @@ textarea:focus-visible {
 }
 
 .brand-subtitle,
-.hero-stats span,
-.hero-card-body .row span,
-.hero-marquee span {
+.hero-marquee span,
+.section-kicker {
   font-family: var(--font-display-light);
   font-weight: 300;
 }
@@ -3886,4 +3885,97 @@ label,
 .admin-nav a,
 .admin-tab {
   font-family: var(--font-body);
+}
+
+/* ESTARS readability and contrast pass */
+.page,
+.tournament-page,
+.admin-shell {
+  color: var(--color-text);
+}
+
+.hero-copy p,
+.section-title p,
+.card-detail,
+.category p,
+.schedule-item p,
+.contact-panel p,
+.auth-switch,
+.form-message,
+.registration-item span,
+.registrations-row .muted,
+.table-controls label,
+.table-pagination,
+.category-meta,
+.trend-item span,
+.alert-card span,
+.alert-item span,
+.match-detail-grid span,
+.contact-details span,
+.hero-card-body .row,
+.hero-stats span {
+  color: rgba(239, 231, 211, 0.86);
+}
+
+.muted,
+.auth-loading {
+  color: rgba(239, 231, 211, 0.82);
+}
+
+.section-tone-ice > .section-title p,
+.section-tone-ice > .section-title .section-kicker,
+.section-tone-ice .muted {
+  color: rgba(12, 16, 50, 0.82);
+}
+
+.section-tone-ice .card .card-detail,
+.section-tone-ice .card .muted,
+.section-tone-ice .category p,
+.section-tone-ice .schedule-item p,
+.section-tone-ice .schedule-item .muted,
+.section-tone-ice .contact-panel p,
+.section-tone-ice .contact-details span {
+  color: rgba(239, 231, 211, 0.88);
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder,
+.auth-card input::placeholder,
+.registration-form input::placeholder,
+.registration-form textarea::placeholder,
+.form-grid input::placeholder,
+.form-grid textarea::placeholder,
+.panel-header input::placeholder,
+.matches-search::placeholder,
+.date-picker-input::placeholder,
+.time-input::placeholder,
+.registration-item input::placeholder,
+.registration-item textarea::placeholder,
+.registrations-row input::placeholder {
+  color: rgba(239, 231, 211, 0.62);
+}
+
+.contact-form input,
+.contact-form textarea,
+.auth-card input,
+.registration-form input,
+.registration-form select,
+.registration-form textarea,
+.admin-page-actions select,
+.admin-page-actions input,
+.form-grid input,
+.form-grid select,
+.form-grid textarea,
+.panel-header input,
+.matches-search,
+.date-picker-input,
+.time-input,
+.registration-item input,
+.registration-item select,
+.registration-item textarea,
+.registrations-row input,
+.registrations-row select {
+  border-color: rgba(239, 231, 211, 0.3);
+  background: rgba(8, 12, 56, 0.62);
+  color: rgba(239, 231, 211, 0.98);
 }

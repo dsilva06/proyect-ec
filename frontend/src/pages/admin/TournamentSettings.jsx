@@ -21,6 +21,7 @@ const initialTournamentForm = {
   day_start_time: '',
   match_duration_minutes: '',
   courts_count: '',
+  prize_money: '',
   city: '',
   venue_name: '',
   venue_address: '',
@@ -365,6 +366,19 @@ export default function TournamentSettings() {
     return startLabel || endLabel || 'TBD'
   }
 
+  const formatMoney = (value) => {
+    if (value === null || value === undefined || value === '') return 'TBD'
+    const amount = Number(value)
+    if (!Number.isFinite(amount)) return 'TBD'
+
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
   const openTournamentModal = (tournamentId) => {
     setSelectedTournamentId(tournamentId)
   }
@@ -405,6 +419,10 @@ export default function TournamentSettings() {
           <div>
             <span className="muted">Inscripciones</span>
             <strong>{formatRange(tournament.registration_open_at, tournament.registration_close_at, formatDateTimeShort)}</strong>
+          </div>
+          <div>
+            <span className="muted">Prize money</span>
+            <strong>{formatMoney(tournament.prize_money)}</strong>
           </div>
         </div>
         <div className="registrations-trello-card-foot">
@@ -451,6 +469,10 @@ export default function TournamentSettings() {
                 formatDateTimeShort,
               )}
             </strong>
+          </div>
+          <div>
+            <span>Prize money</span>
+            <strong>{formatMoney(tournament.prize_money)}</strong>
           </div>
         </div>
 
@@ -580,6 +602,16 @@ export default function TournamentSettings() {
                 min="1"
                 value={tournamentEdits[tournament.id]?.courts_count ?? tournament.courts_count ?? ''}
                 onChange={(event) => handleTournamentEdit(tournament.id, 'courts_count', event.target.value)}
+              />
+            </label>
+            <label>
+              Prize money (USD)
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={tournamentEdits[tournament.id]?.prize_money ?? tournament.prize_money ?? ''}
+                onChange={(event) => handleTournamentEdit(tournament.id, 'prize_money', event.target.value)}
               />
             </label>
             <div className="form-actions field-span-2">
@@ -973,6 +1005,16 @@ export default function TournamentSettings() {
                   min="1"
                   value={form.courts_count}
                   onChange={handleTournamentChange('courts_count')}
+                />
+              </label>
+              <label>
+                Prize money (USD)
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.prize_money}
+                  onChange={handleTournamentChange('prize_money')}
                 />
               </label>
               <div className="panel-card tournament-default-categories field-span-2">
