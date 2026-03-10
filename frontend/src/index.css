@@ -1,22 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import './styles/tokens.css';
 @import './styles/base.css';
 
 @font-face {
-  font-family: 'Humane';
-  src:
-    url('/fonts/Humane-Bold.otf') format('opentype'),
-    url('/fonts/Humane-Bold.woff2') format('woff2');
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Humane';
-  src:
-    url('/fonts/Humane-Light.otf') format('opentype'),
-    url('/fonts/Humane-Light.woff2') format('woff2');
+  font-family: 'Rounded Elegance';
+  src: url('/fonts/rounded-elegance-regular.otf') format('opentype');
   font-style: normal;
   font-weight: 300;
   font-display: swap;
@@ -24,21 +11,24 @@
 
 @font-face {
   font-family: 'Rounded Elegance';
-  src:
-    url('/fonts/Rounded Elegance Regular.otf') format('opentype'),
-    url('/fonts/Rounded-Elegance-Regular.otf') format('opentype'),
-    local('Rounded Elegance'),
-    local('Rounded-Elegance'),
-    local('Rounded Elegance Regular');
+  src: url('/fonts/rounded-elegance-regular.otf') format('opentype');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Rounded Elegance';
+  src: url('/fonts/rounded-elegance-regular.otf') format('opentype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
-  --font-display: 'Humane', 'Arial Narrow', 'Roboto Condensed', sans-serif;
-  --font-display-light: 'Humane', 'Arial Narrow', 'Roboto Condensed', sans-serif;
-  --font-body: 'Rounded Elegance', 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-display: 'Rounded Elegance', 'Segoe UI', sans-serif;
+  --font-display-light: 'Rounded Elegance', 'Segoe UI', sans-serif;
+  --font-body: 'Rounded Elegance', 'Segoe UI', sans-serif;
   --color-midnight: #080c38;
   --color-dark-blue: #1a0025;
   --color-portland-orange: #ff5e33;

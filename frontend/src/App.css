@@ -665,8 +665,8 @@ main,
 }
 
 .admin-shell {
-  --font-admin-heading: 'Humane', var(--font-display);
-  --font-admin-body: 'Humane', var(--font-body);
+  --font-admin-heading: var(--font-display);
+  --font-admin-body: var(--font-body);
   --font-admin-ui: 'Rounded Elegance', var(--font-body);
   padding: 32px 6vw 60px;
   width: min(1600px, 100%);
@@ -3658,7 +3658,7 @@ textarea:focus-visible {
 }
 
 .admin-shell {
-  --font-admin-heading: 'Humane', var(--font-display);
+  --font-admin-heading: var(--font-display);
   --font-admin-body: 'Rounded Elegance', var(--font-body);
   --font-admin-ui: 'Rounded Elegance', var(--font-body);
   width: min(1640px, 100%);
@@ -4003,7 +4003,6 @@ textarea:focus-visible {
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: 0.03em;
-  font-stretch: 108%;
 }
 
 .brand-subtitle,
@@ -4031,7 +4030,6 @@ label,
 .admin-tab {
   font-family: var(--font-body);
   letter-spacing: 0.014em;
-  font-stretch: 105%;
 }
 
 /* ESTARS readability and contrast pass */
