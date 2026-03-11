@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthContext'
+import { useAuth } from '../../auth/useAuth'
 import { playerRegistrationsApi } from '../../features/registrations/api'
 import { playerTeamsApi } from '../../features/teams/api'
 import { publicTournamentsApi } from '../../features/tournaments/api'

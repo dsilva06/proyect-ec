@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthContext'
+import { useAuth } from '../../auth/useAuth'
 import { inviteStorage } from '../../auth/inviteStorage'
 import { getHomeRouteForRole } from '../../auth/roleHelpers'
 import { playerTeamInvitesApi } from '../../features/teamInvites/api'
@@ -13,6 +13,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const requiresEmailVerification = error.toLowerCase().includes('verify your email')
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -102,6 +103,13 @@ export default function Login() {
               </form>
               {isSubmitting && <p className="auth-loading">Validando tus credenciales...</p>}
               {error && <p className="auth-error">{error}</p>}
+              {requiresEmailVerification && (
+                <p className="auth-switch">
+                  <Link to="/verify-email" state={{ email: form.email }}>
+                    Reenviar o revisar verificación
+                  </Link>
+                </p>
+              )}
               <p className="auth-switch">
                 No tienes cuenta? <Link to="/register">Crear cuenta</Link>
               </p>

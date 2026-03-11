@@ -1,72 +1,47 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { authApi } from '../features/auth/api'
-
-const AuthContext = createContext(null)
-const STORAGE_KEY = 'padel-auth-user'
-const TOKEN_KEY = 'auth_token'
-
-function getStoredUser() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return stored ? JSON.parse(stored) : null
-  } catch (error) {
-    return null
-  }
-}
-
-function setStoredUser(user) {
-  try {
-    if (user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
-    } else {
-      localStorage.removeItem(STORAGE_KEY)
-    }
-  } catch (error) {
-    // ignore storage errors
-  }
-}
-
-function setStoredToken(token) {
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token)
-  } else {
-    localStorage.removeItem(TOKEN_KEY)
-  }
-}
+import { AuthContext } from './context'
+import { readAuthToken, readAuthUser, writeAuthToken, writeAuthUser } from './storage'
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(getStoredUser())
-  const [status, setStatus] = useState('loading')
+  const [user, setUser] = useState(() => (readAuthToken() ? readAuthUser() : null))
+  const [status, setStatus] = useState(() => (readAuthToken() ? 'loading' : 'unauthenticated'))
   const [error, setError] = useState(null)
 
   const clearAuth = useCallback(() => {
-    setStoredToken(null)
-    setStoredUser(null)
+    writeAuthToken(null)
+    writeAuthUser(null)
     setUser(null)
   }, [])
 
   const refresh = useCallback(async () => {
-    const token = localStorage.getItem(TOKEN_KEY)
+    const token = readAuthToken()
 
     if (!token) {
       clearAuth()
       setStatus('unauthenticated')
+      setError(null)
       return null
     }
 
+    setStatus('loading')
+
     try {
       const data = await authApi.me()
+
       if (!data?.user) {
         throw new Error('Invalid auth payload')
       }
 
-      setStoredUser(data.user)
+      writeAuthUser(data.user)
       setUser(data.user)
       setStatus('authenticated')
       setError(null)
+
       return data.user
     } catch (err) {
       clearAuth()
+      setUser(null)
       setStatus('unauthenticated')
       setError(err?.message || 'No pudimos validar la sesión.')
       return null
@@ -81,85 +56,90 @@ export function AuthProvider({ children }) {
     const handleSessionInvalid = () => {
       clearAuth()
       setStatus('unauthenticated')
+      setError('Tu sesión expiró. Inicia sesión nuevamente.')
     }
 
     window.addEventListener('auth:session-invalid', handleSessionInvalid)
+
     return () => {
       window.removeEventListener('auth:session-invalid', handleSessionInvalid)
     }
   }, [clearAuth])
 
-  const login = useCallback(async (payload) => {
-    setError(null)
-    try {
-      const data = await authApi.login(payload)
-      if (!data?.token || !data?.user) {
-        throw new Error('Invalid auth payload')
-      }
-
-      setStoredToken(data.token)
-      setStoredUser(data.user)
-      setUser(data.user)
-      setStatus('authenticated')
-      return data.user
-    } catch (err) {
-      setError(err?.message || 'No pudimos iniciar sesión.')
-      throw err
-    }
-  }, [])
-
-  const register = useCallback(async (payload) => {
-    setError(null)
-    try {
-      const data = await authApi.register(payload)
-      if (!data?.token || !data?.user) {
-        throw new Error('Invalid auth payload')
-      }
-
-      setStoredToken(data.token)
-      setStoredUser(data.user)
-      setUser(data.user)
-      setStatus('authenticated')
-      return data.user
-    } catch (err) {
-      setError(err?.message || 'No pudimos completar el registro.')
-      throw err
-    }
-  }, [])
-
-  const logout = useCallback(async () => {
-    try {
-      await authApi.logout()
-    } catch (err) {
-      // ignore logout errors
-    } finally {
-      clearAuth()
+  const login = useCallback(
+    async (payload) => {
       setError(null)
-      setStatus('unauthenticated')
-    }
-  }, [clearAuth])
 
-  const value = useMemo(() => ({
-    user,
-    status,
-    error,
-    login,
-    register,
-    logout,
-    refresh,
-  }), [user, status, error, login, register, logout, refresh])
+      try {
+        const data = await authApi.login(payload)
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+        if (!data?.token || !data?.user) {
+          throw new Error('Invalid auth payload')
+        }
+
+        writeAuthToken(data.token)
+        writeAuthUser(data.user)
+        setUser(data.user)
+        setStatus('authenticated')
+
+        return data.user
+      } catch (err) {
+        clearAuth()
+        setStatus('unauthenticated')
+        setError(err?.message || 'No pudimos iniciar sesión.')
+        throw err
+      }
+    },
+    [clearAuth],
   )
-}
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+  const register = useCallback(
+    async (payload) => {
+      setError(null)
+
+      try {
+        const data = await authApi.register(payload)
+        clearAuth()
+        setStatus('unauthenticated')
+        return data
+      } catch (err) {
+        setStatus('unauthenticated')
+        setError(err?.message || 'No pudimos completar el registro.')
+        throw err
+      }
+    },
+    [clearAuth],
+  )
+
+  const logout = useCallback(
+    async () => {
+      try {
+        await authApi.logout()
+      } catch {
+        // logout always clears local state even if API fails
+      } finally {
+        clearAuth()
+        setError(null)
+        setStatus('unauthenticated')
+      }
+    },
+    [clearAuth],
+  )
+
+  const value = useMemo(
+    () => ({
+      user,
+      status,
+      error,
+      isAuthenticated: status === 'authenticated',
+      isLoading: status === 'loading',
+      login,
+      register,
+      logout,
+      refresh,
+    }),
+    [user, status, error, login, register, logout, refresh],
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

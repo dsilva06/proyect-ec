@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthContext'
+import { useAuth } from '../../auth/useAuth'
 import { inviteStorage } from '../../auth/inviteStorage'
-import { getHomeRouteForRole } from '../../auth/roleHelpers'
-import { playerTeamInvitesApi, publicTeamInvitesApi } from '../../features/teamInvites/api'
+import { publicTeamInvitesApi } from '../../features/teamInvites/api'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -18,6 +17,7 @@ export default function Register() {
     password_confirmation: '',
   })
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [invite, setInvite] = useState(null)
   const [inviteError, setInviteError] = useState('')
 
@@ -48,24 +48,26 @@ export default function Register() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (isSubmitting) return
+
     setError('')
     setInviteError('')
+    setIsSubmitting(true)
+
     try {
-      const loggedInUser = await register(form)
-      const token = inviteStorage.getToken()
-      if (token) {
-        try {
-          await playerTeamInvitesApi.claim(token)
-          inviteStorage.clearToken()
-          navigate('/player/invitations')
-          return
-        } catch (claimError) {
-          setInviteError(claimError?.data?.message || 'No pudimos asociar tu invitacion.')
-        }
-      }
-      navigate(getHomeRouteForRole(loggedInUser))
+      const data = await register(form)
+
+      navigate('/verify-email', {
+        replace: true,
+        state: {
+          email: form.email,
+          message: data?.message,
+        },
+      })
     } catch (err) {
       setError(err?.data?.message || err?.message || 'Registration failed.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -111,6 +113,7 @@ export default function Register() {
                     placeholder="Nombre"
                     value={form.first_name}
                     onChange={(event) => setForm({ ...form, first_name: event.target.value })}
+                    disabled={isSubmitting}
                     required
                   />
                 </label>
@@ -121,6 +124,7 @@ export default function Register() {
                     placeholder="Apellido"
                     value={form.last_name}
                     onChange={(event) => setForm({ ...form, last_name: event.target.value })}
+                    disabled={isSubmitting}
                     required
                   />
                 </label>
@@ -131,6 +135,7 @@ export default function Register() {
                     placeholder="Ej: 12345678"
                     value={form.dni}
                     onChange={(event) => setForm({ ...form, dni: event.target.value })}
+                    disabled={isSubmitting}
                     required
                   />
                 </label>
@@ -140,7 +145,7 @@ export default function Register() {
                     type="email"
                     placeholder="name@email.com"
                     value={form.email}
-                    disabled={Boolean(invite?.invited_email)}
+                    disabled={Boolean(invite?.invited_email) || isSubmitting}
                     onChange={(event) => setForm({ ...form, email: event.target.value })}
                     required
                   />
@@ -152,6 +157,7 @@ export default function Register() {
                     placeholder="+34 600 000 000"
                     value={form.phone}
                     onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                    disabled={isSubmitting}
                   />
                 </label>
                 <label>
@@ -161,6 +167,7 @@ export default function Register() {
                     placeholder="Minimo 8 caracteres"
                     value={form.password}
                     onChange={(event) => setForm({ ...form, password: event.target.value })}
+                    disabled={isSubmitting}
                     required
                   />
                 </label>
@@ -171,10 +178,13 @@ export default function Register() {
                     placeholder="Repite la contrasena"
                     value={form.password_confirmation}
                     onChange={(event) => setForm({ ...form, password_confirmation: event.target.value })}
+                    disabled={isSubmitting}
                     required
                   />
                 </label>
-                <button className="primary-button auth-submit" type="submit">Crear cuenta</button>
+                <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
+                </button>
               </form>
 
               {inviteError && <p className="auth-error">{inviteError}</p>}

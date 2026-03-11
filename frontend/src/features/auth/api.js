@@ -1,8 +1,9 @@
 import { httpClient } from '../../api/httpClient'
 
 export const authApi = {
-  login: (payload) => httpClient.post('/api/auth/login', payload, { skipAuth: true }),
   register: (payload) => httpClient.post('/api/auth/register', payload, { skipAuth: true }),
-  logout: () => httpClient.post('/api/auth/logout'),
+  login: (payload) => httpClient.post('/api/auth/login', payload, { skipAuth: true }),
   me: () => httpClient.get('/api/auth/me'),
+  logout: () => httpClient.post('/api/auth/logout'),
+  resendVerification: (payload) => httpClient.post('/api/auth/email/resend', payload, { skipAuth: true }),
 }

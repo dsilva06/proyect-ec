@@ -1,11 +1,9 @@
+import { readAuthToken } from '../auth/storage'
+
 const API_BASE_URL = import.meta.env.VITE_API_URL
 
 if (!API_BASE_URL) {
   throw new Error('Missing VITE_API_URL')
-}
-
-function getToken() {
-  return localStorage.getItem('auth_token')
 }
 
 function buildQuery(params) {
@@ -78,7 +76,7 @@ const normalizeErrorMessage = (data, status) => {
 }
 
 async function request(path, { method = 'GET', body, headers = {}, skipAuth = false, params, ...options } = {}) {
-  const token = getToken()
+  const token = readAuthToken()
   const query = params ? buildQuery(params) : ''
   let response
   try {
@@ -107,22 +105,15 @@ async function request(path, { method = 'GET', body, headers = {}, skipAuth = fa
 
   if (!response.ok) {
     const rawMessage = typeof data?.message === 'string' ? data.message.trim() : ''
-    if (typeof window !== 'undefined' && !skipAuth) {
-      const normalizedMessage = rawMessage.toLowerCase()
-      const shouldInvalidateSession =
-        response.status === 401 ||
-        (response.status === 403 && normalizedMessage === 'user is inactive')
-
-      if (shouldInvalidateSession) {
-        window.dispatchEvent(
-          new CustomEvent('auth:session-invalid', {
-            detail: {
-              status: response.status,
-              message: rawMessage || null,
-            },
-          }),
-        )
-      }
+    if (typeof window !== 'undefined' && !skipAuth && response.status === 401) {
+      window.dispatchEvent(
+        new CustomEvent('auth:session-invalid', {
+          detail: {
+            status: response.status,
+            message: rawMessage || null,
+          },
+        }),
+      )
     }
 
     const friendlyMessage = normalizeErrorMessage(data, response.status)

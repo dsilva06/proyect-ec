@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthContext'
+import { useAuth } from '../../auth/useAuth'
 import { playerWildcardsApi, publicWildcardsApi } from '../../features/wildcards/api'
 
 export default function WildcardInvite() {
