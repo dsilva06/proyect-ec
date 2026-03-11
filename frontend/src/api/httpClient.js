@@ -1,6 +1,6 @@
 import { readAuthToken } from '../auth/storage'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
 
 if (!API_BASE_URL) {
   throw new Error('Missing VITE_API_URL')
@@ -105,7 +105,12 @@ async function request(path, { method = 'GET', body, headers = {}, skipAuth = fa
 
   if (!response.ok) {
     const rawMessage = typeof data?.message === 'string' ? data.message.trim() : ''
-    if (typeof window !== 'undefined' && !skipAuth && response.status === 401) {
+    const normalizedMessage = rawMessage.toLowerCase()
+    const shouldInvalidateSession =
+      response.status === 401 ||
+      (response.status === 403 && normalizedMessage === 'user is inactive')
+
+    if (typeof window !== 'undefined' && !skipAuth && shouldInvalidateSession) {
       window.dispatchEvent(
         new CustomEvent('auth:session-invalid', {
           detail: {

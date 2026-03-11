@@ -12,14 +12,15 @@ export default function Login() {
   const { login } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
+  const [showVerifyHint, setShowVerifyHint] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const requiresEmailVerification = error.toLowerCase().includes('verify your email')
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (isSubmitting) return
 
     setError('')
+    setShowVerifyHint(false)
     setIsSubmitting(true)
 
     try {
@@ -45,7 +46,12 @@ export default function Login() {
 
       navigate(getHomeRouteForRole(loggedInUser), { replace: true })
     } catch (err) {
-      setError(err?.data?.message || err?.message || 'Login failed.')
+      const errorMessage = err?.data?.message || err?.message || 'Login failed.'
+      const rawError = `${err?.data?.raw_message || ''} ${err?.message || ''}`.toLowerCase()
+      const requiresVerification = err?.status === 403 && rawError.includes('verify your email')
+
+      setError(errorMessage)
+      setShowVerifyHint(requiresVerification)
     } finally {
       setIsSubmitting(false)
     }
@@ -103,7 +109,7 @@ export default function Login() {
               </form>
               {isSubmitting && <p className="auth-loading">Validando tus credenciales...</p>}
               {error && <p className="auth-error">{error}</p>}
-              {requiresEmailVerification && (
+              {showVerifyHint && (
                 <p className="auth-switch">
                   <Link to="/verify-email" state={{ email: form.email }}>
                     Reenviar o revisar verificación

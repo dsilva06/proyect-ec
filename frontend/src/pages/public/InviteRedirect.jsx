@@ -6,11 +6,15 @@ import { inviteStorage } from '../../auth/inviteStorage'
 export default function InviteRedirect() {
   const { token } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, status } = useAuth()
 
   useEffect(() => {
     if (token) {
       inviteStorage.setToken(token)
+    }
+
+    if (status === 'loading') {
+      return
     }
 
     if (user) {
@@ -18,7 +22,7 @@ export default function InviteRedirect() {
     } else {
       navigate('/register', { replace: true })
     }
-  }, [token, user, navigate])
+  }, [token, user, status, navigate])
 
   return (
     <div style={{ padding: '48px' }}>
