@@ -11,7 +11,7 @@ use App\Http\Controllers\Player\TournamentController as PlayerTournamentControll
 use App\Http\Controllers\Player\WildcardController as PlayerWildcardController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'active_user', 'role:player'])->prefix('player')->group(function () {
+Route::middleware(['auth:sanctum', 'active_user', 'verified', 'role:player'])->prefix('player')->group(function () {
     Route::get('/me', [MeController::class, 'show']);
     Route::get('/ranking', [PlayerRankingController::class, 'show']);
     Route::put('/ranking', [PlayerRankingController::class, 'update']);

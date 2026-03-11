@@ -55,5 +55,15 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60)
                 ->by((string) $userId.'|'.(string) $request->ip());
         });
+
+        RateLimiter::for('auth-resend-verification', function (Request $request) {
+            $email = Str::lower(trim((string) $request->input('email')));
+            $ip = (string) $request->ip();
+
+            return [
+                Limit::perMinute(3)->by($email.'|'.$ip),
+                Limit::perMinute(20)->by($ip),
+            ];
+        });
     }
 }

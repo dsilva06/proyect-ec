@@ -54,4 +54,21 @@ class AuthRateLimitTest extends TestCase
                 'message' => 'Too many requests',
             ]);
     }
+
+    public function test_public_resend_verification_endpoint_is_rate_limited(): void
+    {
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            $this->postJson('/api/auth/email/resend', [
+                'email' => 'resend-limit@example.com',
+            ])->assertOk();
+        }
+
+        $this->postJson('/api/auth/email/resend', [
+            'email' => 'resend-limit@example.com',
+        ])
+            ->assertStatus(429)
+            ->assertJson([
+                'message' => 'Too many requests',
+            ]);
+    }
 }

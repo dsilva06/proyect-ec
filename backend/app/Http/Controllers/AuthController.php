@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\RankingSource;
-use App\Enums\UserRole;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResendVerificationEmailRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\WelcomePlayer;
 use App\Models\PlayerProfile;
 use App\Models\TeamInvite;
 use App\Models\User;
 use App\Support\StatusResolver;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +41,7 @@ class AuthController extends Controller
                 'email' => $email,
                 'phone' => $validated['phone'] ?? null,
                 'password_hash' => Hash::make($validated['password']),
-                'role' => UserRole::PLAYER->value,
+                'role' => 'player',
                 'is_active' => true,
             ]);
 
@@ -53,7 +54,7 @@ class AuthController extends Controller
                     'province_state' => filled($validated['province_state'] ?? null)
                         ? $validated['province_state']
                         : 'Unknown',
-                    'ranking_source' => RankingSource::NONE->value,
+                    'ranking_source' => 'NONE',
                     'ranking_value' => null,
                     'ranking_updated_at' => null,
                 ],
@@ -67,15 +68,18 @@ class AuthController extends Controller
                     StatusResolver::getId('team_invite', 'sent')
                 )
                 ->update([
-                    'invited_user_id' => $user->id
+                    'invited_user_id' => $user->id,
                 ]);
 
             return $user;
         });
 
         $this->sendWelcomeEmail($user);
+        $this->sendEmailVerification($user);
 
-        return $this->authPayloadResponse($user, 201);
+        return response()->json([
+            'message' => 'Account created. Please verify your email before logging in.',
+        ], 201);
     }
 
     /**
@@ -102,7 +106,13 @@ class AuthController extends Controller
             ]);
         }
 
-        return $this->authPayloadResponse($user);
+        if (! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Please verify your email before logging in.',
+            ], 403);
+        }
+
+        return $this->loginPayloadResponse($user);
     }
 
     public function logout(Request $request): JsonResponse
@@ -128,10 +138,74 @@ class AuthController extends Controller
         ]);
     }
 
-    private function authPayloadResponse(
-        User $user,
-        int $status = 200
+    /**
+     * @throws ModelNotFoundException
+     */
+    public function verifyEmail(
+        Request $request,
+        int $id,
+        string $hash
     ): JsonResponse {
+
+        $user = User::query()->findOrFail($id);
+
+        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json([
+                'message' => 'Invalid verification link.',
+            ], 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Email is already verified.',
+            ]);
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return response()->json([
+            'message' => 'Email verified successfully.',
+        ]);
+    }
+
+    public function resendVerificationEmail(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Email is already verified.',
+            ]);
+        }
+
+        $this->sendEmailVerification($user);
+
+        return response()->json([
+            'message' => 'Verification email sent.',
+        ]);
+    }
+
+    public function publicResendVerificationEmail(ResendVerificationEmailRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $user = User::query()
+            ->where('email', $validated['email'])
+            ->first();
+
+        if ($user && ! $user->hasVerifiedEmail()) {
+            $this->sendEmailVerification($user);
+        }
+
+        return response()->json([
+            'message' => 'If the account exists and is not yet verified, a verification email has been sent.',
+        ]);
+    }
+
+    private function loginPayloadResponse(User $user): JsonResponse
+    {
 
         $token = $user
             ->createToken('auth_token')
@@ -142,7 +216,7 @@ class AuthController extends Controller
             'user' => new UserResource(
                 $user->load('playerProfile')
             ),
-        ], $status);
+        ]);
     }
 
     private function formatName(
@@ -169,6 +243,15 @@ class AuthController extends Controller
         try {
             Mail::to($user->email)
                 ->queue(new WelcomePlayer($user));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    private function sendEmailVerification(User $user): void
+    {
+        try {
+            $user->sendEmailVerificationNotification();
         } catch (\Throwable $e) {
             report($e);
         }
