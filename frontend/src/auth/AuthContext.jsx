@@ -41,7 +41,6 @@ export function AuthProvider({ children }) {
       return data.user
     } catch (err) {
       clearAuth()
-      setUser(null)
       setStatus('unauthenticated')
       setError(err?.message || 'No pudimos validar la sesión.')
       return null
@@ -117,7 +116,7 @@ export function AuthProvider({ children }) {
       try {
         await authApi.logout()
       } catch {
-        // logout always clears local state even if API fails
+        // ignore API logout failure; local auth must still be cleared
       } finally {
         clearAuth()
         setError(null)

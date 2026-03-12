@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { inviteStorage } from '../../auth/inviteStorage'
 import { getHomeRouteForRole } from '../../auth/roleHelpers'
@@ -21,11 +21,18 @@ function shouldShowVerificationHint(error) {
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
+
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [showVerifyHint, setShowVerifyHint] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const verifiedFromQuery = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    return params.get('verified') === '1'
+  }, [location.search])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -98,6 +105,12 @@ export default function Login() {
             <div className="auth-card">
               <h2>Iniciar sesión</h2>
               <p className="muted">Ingresa con tu cuenta para ver torneos, pagos e invitaciones.</p>
+
+              {verifiedFromQuery && (
+                <p className="auth-success">
+                  Tu correo fue verificado correctamente. Ya puedes iniciar sesión.
+                </p>
+              )}
 
               <form onSubmit={handleSubmit}>
                 <label>

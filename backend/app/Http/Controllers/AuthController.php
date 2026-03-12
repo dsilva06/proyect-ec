@@ -30,52 +30,63 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
-        $user = DB::transaction(function () use ($validated): User {
-            $email = Str::lower($validated['email']);
+        try {
+            $user = DB::transaction(function () use ($validated): User {
+                $email = Str::lower($validated['email']);
 
-            $user = User::create([
-                'name' => $this->formatName(
-                    $validated['first_name'],
-                    $validated['last_name']
-                ),
-                'email' => $email,
-                'phone' => $validated['phone'] ?? null,
-                'password_hash' => Hash::make($validated['password']),
-                'role' => 'player',
-                'is_active' => true,
-            ]);
-
-            PlayerProfile::updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'first_name' => $validated['first_name'],
-                    'last_name' => $validated['last_name'],
-                    'dni' => $validated['dni'] ?? null,
-                    'province_state' => filled($validated['province_state'] ?? null)
-                        ? $validated['province_state']
-                        : 'Unknown',
-                    'ranking_source' => 'NONE',
-                    'ranking_value' => null,
-                    'ranking_updated_at' => null,
-                ],
-            );
-
-            TeamInvite::query()
-                ->where('invited_email', $email)
-                ->whereNull('invited_user_id')
-                ->where(
-                    'status_id',
-                    StatusResolver::getId('team_invite', 'sent')
-                )
-                ->update([
-                    'invited_user_id' => $user->id,
+                $user = User::create([
+                    'name' => $this->formatName(
+                        $validated['first_name'],
+                        $validated['last_name']
+                    ),
+                    'email' => $email,
+                    'phone' => $validated['phone'] ?? null,
+                    'password_hash' => Hash::make($validated['password']),
+                    'role' => 'player',
+                    'is_active' => true,
                 ]);
 
-            return $user;
-        });
+                PlayerProfile::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'first_name' => $validated['first_name'],
+                        'last_name' => $validated['last_name'],
+                        'dni' => $validated['dni'] ?? null,
+                        'province_state' => filled($validated['province_state'] ?? null)
+                            ? $validated['province_state']
+                            : 'Unknown',
+                        'ranking_source' => 'NONE',
+                        'ranking_value' => null,
+                        'ranking_updated_at' => null,
+                    ],
+                );
+
+                TeamInvite::query()
+                    ->where('invited_email', $email)
+                    ->whereNull('invited_user_id')
+                    ->where(
+                        'status_id',
+                        StatusResolver::getId('team_invite', 'sent')
+                    )
+                    ->update([
+                        'invited_user_id' => $user->id,
+                    ]);
+
+                $this->sendEmailVerification($user);
+
+                return $user;
+            });
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'No se pudo completar el registro en este momento. Inténtalo nuevamente o contacta soporte.',
+                'error_code' => 'VERIFICATION_EMAIL_SEND_FAILED',
+                'support_email' => config('mail.support_email'),
+            ], 503);
+        }
 
         $this->sendWelcomeEmail($user);
-        $this->sendEmailVerification($user);
 
         return response()->json([
             'message' => 'Account created. Please verify your email before logging in.',
@@ -108,7 +119,6 @@ class AuthController extends Controller
         if (! $user->hasVerifiedEmail()) {
             return response()->json([
                 'message' => 'Please verify your email before logging in.',
-                'error_code' => 'EMAIL_NOT_VERIFIED',
             ], 403);
         }
 
@@ -117,10 +127,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request
-            ->user()
-            ?->currentAccessToken()
-            ?->delete();
+        $request->user()?->currentAccessToken()?->delete();
 
         return response()->json([
             'message' => 'Logged out successfully',
@@ -131,9 +138,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'user' => new UserResource(
-                $request
-                    ->user()
-                    ->load('playerProfile')
+                $request->user()->load('playerProfile')
             ),
         ]);
     }
@@ -155,13 +160,25 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            return redirect($this->frontendUrl('/verify-email?status=invalid_or_expired'));
+            return redirect()->to(
+                rtrim((string) config('app.frontend_url'), '/').'/verify-email?status=invalid_or_expired'
+            );
         }
 
-        if (! $user->hasVerifiedEmail()) {
-            if ($user->markEmailAsVerified()) {
-                event(new Verified($user));
+        if ($user->hasVerifiedEmail()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Email is already verified.',
+                ]);
             }
+
+            return redirect()->to(
+                rtrim((string) config('app.frontend_url'), '/').'/login?verified=1'
+            );
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
         }
 
         if ($request->expectsJson()) {
@@ -170,7 +187,9 @@ class AuthController extends Controller
             ]);
         }
 
-        return redirect($this->frontendUrl('/login?verified=1'));
+        return redirect()->to(
+            rtrim((string) config('app.frontend_url'), '/').'/login?verified=1'
+        );
     }
 
     public function resendVerificationEmail(Request $request): JsonResponse
@@ -190,9 +209,8 @@ class AuthController extends Controller
         ]);
     }
 
-    public function publicResendVerificationEmail(
-        ResendVerificationEmailRequest $request
-    ): JsonResponse {
+    public function publicResendVerificationEmail(ResendVerificationEmailRequest $request): JsonResponse
+    {
         $validated = $request->validated();
 
         $user = User::query()
@@ -226,7 +244,7 @@ class AuthController extends Controller
         string $firstName,
         string $lastName
     ): string {
-        return trim($firstName . ' ' . $lastName);
+        return trim($firstName.' '.$lastName);
     }
 
     private function validateCredentials(
@@ -234,10 +252,9 @@ class AuthController extends Controller
         string $password
     ): bool {
         $hash = $user?->password_hash
-            ?? '$2y$12$' . str_repeat('0', 53);
+            ?? '$2y$12$'.str_repeat('0', 53);
 
-        return Hash::check($password, $hash)
-            && $user !== null;
+        return Hash::check($password, $hash) && $user !== null;
     }
 
     private function sendWelcomeEmail(User $user): void
@@ -252,17 +269,6 @@ class AuthController extends Controller
 
     private function sendEmailVerification(User $user): void
     {
-        try {
-            $user->sendEmailVerificationNotification();
-        } catch (\Throwable $e) {
-            report($e);
-        }
-    }
-
-    private function frontendUrl(string $path): string
-    {
-        $baseUrl = (string) config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173'));
-
-        return rtrim($baseUrl, '/') . $path;
+        $user->sendEmailVerificationNotification();
     }
 }
