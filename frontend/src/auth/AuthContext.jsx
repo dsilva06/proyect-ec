@@ -103,6 +103,7 @@ export function AuthProvider({ children }) {
         setStatus('unauthenticated')
         return data
       } catch (err) {
+        clearAuth()
         setStatus('unauthenticated')
         setError(err?.message || 'No pudimos completar el registro.')
         throw err

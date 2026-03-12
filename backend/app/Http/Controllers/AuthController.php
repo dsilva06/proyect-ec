@@ -16,6 +16,7 @@ use App\Support\StatusResolver;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,6 @@ class AuthController extends Controller
         $validated = $request->validated();
 
         $user = DB::transaction(function () use ($validated): User {
-
             $email = Str::lower($validated['email']);
 
             $user = User::create([
@@ -89,10 +89,9 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
-        $user = User::where(
-            'email',
-            Str::lower($validated['email'])
-        )->first();
+        $user = User::query()
+            ->where('email', Str::lower($validated['email']))
+            ->first();
 
         if (! $this->validateCredentials($user, $validated['password'])) {
             throw ValidationException::withMessages([
@@ -109,6 +108,7 @@ class AuthController extends Controller
         if (! $user->hasVerifiedEmail()) {
             return response()->json([
                 'message' => 'Please verify your email before logging in.',
+                'error_code' => 'EMAIL_NOT_VERIFIED',
             ], 403);
         }
 
@@ -119,7 +119,7 @@ class AuthController extends Controller
     {
         $request
             ->user()
-            ->currentAccessToken()
+            ?->currentAccessToken()
             ?->delete();
 
         return response()->json([
@@ -145,29 +145,32 @@ class AuthController extends Controller
         Request $request,
         int $id,
         string $hash
-    ): JsonResponse {
-
+    ): JsonResponse|RedirectResponse {
         $user = User::query()->findOrFail($id);
 
         if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            return response()->json([
-                'message' => 'Invalid verification link.',
-            ], 403);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Invalid verification link.',
+                ], 403);
+            }
+
+            return redirect($this->frontendUrl('/verify-email?status=invalid_or_expired'));
         }
 
-        if ($user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
+            if ($user->markEmailAsVerified()) {
+                event(new Verified($user));
+            }
+        }
+
+        if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Email is already verified.',
+                'message' => 'Email verified successfully.',
             ]);
         }
 
-        if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
-        }
-
-        return response()->json([
-            'message' => 'Email verified successfully.',
-        ]);
+        return redirect($this->frontendUrl('/login?verified=1'));
     }
 
     public function resendVerificationEmail(Request $request): JsonResponse
@@ -187,12 +190,13 @@ class AuthController extends Controller
         ]);
     }
 
-    public function publicResendVerificationEmail(ResendVerificationEmailRequest $request): JsonResponse
-    {
+    public function publicResendVerificationEmail(
+        ResendVerificationEmailRequest $request
+    ): JsonResponse {
         $validated = $request->validated();
 
         $user = User::query()
-            ->where('email', $validated['email'])
+            ->where('email', Str::lower($validated['email']))
             ->first();
 
         if ($user && ! $user->hasVerifiedEmail()) {
@@ -206,7 +210,6 @@ class AuthController extends Controller
 
     private function loginPayloadResponse(User $user): JsonResponse
     {
-
         $token = $user
             ->createToken('auth_token')
             ->plainTextToken;
@@ -223,16 +226,15 @@ class AuthController extends Controller
         string $firstName,
         string $lastName
     ): string {
-        return trim($firstName.' '.$lastName);
+        return trim($firstName . ' ' . $lastName);
     }
 
     private function validateCredentials(
         ?User $user,
         string $password
     ): bool {
-
         $hash = $user?->password_hash
-            ?? '$2y$12$'.str_repeat('0', 53);
+            ?? '$2y$12$' . str_repeat('0', 53);
 
         return Hash::check($password, $hash)
             && $user !== null;
@@ -255,5 +257,12 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
             report($e);
         }
+    }
+
+    private function frontendUrl(string $path): string
+    {
+        $baseUrl = (string) config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173'));
+
+        return rtrim($baseUrl, '/') . $path;
     }
 }
