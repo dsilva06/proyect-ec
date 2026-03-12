@@ -7,6 +7,18 @@ import { playerTeamInvitesApi } from '../../features/teamInvites/api'
 
 const AUTH_WARNING_KEY = 'auth_login_warning'
 
+function shouldShowVerificationHint(error) {
+  const rawMessage = `${error?.data?.raw_message || ''} ${error?.data?.message || ''} ${error?.message || ''}`
+    .toLowerCase()
+
+  return (
+    rawMessage.includes('verify your email') ||
+    rawMessage.includes('verify your account') ||
+    rawMessage.includes('email before logging in') ||
+    rawMessage.includes('please verify your email')
+  )
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
@@ -17,6 +29,7 @@ export default function Login() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+
     if (isSubmitting) return
 
     setError('')
@@ -28,6 +41,7 @@ export default function Login() {
       const token = inviteStorage.getToken()
 
       let claimWarning = ''
+
       if (token) {
         try {
           await playerTeamInvitesApi.claim(token)
@@ -36,7 +50,10 @@ export default function Login() {
           return
         } catch (claimError) {
           inviteStorage.clearToken()
-          claimWarning = claimError?.data?.message || claimError?.message || 'Iniciaste sesion, pero no pudimos asociar tu invitacion.'
+          claimWarning =
+            claimError?.data?.message ||
+            claimError?.message ||
+            'Iniciaste sesión, pero no pudimos asociar tu invitación.'
         }
       }
 
@@ -46,12 +63,13 @@ export default function Login() {
 
       navigate(getHomeRouteForRole(loggedInUser), { replace: true })
     } catch (err) {
-      const errorMessage = err?.data?.message || err?.message || 'Login failed.'
-      const rawError = `${err?.data?.raw_message || ''} ${err?.message || ''}`.toLowerCase()
-      const requiresVerification = err?.status === 403 && rawError.includes('verify your email')
+      const errorMessage =
+        err?.data?.message ||
+        err?.message ||
+        'No pudimos iniciar sesión.'
 
       setError(errorMessage)
-      setShowVerifyHint(requiresVerification)
+      setShowVerifyHint(shouldShowVerificationHint(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -78,8 +96,9 @@ export default function Login() {
         <section className="section auth-standalone">
           <div className="auth-shell single-card">
             <div className="auth-card">
-              <h2>Iniciar sesion</h2>
+              <h2>Iniciar sesión</h2>
               <p className="muted">Ingresa con tu cuenta para ver torneos, pagos e invitaciones.</p>
+
               <form onSubmit={handleSubmit}>
                 <label>
                   Correo
@@ -92,23 +111,27 @@ export default function Login() {
                     required
                   />
                 </label>
+
                 <label>
-                  Contrasena
+                  Contraseña
                   <input
                     type="password"
-                    placeholder="Tu contrasena"
+                    placeholder="Tu contraseña"
                     value={form.password}
                     onChange={(event) => setForm({ ...form, password: event.target.value })}
                     disabled={isSubmitting}
                     required
                   />
                 </label>
+
                 <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Entrando...' : 'Entrar'}
                 </button>
               </form>
+
               {isSubmitting && <p className="auth-loading">Validando tus credenciales...</p>}
               {error && <p className="auth-error">{error}</p>}
+
               {showVerifyHint && (
                 <p className="auth-switch">
                   <Link to="/verify-email" state={{ email: form.email }}>
@@ -116,6 +139,7 @@ export default function Login() {
                   </Link>
                 </p>
               )}
+
               <p className="auth-switch">
                 No tienes cuenta? <Link to="/register">Crear cuenta</Link>
               </p>
