@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 
 const AUTH_WARNING_KEY = 'auth_login_warning'
@@ -7,6 +7,8 @@ const AUTH_WARNING_KEY = 'auth_login_warning'
 export default function AdminLayout() {
   const { user, logout } = useAuth()
   const [authWarning, setAuthWarning] = useState('')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const location = useLocation()
 
   useEffect(() => {
     const message = sessionStorage.getItem(AUTH_WARNING_KEY)
@@ -15,6 +17,12 @@ export default function AdminLayout() {
     setAuthWarning(message)
     sessionStorage.removeItem(AUTH_WARNING_KEY)
   }, [])
+
+  useEffect(() => {
+    setIsSidebarOpen(false)
+  }, [location.pathname])
+
+  const handleCloseSidebar = () => setIsSidebarOpen(false)
 
   return (
     <div className="admin-shell">
@@ -33,19 +41,48 @@ export default function AdminLayout() {
           <button className="secondary-button" type="button" onClick={logout}>
             Cerrar sesión
           </button>
+          <button
+            className="ghost-button admin-menu-toggle"
+            type="button"
+            aria-label="Abrir menú de navegación"
+            aria-expanded={isSidebarOpen}
+            aria-controls="admin-sidebar-nav"
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+          >
+            Menú
+          </button>
         </div>
       </header>
 
-      <nav className="admin-nav">
-        <NavLink to="/admin" end>Resumen</NavLink>
-        <NavLink to="/admin/settings">Torneos</NavLink>
-        <NavLink to="/admin/registrations">Inscripciones</NavLink>
-        <NavLink to="/admin/wildcards">Wildcards</NavLink>
-        <NavLink to="/admin/players">Jugadores</NavLink>
-        <NavLink to="/admin/payments">Pagos</NavLink>
-        <NavLink to="/admin/draws">Cuadros</NavLink>
-        <NavLink to="/admin/matches">Partidos</NavLink>
-        <NavLink to="/admin/leads">Leads</NavLink>
+      <button
+        type="button"
+        className={`admin-sidebar-backdrop ${isSidebarOpen ? 'is-open' : ''}`}
+        onClick={handleCloseSidebar}
+        aria-hidden={!isSidebarOpen}
+        tabIndex={isSidebarOpen ? 0 : -1}
+      />
+
+      <nav id="admin-sidebar-nav" className={`admin-nav admin-sidebar ${isSidebarOpen ? 'is-open' : ''}`}>
+        <div className="admin-sidebar-header">
+          <strong>Navegación</strong>
+          <button
+            className="ghost-button admin-sidebar-close"
+            type="button"
+            aria-label="Cerrar menú de navegación"
+            onClick={handleCloseSidebar}
+          >
+            Cerrar
+          </button>
+        </div>
+        <NavLink to="/admin" end onClick={handleCloseSidebar}>Resumen</NavLink>
+        <NavLink to="/admin/settings" onClick={handleCloseSidebar}>Torneos</NavLink>
+        <NavLink to="/admin/registrations" onClick={handleCloseSidebar}>Inscripciones</NavLink>
+        <NavLink to="/admin/wildcards" onClick={handleCloseSidebar}>Wildcards</NavLink>
+        <NavLink to="/admin/players" onClick={handleCloseSidebar}>Jugadores</NavLink>
+        <NavLink to="/admin/payments" onClick={handleCloseSidebar}>Pagos</NavLink>
+        <NavLink to="/admin/draws" onClick={handleCloseSidebar}>Cuadros</NavLink>
+        <NavLink to="/admin/matches" onClick={handleCloseSidebar}>Partidos</NavLink>
+        <NavLink to="/admin/leads" onClick={handleCloseSidebar}>Leads</NavLink>
       </nav>
 
       <div className="admin-content">

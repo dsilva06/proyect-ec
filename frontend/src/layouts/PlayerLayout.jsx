@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 
 const AUTH_WARNING_KEY = 'auth_login_warning'
@@ -7,6 +7,8 @@ const AUTH_WARNING_KEY = 'auth_login_warning'
 export default function PlayerLayout() {
   const { user, logout } = useAuth()
   const [authWarning, setAuthWarning] = useState('')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const location = useLocation()
 
   useEffect(() => {
     const message = sessionStorage.getItem(AUTH_WARNING_KEY)
@@ -15,6 +17,12 @@ export default function PlayerLayout() {
     setAuthWarning(message)
     sessionStorage.removeItem(AUTH_WARNING_KEY)
   }, [])
+
+  useEffect(() => {
+    setIsSidebarOpen(false)
+  }, [location.pathname])
+
+  const handleCloseSidebar = () => setIsSidebarOpen(false)
 
   return (
     <div className="admin-shell">
@@ -33,16 +41,45 @@ export default function PlayerLayout() {
           <button className="secondary-button" type="button" onClick={logout}>
             Cerrar sesión
           </button>
+          <button
+            className="ghost-button admin-menu-toggle"
+            type="button"
+            aria-label="Abrir menú de navegación"
+            aria-expanded={isSidebarOpen}
+            aria-controls="player-sidebar-nav"
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+          >
+            Menú
+          </button>
         </div>
       </header>
 
-      <nav className="admin-nav">
-        <NavLink to="/player" end>Resumen</NavLink>
-        <NavLink to="/player/tournaments">Torneos</NavLink>
-        <NavLink to="/player/invitations">Invitaciones</NavLink>
-        <NavLink to="/player/ranking">Mi ranking</NavLink>
-        <NavLink to="/player/registrations">Mis inscripciones</NavLink>
-        <NavLink to="/player/payments">Mis pagos</NavLink>
+      <button
+        type="button"
+        className={`admin-sidebar-backdrop ${isSidebarOpen ? 'is-open' : ''}`}
+        onClick={handleCloseSidebar}
+        aria-hidden={!isSidebarOpen}
+        tabIndex={isSidebarOpen ? 0 : -1}
+      />
+
+      <nav id="player-sidebar-nav" className={`admin-nav admin-sidebar ${isSidebarOpen ? 'is-open' : ''}`}>
+        <div className="admin-sidebar-header">
+          <strong>Navegación</strong>
+          <button
+            className="ghost-button admin-sidebar-close"
+            type="button"
+            aria-label="Cerrar menú de navegación"
+            onClick={handleCloseSidebar}
+          >
+            Cerrar
+          </button>
+        </div>
+        <NavLink to="/player" end onClick={handleCloseSidebar}>Resumen</NavLink>
+        <NavLink to="/player/tournaments" onClick={handleCloseSidebar}>Torneos</NavLink>
+        <NavLink to="/player/invitations" onClick={handleCloseSidebar}>Invitaciones</NavLink>
+        <NavLink to="/player/ranking" onClick={handleCloseSidebar}>Mi ranking</NavLink>
+        <NavLink to="/player/registrations" onClick={handleCloseSidebar}>Mis inscripciones</NavLink>
+        <NavLink to="/player/payments" onClick={handleCloseSidebar}>Mis pagos</NavLink>
       </nav>
 
       <div className="admin-content">

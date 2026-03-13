@@ -8,7 +8,7 @@ import WildcardInvite from '../pages/public/WildcardInvite'
 import PublicOnlyRoute from '../components/shared/PublicOnlyRoute'
 
 export const publicRoutes = [
-  { path: '/', element: <Home /> },
+  { path: '/', element: <PublicOnlyRoute><Home /></PublicOnlyRoute> },
   { path: '/invite/:token', element: <InviteRedirect /> },
   { path: '/login', element: <PublicOnlyRoute><Login /></PublicOnlyRoute> },
   { path: '/register', element: <PublicOnlyRoute><Register /></PublicOnlyRoute> },
