@@ -8,9 +8,11 @@ use App\Models\Tournament;
 use App\Policies\PaymentPolicy;
 use App\Policies\RegistrationPolicy;
 use App\Policies\TournamentPolicy;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -35,6 +37,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Registration::class, RegistrationPolicy::class);
         Gate::policy(Payment::class, PaymentPolicy::class);
         Gate::policy(Tournament::class, TournamentPolicy::class);
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verifica tu correo - ESTARS PADEL TOUR')
+                ->greeting('¡Bienvenido a ESTARS PADEL TOUR!')
+                ->line('Tu cuenta fue creada correctamente.')
+                ->line('Para continuar, confirma que este correo te pertenece.')
+                ->action('Verificar mi correo', $url)
+                ->line('Si no creaste esta cuenta, puedes ignorar este mensaje.');
+        });
 
         RateLimiter::for('auth-login', function (Request $request) {
             $email = Str::lower((string) $request->input('email'));
