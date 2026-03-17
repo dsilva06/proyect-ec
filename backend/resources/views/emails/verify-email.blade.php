@@ -5,53 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verifica tu correo - ESTARS PADEL TOUR</title>
 </head>
-<body style="margin:0; padding:0; background:#f5f6fb;">
-<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f5f6fb; padding:24px 12px;">
+<body style="margin:0; padding:0; background:#edf0f8;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#edf0f8; padding:22px 12px;">
     <tr>
         <td align="center">
-            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:620px; background:#1a1a35; border-radius:18px; overflow:hidden; border:1px solid rgba(240,232,212,0.16);">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px; background:#12163a; border-radius:22px; overflow:hidden; border:1px solid #273162;">
                 <tr>
-                    <td style="padding:24px 28px; background:linear-gradient(135deg,#2b2e72 0%,#1a1a35 60%,#16152a 100%);">
-                        <p style="margin:0; font-family:Arial,Helvetica,sans-serif; color:#b7d051; font-size:12px; letter-spacing:1.4px; text-transform:uppercase;">
-                            Estars Padel Tour
-                        </p>
-                        <h1 style="margin:12px 0 0; font-family:Arial,Helvetica,sans-serif; color:#f0e8d4; font-size:28px; line-height:1.2;">
+                    <td style="padding:26px 28px; background:linear-gradient(135deg,#1a2054 0%,#111539 58%,#2b1135 100%); border-bottom:1px solid #2f3a70;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                            <tr>
+                                <td align="left" style="padding:0 0 14px;">
+                                    <img
+                                        src="{{ $logoUrl }}"
+                                        alt="ESTARS PADEL TOUR"
+                                        width="235"
+                                        style="display:block; width:235px; max-width:100%; height:auto; border:0;"
+                                    >
+                                </td>
+                            </tr>
+                        </table>
+
+                        <span style="display:inline-block; padding:6px 12px; border-radius:999px; background:rgba(183,208,81,0.16); border:1px solid rgba(183,208,81,0.45); font-family:Arial,Helvetica,sans-serif; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#dceda0;">
+                            Activacion de cuenta
+                        </span>
+                        <h1 style="margin:14px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:33px; line-height:1.08; color:#f3ecd8;">
                             Verifica tu correo
                         </h1>
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding:28px; font-family:Arial,Helvetica,sans-serif; color:#f0e8d4;">
-                        <p style="margin:0 0 14px; font-size:16px; line-height:1.6;">
+                    <td style="padding:28px;">
+                        <p style="margin:0 0 12px; font-family:Arial,Helvetica,sans-serif; font-size:18px; line-height:1.5; color:#f3ecd8;">
                             Hola {{ $name }},
                         </p>
-                        <p style="margin:0 0 14px; font-size:15px; line-height:1.7; color:rgba(240,232,212,0.92);">
-                            Tu cuenta fue creada correctamente. Para activarla y poder iniciar sesión, confirma que este correo te pertenece.
+                        <p style="margin:0 0 16px; font-family:Arial,Helvetica,sans-serif; font-size:16px; line-height:1.7; color:#d9ddef;">
+                            Bienvenido a <strong style="color:#ffffff;">ESTARS PADEL TOUR</strong>.
+                            Tu cuenta fue creada correctamente y solo falta un paso para activarla.
+                        </p>
+                        <p style="margin:0 0 22px; font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:1.7; color:#d9ddef;">
+                            Confirma que este correo te pertenece y en segundos podras iniciar sesion para gestionar torneos, invitaciones y pagos.
                         </p>
 
-                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 20px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px;">
                             <tr>
-                                <td align="center" style="border-radius:999px; background:#eb5f3c;">
-                                    <a href="{{ $verificationEntryUrl }}" style="display:inline-block; padding:13px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:700; color:#f0e8d4; text-decoration:none; border-radius:999px;">
+                                <td align="center" style="border-radius:999px; background:linear-gradient(120deg,#ff653f,#ff9a4f);">
+                                    <a href="{{ $verificationEntryUrl }}" style="display:inline-block; padding:14px 30px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:700; color:#1a1021; text-decoration:none; border-radius:999px;">
                                         Verificar mi correo
                                     </a>
                                 </td>
                             </tr>
                         </table>
 
-                        <p style="margin:0 0 10px; font-size:13px; line-height:1.6; color:rgba(240,232,212,0.72);">
-                            Si el botón no funciona, copia y pega este enlace en tu navegador:
-                        </p>
-                        <p style="margin:0 0 16px; word-break:break-all;">
-                            <a href="{{ $verificationEntryUrl }}" style="color:#b7d051; font-size:13px; text-decoration:underline;">
-                                {{ $verificationEntryUrl }}
-                            </a>
-                        </p>
+                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">
+                            <tr>
+                                <td align="center" style="border-radius:999px; border:1px solid rgba(183,208,81,0.55); background:rgba(183,208,81,0.08);">
+                                    <a href="{{ $verificationEntryUrl }}" style="display:inline-block; padding:10px 20px; font-family:Arial,Helvetica,sans-serif; font-size:13px; font-weight:700; color:#dceda0; text-decoration:none; border-radius:999px;">
+                                        Abrir enlace alterno
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
 
-                        <p style="margin:0; font-size:13px; line-height:1.6; color:rgba(240,232,212,0.72);">
-                            Si no creaste esta cuenta, puedes ignorar este mensaje.
-                            Luego de verificar, podrás iniciar sesión en
-                            <a href="{{ $loginUrl }}" style="color:#b7d051;">ESTARS PADEL TOUR</a>.
+                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px; border-collapse:separate;">
+                            <tr>
+                                <td style="padding:14px 15px; border-radius:14px; border:1px solid rgba(240,236,216,0.2); background:rgba(240,236,216,0.06);">
+                                    <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:1.7; color:#d9ddef;">
+                                        Si no solicitaste esta cuenta, puedes ignorar este correo.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:1.6; color:#aeb7dc;">
+                            Despues de verificar, podras iniciar sesion desde
+                            <a href="{{ $loginUrl }}" style="color:#b7d051; text-decoration:none; font-weight:700;">estarspadeltour.com/login</a>.
                         </p>
                     </td>
                 </tr>

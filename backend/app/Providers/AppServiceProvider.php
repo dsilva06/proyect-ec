@@ -52,13 +52,16 @@ class AppServiceProvider extends ServiceProvider
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
             $name = trim((string) ($notifiable->name ?? 'Jugador'));
             $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
+            $apiUrl = rtrim((string) config('app.url'), '/');
             $loginUrl = $frontendUrl.'/login';
-            $verificationEntryUrl = $frontendUrl.'/verify-email?url='.rawurlencode($url);
+            $verificationEntryUrl = $frontendUrl.'/?verify_url='.rawurlencode($url);
+            $logoUrl = $apiUrl.'/emails/estars-logo.png';
 
             return (new MailMessage)
                 ->subject('Verifica tu correo - ESTARS PADEL TOUR')
                 ->view('emails.verify-email', [
                     'name' => $name,
+                    'logoUrl' => $logoUrl,
                     'verificationEntryUrl' => $verificationEntryUrl,
                     'loginUrl' => $loginUrl,
                 ]);

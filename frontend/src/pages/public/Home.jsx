@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { publicLeadsApi } from '../../features/leads/api'
 import '../../App.css'
@@ -33,6 +33,7 @@ const steps = [
 ]
 
 export default function Home() {
+  const location = useLocation()
   const { user, logout } = useAuth()
   const [contactForm, setContactForm] = useState({
     full_name: '',
@@ -41,6 +42,7 @@ export default function Home() {
     message: '',
   })
   const [contactStatus, setContactStatus] = useState('')
+  const verificationUrl = new URLSearchParams(location.search).get('verify_url')
 
   useEffect(() => {
     const updateScroll = () => {
@@ -97,6 +99,15 @@ export default function Home() {
     } catch (error) {
       setContactStatus(error?.data?.message || error?.message || 'No pudimos enviar el mensaje.')
     }
+  }
+
+  if (verificationUrl) {
+    return (
+      <Navigate
+        to={`/verify-email?url=${encodeURIComponent(verificationUrl)}`}
+        replace
+      />
+    )
   }
 
   return (
