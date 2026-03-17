@@ -1,12 +1,20 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { authApi } from '../../features/auth/api'
 
 export default function VerifyEmailPending() {
   const location = useLocation()
+  const status = useMemo(() => new URLSearchParams(location.search).get('status'), [location.search])
+  const isVerified = status === 'verified'
+  const isInvalidOrExpired = status === 'invalid_or_expired'
   const [email, setEmail] = useState(location.state?.email || '')
   const [message, setMessage] = useState(
-    location.state?.message || 'Revisa tu bandeja de entrada para verificar tu cuenta.',
+    location.state?.message ||
+      (isVerified
+        ? 'Tu correo fue verificado con éxito.'
+        : isInvalidOrExpired
+          ? 'El enlace de verificación es inválido o expiró. Puedes solicitar uno nuevo.'
+          : 'Revisa tu bandeja de entrada para verificar tu cuenta.'),
   )
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -43,7 +51,7 @@ export default function VerifyEmailPending() {
         </div>
         <div className="nav-auth-actions">
           <Link className="ghost-button" to="/login">Login</Link>
-          <span className="tag muted">Verificación pendiente</span>
+          <span className="tag muted">{isVerified ? 'Verificación lista' : 'Verificación pendiente'}</span>
         </div>
       </header>
 
@@ -51,30 +59,44 @@ export default function VerifyEmailPending() {
         <section className="section auth-standalone">
           <div className="auth-shell single-card">
             <div className="auth-card">
-              <h2>Revisa tu correo</h2>
+              <h2>{isVerified ? 'Verificación lista' : 'Revisa tu correo'}</h2>
               <p className="muted">{message}</p>
 
-              <form onSubmit={handleResend}>
-                <label>
-                  Correo
-                  <input
-                    type="email"
-                    placeholder="name@email.com"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </label>
-                <button className="secondary-button auth-submit" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Reenviando...' : 'Reenviar correo de verificación'}
-                </button>
-              </form>
+              {isVerified ? (
+                <Link className="primary-button auth-submit" to="/login?verified=1">
+                  Ir a iniciar sesión
+                </Link>
+              ) : (
+                <form onSubmit={handleResend}>
+                  <label>
+                    Correo
+                    <input
+                      type="email"
+                      placeholder="name@email.com"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </label>
+                  <button className="secondary-button auth-submit" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Reenviando...' : 'Reenviar correo de verificación'}
+                  </button>
+                </form>
+              )}
 
               {error && <p className="auth-error">{error}</p>}
 
               <p className="auth-switch">
-                ¿Ya verificaste tu correo? <Link to="/login">Inicia sesión</Link>
+                {isVerified ? (
+                  <>
+                    ¿Listo para entrar? <Link to="/login">Inicia sesión</Link>
+                  </>
+                ) : (
+                  <>
+                    ¿Ya verificaste tu correo? <Link to="/login">Inicia sesión</Link>
+                  </>
+                )}
               </p>
             </div>
           </div>
