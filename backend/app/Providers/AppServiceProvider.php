@@ -15,6 +15,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
@@ -34,6 +35,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         JsonResource::withoutWrapping();
+
+        $appUrl = trim((string) config('app.url'));
+        if ($appUrl !== '') {
+            URL::forceRootUrl($appUrl);
+
+            $scheme = parse_url($appUrl, PHP_URL_SCHEME);
+            if (is_string($scheme) && $scheme !== '') {
+                URL::forceScheme($scheme);
+            }
+        }
+
         Gate::policy(Registration::class, RegistrationPolicy::class);
         Gate::policy(Payment::class, PaymentPolicy::class);
         Gate::policy(Tournament::class, TournamentPolicy::class);
