@@ -1,14 +1,38 @@
 import { httpClient } from '../../api/httpClient'
 
+function normalizeVerificationUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return ''
+
+  let normalized = rawUrl.trim()
+
+  for (let index = 0; index < 3; index += 1) {
+    try {
+      const decoded = decodeURIComponent(normalized)
+      if (decoded === normalized) break
+      normalized = decoded
+    } catch {
+      break
+    }
+  }
+
+  return normalized
+}
+
 async function verifyEmailByUrl(url) {
-  if (!url) {
+  const normalizedUrl = normalizeVerificationUrl(url)
+
+  if (!normalizedUrl) {
     throw new Error('Missing verification URL.')
+  }
+
+  if (!/^https?:\/\//i.test(normalizedUrl)) {
+    throw new Error('Invalid verification URL format.')
   }
 
   let response
 
   try {
-    response = await fetch(url, {
+    response = await fetch(normalizedUrl, {
       method: 'GET',
       headers: {
         Accept: 'application/json',

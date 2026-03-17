@@ -12,15 +12,21 @@
             <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px; background:#12163a; border-radius:22px; overflow:hidden; border:1px solid #273162;">
                 <tr>
                     <td style="padding:26px 28px; background:linear-gradient(135deg,#1a2054 0%,#111539 58%,#2b1135 100%); border-bottom:1px solid #2f3a70;">
-                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 14px;">
                             <tr>
-                                <td align="left" style="padding:0 0 14px;">
-                                    <img
-                                        src="{{ $logoUrl }}"
-                                        alt="ESTARS PADEL TOUR"
-                                        width="235"
-                                        style="display:block; width:235px; max-width:100%; height:auto; border:0;"
-                                    >
+                                <td align="left">
+                                    <table role="presentation" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="padding:10px 14px; border-radius:14px; background:#f3ecd8; border:1px solid rgba(18,22,58,0.2);">
+                                                <img
+                                                    src="{{ $logoUrl }}"
+                                                    alt="ESTARS PADEL TOUR"
+                                                    width="235"
+                                                    style="display:block; width:235px; max-width:100%; height:auto; border:0;"
+                                                >
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </td>
                             </tr>
                         </table>
@@ -38,11 +44,11 @@
                         <p style="margin:0 0 12px; font-family:Arial,Helvetica,sans-serif; font-size:18px; line-height:1.5; color:#f3ecd8;">
                             Hola {{ $name }},
                         </p>
-                        <p style="margin:0 0 16px; font-family:Arial,Helvetica,sans-serif; font-size:16px; line-height:1.7; color:#d9ddef;">
+                        <p style="margin:0 0 16px; font-family:Arial,Helvetica,sans-serif; font-size:16px; line-height:1.7; color:#e6e9f7;">
                             Bienvenido a <strong style="color:#ffffff;">ESTARS PADEL TOUR</strong>.
                             Tu cuenta fue creada correctamente y solo falta un paso para activarla.
                         </p>
-                        <p style="margin:0 0 22px; font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:1.7; color:#d9ddef;">
+                        <p style="margin:0 0 22px; font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:1.7; color:#e6e9f7;">
                             Confirma que este correo te pertenece y en segundos podras iniciar sesion para gestionar torneos, invitaciones y pagos.
                         </p>
 

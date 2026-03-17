@@ -55,9 +55,15 @@ export default function VerifyEmailPending() {
         const name = data?.name ? `&name=${encodeURIComponent(data.name)}` : ''
         navigate(`/verify-email?status=verified${name}`, { replace: true })
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return
-        navigate('/verify-email?status=invalid_or_expired', { replace: true })
+        const fallbackMessage = 'El enlace de verificación es inválido o expiró. Puedes solicitar uno nuevo.'
+        const message = err?.data?.message || err?.message || fallbackMessage
+
+        navigate('/verify-email?status=invalid_or_expired', {
+          replace: true,
+          state: { message },
+        })
       })
       .finally(() => {
         if (!cancelled) {
