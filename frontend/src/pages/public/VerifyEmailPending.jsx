@@ -1,23 +1,74 @@
-import { useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authApi } from '../../features/auth/api'
 
 export default function VerifyEmailPending() {
   const location = useLocation()
-  const status = useMemo(() => new URLSearchParams(location.search).get('status'), [location.search])
+  const navigate = useNavigate()
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search])
+  const stateMessage = location.state?.message
+  const status = searchParams.get('status')
+  const verificationUrl = searchParams.get('url')
+  const verifiedName = searchParams.get('name')
   const isVerified = status === 'verified'
   const isInvalidOrExpired = status === 'invalid_or_expired'
   const [email, setEmail] = useState(location.state?.email || '')
+  const [isAutoVerifying, setIsAutoVerifying] = useState(false)
   const [message, setMessage] = useState(
-    location.state?.message ||
+    stateMessage ||
       (isVerified
-        ? 'Tu correo fue verificado con éxito.'
+        ? verifiedName
+          ? `Bienvenido, ${verifiedName}. Tu correo fue verificado con éxito.`
+          : 'Tu correo fue verificado con éxito.'
         : isInvalidOrExpired
           ? 'El enlace de verificación es inválido o expiró. Puedes solicitar uno nuevo.'
           : 'Revisa tu bandeja de entrada para verificar tu cuenta.'),
   )
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    setMessage(
+      stateMessage ||
+        (status === 'verified'
+          ? verifiedName
+            ? `Bienvenido, ${verifiedName}. Tu correo fue verificado con éxito.`
+            : 'Tu correo fue verificado con éxito.'
+          : status === 'invalid_or_expired'
+            ? 'El enlace de verificación es inválido o expiró. Puedes solicitar uno nuevo.'
+            : 'Revisa tu bandeja de entrada para verificar tu cuenta.'),
+    )
+  }, [stateMessage, status, verifiedName])
+
+  useEffect(() => {
+    if (!verificationUrl || status) return
+
+    let cancelled = false
+    setIsAutoVerifying(true)
+    setError('')
+
+    authApi
+      .verifyEmailByUrl(verificationUrl)
+      .then((data) => {
+        if (cancelled) return
+
+        const name = data?.name ? `&name=${encodeURIComponent(data.name)}` : ''
+        navigate(`/verify-email?status=verified${name}`, { replace: true })
+      })
+      .catch(() => {
+        if (cancelled) return
+        navigate('/verify-email?status=invalid_or_expired', { replace: true })
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsAutoVerifying(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [navigate, status, verificationUrl])
 
   const handleResend = async (event) => {
     event.preventDefault()
@@ -62,7 +113,9 @@ export default function VerifyEmailPending() {
               <h2>{isVerified ? 'Verificación lista' : 'Revisa tu correo'}</h2>
               <p className="muted">{message}</p>
 
-              {isVerified ? (
+              {isAutoVerifying ? (
+                <p className="auth-loading">Validando tu enlace de verificación...</p>
+              ) : isVerified ? (
                 <Link className="primary-button auth-submit" to="/login?verified=1">
                   Ir a iniciar sesión
                 </Link>

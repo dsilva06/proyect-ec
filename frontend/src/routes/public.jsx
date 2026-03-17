@@ -13,7 +13,7 @@ export const publicRoutes = [
   { path: '/invite/:token', element: <InviteRedirect /> },
   { path: '/login', element: <PublicOnlyRoute><Login /></PublicOnlyRoute> },
   { path: '/register', element: <PublicOnlyRoute><Register /></PublicOnlyRoute> },
-  { path: '/verify-email', element: <PublicOnlyRoute><VerifyEmailPending /></PublicOnlyRoute> },
+  { path: '/verify-email', element: <VerifyEmailPending /> },
   { path: '/verify-email/confirm', element: <VerifyEmailConfirm /> },
   { path: '/tournament', element: <Tournament /> },
   { path: '/wildcard/:token', element: <WildcardInvite /> },

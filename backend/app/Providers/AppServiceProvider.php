@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
             $name = trim((string) ($notifiable->name ?? 'Jugador'));
             $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
             $loginUrl = $frontendUrl.'/login';
-            $verificationEntryUrl = $frontendUrl.'/verify-email/confirm?url='.rawurlencode($url);
+            $verificationEntryUrl = $frontendUrl.'/verify-email?url='.rawurlencode($url);
 
             return (new MailMessage)
                 ->subject('Verifica tu correo - ESTARS PADEL TOUR')

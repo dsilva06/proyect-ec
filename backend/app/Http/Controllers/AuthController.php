@@ -169,6 +169,7 @@ class AuthController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Email is already verified.',
+                    'name' => $user->name,
                 ]);
             }
 
@@ -184,6 +185,7 @@ class AuthController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Email verified successfully.',
+                'name' => $user->name,
             ]);
         }
 
