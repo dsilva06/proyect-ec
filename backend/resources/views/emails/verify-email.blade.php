@@ -32,7 +32,7 @@
                         <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 20px;">
                             <tr>
                                 <td align="center" style="border-radius:999px; background:#eb5f3c;">
-                                    <a href="{{ $verificationUrl }}" style="display:inline-block; padding:13px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:700; color:#f0e8d4; text-decoration:none; border-radius:999px;">
+                                    <a href="{{ $verificationEntryUrl }}" style="display:inline-block; padding:13px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:700; color:#f0e8d4; text-decoration:none; border-radius:999px;">
                                         Verificar mi correo
                                     </a>
                                 </td>
@@ -43,8 +43,8 @@
                             Si el botón no funciona, copia y pega este enlace en tu navegador:
                         </p>
                         <p style="margin:0 0 16px; word-break:break-all;">
-                            <a href="{{ $verificationUrl }}" style="color:#b7d051; font-size:13px; text-decoration:underline;">
-                                {{ $verificationUrl }}
+                            <a href="{{ $verificationEntryUrl }}" style="color:#b7d051; font-size:13px; text-decoration:underline;">
+                                {{ $verificationEntryUrl }}
                             </a>
                         </p>
 

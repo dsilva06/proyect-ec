@@ -51,13 +51,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Tournament::class, TournamentPolicy::class);
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
             $name = trim((string) ($notifiable->name ?? 'Jugador'));
-            $loginUrl = rtrim((string) config('app.frontend_url'), '/').'/login';
+            $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
+            $loginUrl = $frontendUrl.'/login';
+            $verificationEntryUrl = $frontendUrl.'/verify-email/confirm?url='.rawurlencode($url);
 
             return (new MailMessage)
                 ->subject('Verifica tu correo - ESTARS PADEL TOUR')
                 ->view('emails.verify-email', [
                     'name' => $name,
-                    'verificationUrl' => $url,
+                    'verificationEntryUrl' => $verificationEntryUrl,
                     'loginUrl' => $loginUrl,
                 ]);
         });
