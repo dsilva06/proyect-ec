@@ -161,7 +161,7 @@ class AuthController extends Controller
             }
 
             return redirect()->to(
-                rtrim((string) config('app.frontend_url'), '/').'/verify-email?status=invalid_or_expired'
+                rtrim((string) config('app.frontend_url'), '/').'/login?verification=invalid_or_expired'
             );
         }
 

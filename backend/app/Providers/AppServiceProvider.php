@@ -38,13 +38,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Payment::class, PaymentPolicy::class);
         Gate::policy(Tournament::class, TournamentPolicy::class);
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            $name = trim((string) ($notifiable->name ?? 'Jugador'));
+            $loginUrl = rtrim((string) config('app.frontend_url'), '/').'/login';
+
             return (new MailMessage)
                 ->subject('Verifica tu correo - ESTARS PADEL TOUR')
-                ->greeting('¡Bienvenido a ESTARS PADEL TOUR!')
-                ->line('Tu cuenta fue creada correctamente.')
-                ->line('Para continuar, confirma que este correo te pertenece.')
-                ->action('Verificar mi correo', $url)
-                ->line('Si no creaste esta cuenta, puedes ignorar este mensaje.');
+                ->view('emails.verify-email', [
+                    'name' => $name,
+                    'verificationUrl' => $url,
+                    'loginUrl' => $loginUrl,
+                ]);
         });
 
         RateLimiter::for('auth-login', function (Request $request) {
