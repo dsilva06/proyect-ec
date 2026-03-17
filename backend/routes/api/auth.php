@@ -13,7 +13,7 @@ Route::post('/auth/email/resend', [AuthController::class, 'publicResendVerificat
     ->middleware('throttle:auth-resend-verification');
 
 Route::get('/auth/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-    ->middleware(['signed', 'throttle:6,1'])
+    ->middleware(['signed:relative', 'throttle:6,1'])
     ->name('verification.verify');
 
 Route::middleware(['auth:sanctum', 'active_user', 'throttle:auth-session'])->group(function () {

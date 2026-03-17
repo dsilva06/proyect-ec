@@ -108,6 +108,7 @@ class AuthEmailVerificationTest extends TestCase
                 'id' => $user->id,
                 'hash' => sha1($user->getEmailForVerification()),
             ],
+            absolute: false,
         );
 
         $this->getJson($url)
@@ -277,6 +278,7 @@ class AuthEmailVerificationTest extends TestCase
                 'id' => $user->id,
                 'hash' => sha1($user->getEmailForVerification()),
             ],
+            absolute: false,
         );
 
         $this->getJson($expiredUrl)

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifica tu correo - ESTARS PADEL TOUR</title>
+    <title>Verificacion de correo - ESTARS PADEL TOUR</title>
 </head>
 <body style="margin:0; padding:0; background:#edf0f8;">
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#edf0f8; padding:22px 12px;">
@@ -35,7 +35,7 @@
                             Activacion de cuenta
                         </span>
                         <h1 style="margin:14px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:33px; line-height:1.08; color:#f3ecd8;">
-                            Verifica tu correo
+                            Verificacion de correo
                         </h1>
                     </td>
                 </tr>
