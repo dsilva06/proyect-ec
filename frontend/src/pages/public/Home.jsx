@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { publicLeadsApi } from '../../features/leads/api'
+import BrandLockup from '../../components/shared/BrandLockup'
 import '../../App.css'
 
 const categories = [
@@ -117,10 +118,7 @@ export default function Home() {
       <div className="background-grid" />
 
       <header className="nav">
-        <div className="brand">
-          <span className="brand-mark">ESTARS PADEL TOUR</span>
-          <span className="brand-subtitle">Tournament Hub</span>
-        </div>
+        <BrandLockup subtitle="Tournament Hub" />
         <nav className="nav-links">
           <a href="#tournaments">Tournament</a>
           <a href="#categories">Categories</a>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authApi } from '../../features/auth/api'
+import BrandLockup from '../../components/shared/BrandLockup'
 
 export default function VerifyEmailPending() {
   const location = useLocation()
@@ -102,10 +103,7 @@ export default function VerifyEmailPending() {
       <div className="background-grid" />
 
       <header className="nav auth-nav">
-        <div className="brand">
-          <Link to="/" className="brand-mark">ESTARS PADEL TOUR</Link>
-          <span className="brand-subtitle">Tournament Hub</span>
-        </div>
+        <BrandLockup subtitle="Verification Center" />
         <div className="nav-auth-actions">
           <Link className="ghost-button" to="/login">Login</Link>
           <span className="tag muted">{isVerified ? 'Verificación lista' : 'Verificación pendiente'}</span>

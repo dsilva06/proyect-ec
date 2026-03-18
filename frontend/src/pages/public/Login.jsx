@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/useAuth'
 import { inviteStorage } from '../../auth/inviteStorage'
 import { getHomeRouteForRole } from '../../auth/roleHelpers'
 import { playerTeamInvitesApi } from '../../features/teamInvites/api'
+import BrandLockup from '../../components/shared/BrandLockup'
 
 const AUTH_WARNING_KEY = 'auth_login_warning'
 
@@ -89,10 +90,7 @@ export default function Login() {
       <div className="background-grid" />
 
       <header className="nav auth-nav">
-        <div className="brand">
-          <Link to="/" className="brand-mark">ESTARS PADEL TOUR</Link>
-          <span className="brand-subtitle">Tournament Hub</span>
-        </div>
+        <BrandLockup subtitle="Player Access" />
         <div className="nav-auth-actions">
           <span className="tag muted">Player Access</span>
           <Link className="primary-button" to="/register">Sign up</Link>

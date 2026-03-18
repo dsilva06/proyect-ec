@@ -4755,3 +4755,342 @@ label,
     margin-top: 2px;
   }
 }
+
+/* ESTARS Pro redesign layer: structure + branding cohesion */
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-logo {
+  width: clamp(124px, 14vw, 188px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.28));
+}
+
+.brand-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.brand-heading {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.9);
+}
+
+.brand-lockup .brand-subtitle {
+  margin: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.72);
+}
+
+.nav {
+  top: 10px;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 24px);
+  border-color: rgba(239, 231, 211, 0.2);
+  box-shadow: 0 14px 30px rgba(3, 7, 24, 0.42);
+}
+
+.nav-links {
+  justify-content: center;
+  align-items: center;
+}
+
+.nav-links a {
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid rgba(239, 231, 211, 0.2);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nav-links a:hover {
+  color: #12071a;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.hero-copy {
+  border-radius: 24px;
+}
+
+.hero-copy h1 {
+  max-width: 10ch;
+  letter-spacing: 0.02em;
+}
+
+.hero-copy p {
+  max-width: 60ch;
+  color: rgba(239, 231, 211, 0.9);
+}
+
+.section-block {
+  border-radius: 24px;
+  border-color: rgba(239, 231, 211, 0.14);
+}
+
+.section-title p,
+.card-detail,
+.category p,
+.schedule-item p,
+.contact-panel p,
+.hero-stats span,
+.hero-card-body .row {
+  color: rgba(239, 231, 211, 0.9);
+}
+
+.auth-page .auth-nav .brand-logo {
+  width: clamp(112px, 16vw, 164px);
+}
+
+.auth-page .auth-standalone {
+  width: min(860px, 100%);
+  border-radius: 24px;
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.auth-page .auth-card {
+  gap: 18px;
+  border-radius: 18px;
+  border-color: rgba(239, 231, 211, 0.2);
+}
+
+.auth-page .auth-card h2 {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.auth-page .auth-card .muted {
+  color: rgba(239, 231, 211, 0.88);
+}
+
+.admin-shell-pro {
+  width: min(1740px, 100%);
+  padding: clamp(16px, 2.4vw, 30px);
+  display: grid;
+  grid-template-columns: minmax(240px, 290px) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(14px, 1.8vw, 24px);
+}
+
+.admin-sidebar-frame {
+  position: sticky;
+  top: 14px;
+  z-index: 10;
+  display: grid;
+  gap: 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(239, 231, 211, 0.16);
+  background:
+    linear-gradient(155deg, rgba(8, 12, 56, 0.92), rgba(28, 6, 42, 0.9)),
+    radial-gradient(circle at 0% 0%, rgba(183, 207, 79, 0.12), transparent 46%);
+  box-shadow: 0 18px 30px rgba(3, 7, 24, 0.42);
+  padding: 14px;
+}
+
+.admin-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px 10px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.12);
+}
+
+.admin-brand-lockup .brand-logo {
+  width: 106px;
+}
+
+.admin-brand-lockup .brand-heading {
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+}
+
+.admin-brand-lockup .brand-subtitle {
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+}
+
+.admin-shell-pro .admin-sidebar {
+  display: grid;
+  gap: 8px;
+  position: static;
+  transform: none;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-shell-pro .admin-nav a {
+  width: 100%;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 231, 211, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(239, 231, 211, 0.86);
+  padding: 10px 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.admin-shell-pro .admin-nav a.active {
+  color: #180a18;
+  border-color: rgba(183, 207, 79, 0.78);
+  background: linear-gradient(120deg, rgba(183, 207, 79, 0.94), #d9ec88);
+}
+
+.admin-main {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.admin-main .admin-header {
+  position: sticky;
+  top: 14px;
+  z-index: 11;
+  border-radius: 18px;
+  padding: 14px 16px;
+  border-color: rgba(239, 231, 211, 0.18);
+}
+
+.admin-main .admin-content {
+  padding: 2px 2px 14px;
+}
+
+.admin-main .admin-page-header h3 {
+  letter-spacing: 0.02em;
+}
+
+.admin-main .panel-card,
+.admin-main .tournament-card,
+.admin-main .registrations-trello-toolbar,
+.admin-main .draws-toolbar-card,
+.admin-main .active-list-card {
+  border-color: rgba(239, 231, 211, 0.16);
+}
+
+.admin-shell-player .admin-sidebar-frame {
+  background:
+    linear-gradient(155deg, rgba(8, 12, 56, 0.92), rgba(18, 20, 40, 0.92)),
+    radial-gradient(circle at 100% 0%, rgba(255, 94, 51, 0.12), transparent 46%);
+}
+
+.admin-shell-pro .admin-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .admin-shell-pro {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-shell-pro .admin-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .admin-shell-pro .admin-sidebar-frame {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(84vw, 330px);
+    height: 100dvh;
+    border-radius: 0;
+    border: 0;
+    border-left: 1px solid rgba(239, 231, 211, 0.18);
+    padding: 14px;
+    transform: translateX(106%);
+    transition: transform 0.24s ease;
+    z-index: 34;
+  }
+
+  .admin-shell-pro .admin-sidebar-frame.is-open {
+    transform: translateX(0);
+  }
+
+  .admin-shell-pro .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    border: 0;
+    background: rgba(5, 8, 24, 0.58);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    z-index: 32;
+  }
+
+  .admin-shell-pro .admin-sidebar-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .admin-shell-pro .admin-main .admin-header {
+    position: relative;
+    top: 0;
+  }
+
+  .admin-shell-pro .admin-user {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 820px) {
+  .nav {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .nav-links {
+    width: 100%;
+    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .nav-links a {
+    text-align: center;
+    font-size: 0.8rem;
+  }
+
+  .nav-auth-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .brand-lockup {
+    gap: 10px;
+  }
+
+  .brand-logo {
+    width: clamp(108px, 32vw, 146px);
+  }
+
+  .auth-page .auth-card {
+    padding: 16px 14px;
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authApi } from '../../features/auth/api'
+import BrandLockup from '../../components/shared/BrandLockup'
 
 function normalizeVerificationUrl(rawUrl) {
   if (!rawUrl) return ''
@@ -52,6 +53,14 @@ export default function VerifyEmailConfirm() {
       <div className="background-orb orb-one" />
       <div className="background-orb orb-two" />
       <div className="background-grid" />
+
+      <header className="nav auth-nav">
+        <BrandLockup subtitle="Verification Center" />
+        <div className="nav-auth-actions">
+          <Link className="ghost-button" to="/login">Login</Link>
+          <span className="tag muted">Verificando</span>
+        </div>
+      </header>
 
       <main>
         <section className="section auth-standalone">

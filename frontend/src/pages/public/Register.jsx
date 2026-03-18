@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { inviteStorage } from '../../auth/inviteStorage'
 import { publicTeamInvitesApi } from '../../features/teamInvites/api'
+import BrandLockup from '../../components/shared/BrandLockup'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -78,10 +79,7 @@ export default function Register() {
       <div className="background-grid" />
 
       <header className="nav auth-nav">
-        <div className="brand">
-          <Link to="/" className="brand-mark">ESTARS PADEL TOUR</Link>
-          <span className="brand-subtitle">Tournament Hub</span>
-        </div>
+        <BrandLockup subtitle="Player Access" />
         <div className="nav-auth-actions">
           <Link className="ghost-button" to="/login">Login</Link>
           <span className="tag muted">Player Access</span>
