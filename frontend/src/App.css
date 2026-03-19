@@ -5284,3 +5284,90 @@ label,
     padding: 14px;
   }
 }
+
+/* Home alignment + contrast corrections */
+.home-hero {
+  justify-items: center;
+}
+
+.home-hero-main {
+  width: min(1120px, 100%);
+  margin-inline: auto;
+  align-items: center;
+  text-align: center;
+}
+
+.home-hero-main h1,
+.home-hero-main p {
+  margin-inline: auto;
+}
+
+.home-hero-main .hero-actions,
+.home-hero-main .home-stats-row {
+  justify-content: center;
+}
+
+.home-section-title {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.home-signal-grid,
+.home-tournament-grid,
+.steps,
+.category-grid,
+.schedule,
+.contact-grid {
+  width: min(1320px, 100%);
+  margin-inline: auto;
+}
+
+.home-signal-card,
+.card,
+.category,
+.schedule-item,
+.contact-panel,
+.contact-form {
+  color: rgba(239, 231, 211, 0.96);
+}
+
+.section-tone-ice .card h3,
+.section-tone-ice .category h3,
+.section-tone-ice .schedule-item h3,
+.section-tone-ice .contact-panel h3 {
+  color: rgba(239, 231, 211, 0.96);
+}
+
+.section-tone-ice .category p,
+.section-tone-ice .card-detail,
+.section-tone-ice .schedule-item p,
+.section-tone-ice .contact-panel p,
+.section-tone-ice .contact-details span {
+  color: rgba(239, 231, 211, 0.9);
+}
+
+.home-nav {
+  background: linear-gradient(140deg, rgba(8, 12, 56, 0.95), rgba(26, 0, 37, 0.9));
+}
+
+.home-nav .nav-links a,
+.home-nav .brand-subtitle {
+  color: rgba(239, 231, 211, 0.92);
+}
+
+@media (max-width: 820px) {
+  .home-hero-main {
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .home-hero-main h1,
+  .home-hero-main p {
+    margin-inline: 0;
+  }
+
+  .home-hero-main .hero-actions,
+  .home-hero-main .home-stats-row {
+    justify-content: flex-start;
+  }
+}
