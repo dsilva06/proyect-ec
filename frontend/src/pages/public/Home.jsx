@@ -112,12 +112,12 @@ export default function Home() {
   }
 
   return (
-    <div className="page">
+    <div className="page home-page">
       <div className="background-orb orb-one" />
       <div className="background-orb orb-two" />
       <div className="background-grid" />
 
-      <header className="nav">
+      <header className="nav home-nav">
         <BrandLockup subtitle="Tournament Hub" />
         <nav className="nav-links">
           <a href="#tournaments">Tournament</a>
@@ -139,79 +139,98 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="hero-marquee" aria-hidden="true">
+      <div className="hero-marquee home-marquee" aria-hidden="true">
         <span>ESTARS PADEL TOUR</span>
         <span>RANKED COMPETITION</span>
         <span>LIVE DRAWS</span>
         <span>ESTARS PADEL TOUR</span>
       </div>
 
-      <main className="landing-main">
-        <section className="hero reveal">
-          <div className="hero-copy">
-            <div className="pill">Web demo for players</div>
-            <h1>Register, rank, and play. Your padel season starts here.</h1>
+      <main className="landing-main home-main">
+        <section className="home-hero reveal">
+          <div className="home-hero-main hero-copy">
+            <div className="pill">Season launch</div>
+            <h1>One hub for registrations, rankings, draws, and match-day updates.</h1>
             <p>
-              A modern padel tournament experience with ranking-based acceptance,
-              transparent waitlists, and daily-updated draws. Built for players
-              first, ready for mobile later.
+              ESTARS centralizes the full tournament operation so players and organizers work in one clean flow:
+              register, validate, pay, and compete with transparent status every day.
             </p>
             <div className="hero-actions">
               <Link className="primary-button" to="/register">Create account</Link>
               <Link className="secondary-button" to="/login">Login</Link>
-              <a className="ghost-button" href="#contact">Contact us</a>
+              <a className="ghost-button" href="#contact">Talk to us</a>
             </div>
-            <div className="hero-stats">
+            <div className="hero-stats home-stats-row">
               <div>
                 <strong>6</strong>
-                <span>Categories</span>
+                <span>Active categories</span>
+              </div>
+              <div>
+                <strong>Top Rank</strong>
+                <span>Priority acceptance</span>
               </div>
               <div>
                 <strong>24h</strong>
-                <span>Support response</span>
-              </div>
-              <div>
-                <strong>Live</strong>
-                <span>Draw updates</span>
+                <span>Ops support</span>
               </div>
             </div>
           </div>
-          <div className="hero-card">
+
+          <aside className="hero-card home-ops-card">
             <div className="hero-card-header">
-              <h3>Registration snapshot</h3>
-              <span className="tag muted">Player view</span>
+              <h3>Control Snapshot</h3>
+              <span className="tag">Live Workflow</span>
             </div>
             <div className="hero-card-body">
               <div className="row">
-                <span>Ranking source</span>
-                <strong>FEP / FIP</strong>
+                <span>Entry model</span>
+                <strong>Ranking + waitlist</strong>
               </div>
               <div className="row">
-                <span>Waitlist logic</span>
-                <strong>Top by ranking</strong>
+                <span>Payment trigger</span>
+                <strong>After acceptance</strong>
               </div>
               <div className="row">
-                <span>Payment window</span>
-                <strong>Enabled after acceptance</strong>
+                <span>Draw publication</span>
+                <strong>Daily board updates</strong>
               </div>
               <div className="row">
-                <span>Draw updates</span>
-                <strong>Posted daily</strong>
+                <span>Player communication</span>
+                <strong>Email + status feed</strong>
               </div>
             </div>
-          </div>
+            <div className="home-ops-actions">
+              <Link className="secondary-button" to="/register">Join this season</Link>
+              <a className="ghost-button" href="#schedule">See schedule flow</a>
+            </div>
+          </aside>
+        </section>
+
+        <section className="home-signal-grid reveal">
+          <article className="home-signal-card">
+            <span className="tag muted">01</span>
+            <h3>Single source of truth</h3>
+            <p className="card-detail">Registrations, categories, and payments sync in one panel.</p>
+          </article>
+          <article className="home-signal-card">
+            <span className="tag muted">02</span>
+            <h3>Fair acceptance model</h3>
+            <p className="card-detail">Ranking-first logic and explicit pending/waitlist states.</p>
+          </article>
+          <article className="home-signal-card">
+            <span className="tag muted">03</span>
+            <h3>Fast operations</h3>
+            <p className="card-detail">Admins update draws and players see status immediately.</p>
+          </article>
         </section>
 
         <section id="tournaments" className="section section-block section-tone-ice reveal">
-          <div className="section-title">
+          <div className="section-title home-section-title">
             <span className="section-kicker">Live Event Layer</span>
-            <h2>Current tournament</h2>
-            <p>
-              We are launching with a single tournament. More events will be
-              added later.
-            </p>
+            <h2>Current Tournament</h2>
+            <p>Single-event mode now, designed to expand into a full calendar.</p>
           </div>
-          <div className="card-grid">
+          <div className="card-grid home-tournament-grid">
             <article className="card card-featured">
               <div className="card-header">
                 <h3>Tournament name: TBD</h3>
@@ -219,17 +238,26 @@ export default function Home() {
               </div>
               <p className="card-detail">Dates: to be confirmed.</p>
               <p className="card-detail">Venue: to be confirmed.</p>
-              <p className="card-detail emphasis">Modalidad: pro / amateur.</p>
+              <p className="card-detail emphasis">Mode: pro / amateur divisions.</p>
               <a className="ghost-button full" href="#contact">Get updates</a>
+            </article>
+            <article className="card home-mini-brief">
+              <div className="card-header">
+                <h3>Operator checklist</h3>
+                <span className="tag muted">Readiness</span>
+              </div>
+              <p className="card-detail">Categories configured with capacity rules.</p>
+              <p className="card-detail">Registration state and payment window linked.</p>
+              <p className="card-detail">Draw publication and match boards prepared.</p>
             </article>
           </div>
         </section>
 
         <section className="section flow section-block section-tone-solid reveal">
-          <div className="section-title">
+          <div className="section-title home-section-title">
             <span className="section-kicker">How It Works</span>
-            <h2>Player flow</h2>
-            <p>Every step is clear, fair, and fast.</p>
+            <h2>Player Flow</h2>
+            <p>Every step is explicit, auditable, and designed to reduce friction.</p>
           </div>
           <div className="steps">
             {steps.map((step, index) => (
@@ -243,10 +271,10 @@ export default function Home() {
         </section>
 
         <section id="categories" className="section section-block section-tone-ice reveal">
-          <div className="section-title">
+          <div className="section-title home-section-title">
             <span className="section-kicker">Divisions</span>
-            <h2>Categories</h2>
-            <p>Six divisions, clear rules, flexible capacity.</p>
+            <h2>Competitive Categories</h2>
+            <p>Six divisions with transparent entry rules and dynamic capacity.</p>
           </div>
           <div className="category-grid">
             {categories.map((category) => (
@@ -262,10 +290,10 @@ export default function Home() {
         </section>
 
         <section id="schedule" className="section section-block section-tone-solid reveal">
-          <div className="section-title">
+          <div className="section-title home-section-title">
             <span className="section-kicker">Tournament Ops</span>
-            <h2>Match schedule</h2>
-            <p>Published once the draw is ready. Updated daily during play.</p>
+            <h2>Match Schedule</h2>
+            <p>Published once draws are locked and updated daily during tournament days.</p>
           </div>
           <div className="schedule">
             <div className="schedule-item">
@@ -281,10 +309,10 @@ export default function Home() {
         </section>
 
         <section id="contact" className="section contact section-block section-tone-ice reveal">
-          <div className="section-title">
+          <div className="section-title home-section-title">
             <span className="section-kicker">Partnerships</span>
-            <h2>Contact & partnerships</h2>
-            <p>Let us know if you want to sponsor or collaborate.</p>
+            <h2>Contact & Partnerships</h2>
+            <p>Tell us about sponsorships, venues, or strategic collaborations.</p>
           </div>
           <div className="contact-grid">
             <form className="contact-form" onSubmit={handleContactSubmit}>
@@ -356,7 +384,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="footer">
+      <footer className="footer home-footer">
         <div>
           <strong>ESTARS PADEL TOUR</strong>
           <span>Smart tournaments for modern players.</span>

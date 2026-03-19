@@ -37,7 +37,7 @@ export default function PlayerLayout() {
 
       <aside className={`admin-sidebar-frame ${isSidebarOpen ? 'is-open' : ''}`}>
         <div className="admin-sidebar-top">
-          <BrandLockup subtitle="Player Console" className="admin-brand-lockup" />
+          <BrandLockup subtitle="Player Console" className="admin-brand-lockup" variant="compact" />
           <span className="tag muted">Jugador</span>
         </div>
 

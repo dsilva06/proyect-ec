@@ -101,59 +101,76 @@ export default function Login() {
         <section className="section auth-standalone">
           <div className="auth-shell single-card">
             <div className="auth-card">
-              <h2>Iniciar sesión</h2>
-              <p className="muted">Ingresa con tu cuenta para ver torneos, pagos e invitaciones.</p>
+              <div className="auth-modern-grid">
+                <div className="auth-form-panel">
+                  <h2>Iniciar sesión</h2>
+                  <p className="muted">Ingresa con tu cuenta para ver torneos, pagos e invitaciones.</p>
 
-              {verifiedFromQuery && (
-                <p className="auth-success">
-                  Tu correo fue verificado correctamente. Ya puedes iniciar sesión.
-                </p>
-              )}
+                  {verifiedFromQuery && (
+                    <p className="auth-success">
+                      Tu correo fue verificado correctamente. Ya puedes iniciar sesión.
+                    </p>
+                  )}
 
-              <form onSubmit={handleSubmit}>
-                <label>
-                  Correo
-                  <input
-                    type="email"
-                    placeholder="name@email.com"
-                    value={form.email}
-                    onChange={(event) => setForm({ ...form, email: event.target.value })}
-                    disabled={isSubmitting}
-                    required
-                  />
-                </label>
+                  <form onSubmit={handleSubmit}>
+                    <label>
+                      Correo
+                      <input
+                        type="email"
+                        placeholder="name@email.com"
+                        value={form.email}
+                        onChange={(event) => setForm({ ...form, email: event.target.value })}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </label>
 
-                <label>
-                  Contraseña
-                  <input
-                    type="password"
-                    placeholder="Tu contraseña"
-                    value={form.password}
-                    onChange={(event) => setForm({ ...form, password: event.target.value })}
-                    disabled={isSubmitting}
-                    required
-                  />
-                </label>
+                    <label>
+                      Contraseña
+                      <input
+                        type="password"
+                        placeholder="Tu contraseña"
+                        value={form.password}
+                        onChange={(event) => setForm({ ...form, password: event.target.value })}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </label>
 
-                <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Entrando...' : 'Entrar'}
-                </button>
-              </form>
+                    <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? 'Entrando...' : 'Entrar'}
+                    </button>
+                  </form>
 
-              {isSubmitting && <p className="auth-loading">Validando tus credenciales...</p>}
-              {error && <p className="auth-error">{error}</p>}
+                  {isSubmitting && <p className="auth-loading">Validando tus credenciales...</p>}
+                  {error && <p className="auth-error">{error}</p>}
 
-              {showVerifyHint && (
-                <p className="auth-switch">
-                  <Link to="/verify-email" state={{ email: form.email }}>
-                    Reenviar o revisar verificación
-                  </Link>
-                </p>
-              )}
+                  {showVerifyHint && (
+                    <p className="auth-switch">
+                      <Link to="/verify-email" state={{ email: form.email }}>
+                        Reenviar o revisar verificación
+                      </Link>
+                    </p>
+                  )}
 
-              <p className="auth-switch">
-                No tienes cuenta? <Link to="/register">Crear cuenta</Link>
-              </p>
+                  <p className="auth-switch">
+                    No tienes cuenta? <Link to="/register">Crear cuenta</Link>
+                  </p>
+                </div>
+
+                <aside className="auth-side-panel">
+                  <span className="tag muted">Estars Access</span>
+                  <h3>Tu consola de competencia</h3>
+                  <p>
+                    Desde aquí gestionas tu perfil, recibes invitaciones y haces seguimiento de estados en tiempo real.
+                  </p>
+                  <div className="auth-side-list">
+                    <p>• Historial de inscripciones por categoría</p>
+                    <p>• Estado de pago y aceptación del equipo</p>
+                    <p>• Acceso directo a sorteos y cronograma</p>
+                  </div>
+                </aside>
+              </div>
             </div>
           </div>
         </section>

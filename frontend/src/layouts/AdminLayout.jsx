@@ -37,7 +37,7 @@ export default function AdminLayout() {
 
       <aside className={`admin-sidebar-frame ${isSidebarOpen ? 'is-open' : ''}`}>
         <div className="admin-sidebar-top">
-          <BrandLockup subtitle="Control Center" className="admin-brand-lockup" />
+          <BrandLockup subtitle="Control Center" className="admin-brand-lockup" variant="compact" />
           <span className="tag muted">Administrador</span>
         </div>
 

@@ -90,107 +90,124 @@ export default function Register() {
         <section className="section auth-standalone">
           <div className="auth-shell single-card">
             <div className="auth-card">
-              <h2>Crear cuenta</h2>
-              <p className="muted">Registra tu perfil para unirte al torneo y gestionar tu equipo.</p>
+              <div className="auth-modern-grid">
+                <div className="auth-form-panel">
+                  <h2>Crear cuenta</h2>
+                  <p className="muted">Registra tu perfil para unirte al torneo y gestionar tu equipo.</p>
 
-              {invite && (
-                <div className="auth-status">
-                  <span className="tag">Invitacion pendiente</span>
-                  <p>
-                    Equipo: <strong>{invite.team?.display_name || 'Equipo'}</strong>
+                  {invite && (
+                    <div className="auth-status">
+                      <span className="tag">Invitacion pendiente</span>
+                      <p>
+                        Equipo: <strong>{invite.team?.display_name || 'Equipo'}</strong>
+                      </p>
+                      <p>Usa este correo para reclamar tu invitacion automaticamente.</p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit}>
+                    <label>
+                      Nombre
+                      <input
+                        type="text"
+                        placeholder="Nombre"
+                        value={form.first_name}
+                        onChange={(event) => setForm({ ...form, first_name: event.target.value })}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </label>
+                    <label>
+                      Apellido
+                      <input
+                        type="text"
+                        placeholder="Apellido"
+                        value={form.last_name}
+                        onChange={(event) => setForm({ ...form, last_name: event.target.value })}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </label>
+                    <label>
+                      DNI
+                      <input
+                        type="text"
+                        placeholder="Ej: 12345678"
+                        value={form.dni}
+                        onChange={(event) => setForm({ ...form, dni: event.target.value })}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </label>
+                    <label>
+                      Correo
+                      <input
+                        type="email"
+                        placeholder="name@email.com"
+                        value={form.email}
+                        disabled={Boolean(invite?.invited_email) || isSubmitting}
+                        onChange={(event) => setForm({ ...form, email: event.target.value })}
+                        required
+                      />
+                    </label>
+                    <label>
+                      Telefono (opcional)
+                      <input
+                        type="text"
+                        placeholder="+34 600 000 000"
+                        value={form.phone}
+                        onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                        disabled={isSubmitting}
+                      />
+                    </label>
+                    <label>
+                      Contrasena
+                      <input
+                        type="password"
+                        placeholder="Minimo 8 caracteres"
+                        value={form.password}
+                        onChange={(event) => setForm({ ...form, password: event.target.value })}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </label>
+                    <label>
+                      Confirmar contrasena
+                      <input
+                        type="password"
+                        placeholder="Repite la contrasena"
+                        value={form.password_confirmation}
+                        onChange={(event) => setForm({ ...form, password_confirmation: event.target.value })}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </label>
+                    <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
+                    </button>
+                  </form>
+
+                  {inviteError && <p className="auth-error">{inviteError}</p>}
+                  {error && <p className="auth-error">{error}</p>}
+
+                  <p className="auth-switch">
+                    Ya tienes cuenta? <Link to="/login">Inicia sesion</Link>
                   </p>
-                  <p>Usa este correo para reclamar tu invitacion automaticamente.</p>
                 </div>
-              )}
 
-              <form onSubmit={handleSubmit}>
-                <label>
-                  Nombre
-                  <input
-                    type="text"
-                    placeholder="Nombre"
-                    value={form.first_name}
-                    onChange={(event) => setForm({ ...form, first_name: event.target.value })}
-                    disabled={isSubmitting}
-                    required
-                  />
-                </label>
-                <label>
-                  Apellido
-                  <input
-                    type="text"
-                    placeholder="Apellido"
-                    value={form.last_name}
-                    onChange={(event) => setForm({ ...form, last_name: event.target.value })}
-                    disabled={isSubmitting}
-                    required
-                  />
-                </label>
-                <label>
-                  DNI
-                  <input
-                    type="text"
-                    placeholder="Ej: 12345678"
-                    value={form.dni}
-                    onChange={(event) => setForm({ ...form, dni: event.target.value })}
-                    disabled={isSubmitting}
-                    required
-                  />
-                </label>
-                <label>
-                  Correo
-                  <input
-                    type="email"
-                    placeholder="name@email.com"
-                    value={form.email}
-                    disabled={Boolean(invite?.invited_email) || isSubmitting}
-                    onChange={(event) => setForm({ ...form, email: event.target.value })}
-                    required
-                  />
-                </label>
-                <label>
-                  Telefono (opcional)
-                  <input
-                    type="text"
-                    placeholder="+34 600 000 000"
-                    value={form.phone}
-                    onChange={(event) => setForm({ ...form, phone: event.target.value })}
-                    disabled={isSubmitting}
-                  />
-                </label>
-                <label>
-                  Contrasena
-                  <input
-                    type="password"
-                    placeholder="Minimo 8 caracteres"
-                    value={form.password}
-                    onChange={(event) => setForm({ ...form, password: event.target.value })}
-                    disabled={isSubmitting}
-                    required
-                  />
-                </label>
-                <label>
-                  Confirmar contrasena
-                  <input
-                    type="password"
-                    placeholder="Repite la contrasena"
-                    value={form.password_confirmation}
-                    onChange={(event) => setForm({ ...form, password_confirmation: event.target.value })}
-                    disabled={isSubmitting}
-                    required
-                  />
-                </label>
-                <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
-                </button>
-              </form>
-
-              {inviteError && <p className="auth-error">{inviteError}</p>}
-              {error && <p className="auth-error">{error}</p>}
-
-              <p className="auth-switch">
-                Ya tienes cuenta? <Link to="/login">Inicia sesion</Link>
-              </p>
+                <aside className="auth-side-panel">
+                  <span className="tag muted">Inscripción segura</span>
+                  <h3>Arranca tu temporada</h3>
+                  <p>
+                    Creamos tu cuenta, enviamos verificación y habilitamos acceso cuando el correo esté confirmado.
+                  </p>
+                  <div className="auth-side-list">
+                    <p>• Vinculación automática con invitaciones pendientes</p>
+                    <p>• Perfil listo para rankings y categorías</p>
+                    <p>• Flujo de pago y aceptación integrado</p>
+                  </div>
+                </aside>
+              </div>
             </div>
           </div>
         </section>
