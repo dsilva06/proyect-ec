@@ -18,26 +18,38 @@ class UserResource extends JsonResource
             $profile = $this->playerProfile;
         }
 
+        $viewer = $request->user();
+        $canViewSensitiveFields = $viewer
+            && ((int) $viewer->id === (int) $this->id || (string) $viewer->role === 'admin');
+
+        $profileData = null;
+        if ($profile) {
+            $profileData = [
+                'first_name' => $profile->first_name,
+                'last_name' => $profile->last_name,
+                'province_state' => $profile->province_state,
+                'ranking_source' => $profile->ranking_source,
+                'ranking_value' => $profile->ranking_value,
+                'ranking_updated_at' => optional($profile->ranking_updated_at)->toIso8601String(),
+            ];
+
+            if ($canViewSensitiveFields) {
+                $profileData['dni'] = $profile->dni;
+            }
+        }
+
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->email,
-            'phone' => $this->phone,
+            'email' => $canViewSensitiveFields ? $this->email : null,
+            'phone' => $canViewSensitiveFields ? $this->phone : null,
             'role' => $this->role,
             'is_active' => (bool) $this->is_active,
             'ranking_source' => $profile?->ranking_source,
             'ranking_value' => $profile?->ranking_value,
             'ranking_updated_at' => optional($profile?->ranking_updated_at)->toIso8601String(),
             'ranking_verified_at' => optional($profile?->ranking_updated_at)->toIso8601String(),
-            'player_profile' => $profile ? [
-                'first_name' => $profile->first_name,
-                'last_name' => $profile->last_name,
-                'dni' => $profile->dni,
-                'province_state' => $profile->province_state,
-                'ranking_source' => $profile->ranking_source,
-                'ranking_value' => $profile->ranking_value,
-                'ranking_updated_at' => optional($profile->ranking_updated_at)->toIso8601String(),
-            ] : null,
+            'player_profile' => $profileData,
         ];
     }
 }
