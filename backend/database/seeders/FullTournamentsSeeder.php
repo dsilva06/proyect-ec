@@ -21,8 +21,11 @@ use Illuminate\Support\Facades\Hash;
 class FullTournamentsSeeder extends Seeder
 {
     private const TEAMS_PER_CATEGORY = 32;
+
     private const WILDCARDS_PER_CATEGORY = 4;
+
     private const USER_EMAIL_PREFIX = 'fullseed';
+
     private const TEAM_NAME_PREFIX = '[SEED FULL]';
 
     public function run(): void
@@ -197,11 +200,11 @@ class FullTournamentsSeeder extends Seeder
             ->delete();
 
         Team::query()
-            ->where('display_name', 'like', self::TEAM_NAME_PREFIX . '%')
+            ->where('display_name', 'like', self::TEAM_NAME_PREFIX.'%')
             ->delete();
 
         User::query()
-            ->where('email', 'like', self::USER_EMAIL_PREFIX . '.%@proyect-ec.test')
+            ->where('email', 'like', self::USER_EMAIL_PREFIX.'.%@proyect-ec.test')
             ->delete();
     }
 
@@ -239,11 +242,13 @@ class FullTournamentsSeeder extends Seeder
                 'team_id' => $team->id,
                 'user_id' => $userA->id,
                 'slot' => 1,
+                'role' => \App\Models\TeamMember::ROLE_CAPTAIN,
             ]);
             TeamMember::create([
                 'team_id' => $team->id,
                 'user_id' => $userB->id,
                 'slot' => 2,
+                'role' => \App\Models\TeamMember::ROLE_PARTNER,
             ]);
 
             $rankingA = $isWildcard ? null : (($regularPairIndex * 2) - 1);

@@ -109,5 +109,15 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(20)->by($ip),
             ];
         });
+
+        RateLimiter::for('team-invite-resend', function (Request $request) {
+            $userId = $request->user()?->getAuthIdentifier() ?? 'guest';
+            $ip = (string) $request->ip();
+
+            return [
+                Limit::perMinute(5)->by($userId.'|'.$ip),
+                Limit::perMinute(30)->by($ip),
+            ];
+        });
     }
 }

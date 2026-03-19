@@ -69,10 +69,17 @@ class StatusSeeder extends Seeder
                 ['code' => 'cancelled', 'terminal' => true],
             ],
             'team_invite' => [
-                ['code' => 'sent', 'terminal' => false],
+                ['code' => 'pending', 'terminal' => false],
                 ['code' => 'accepted', 'terminal' => true],
+                ['code' => 'rejected', 'terminal' => true],
                 ['code' => 'expired', 'terminal' => true],
+                ['code' => 'revoked', 'terminal' => true],
+            ],
+            'team' => [
+                ['code' => 'pending_partner_acceptance', 'terminal' => false],
+                ['code' => 'confirmed', 'terminal' => false],
                 ['code' => 'cancelled', 'terminal' => true],
+                ['code' => 'expired', 'terminal' => true],
             ],
             'invitation' => [
                 ['code' => 'pending', 'terminal' => false],

@@ -24,6 +24,9 @@ Route::middleware(['auth:sanctum', 'active_user', 'verified', 'role:player'])->p
     Route::get('/team-invites', [PlayerTeamInviteController::class, 'index']);
     Route::post('/team-invites/claim', [PlayerTeamInviteController::class, 'claim']);
     Route::post('/team-invites/{teamInvite}/accept', [PlayerTeamInviteController::class, 'accept']);
+    Route::post('/team-invites/{teamInvite}/reject', [PlayerTeamInviteController::class, 'reject']);
+    Route::post('/team-invites/{teamInvite}/resend', [PlayerTeamInviteController::class, 'resend'])
+        ->middleware('throttle:team-invite-resend');
     Route::post('/registrations', [PlayerRegistrationController::class, 'store']);
     Route::get('/registrations', [PlayerRegistrationController::class, 'index']);
     Route::get('/payments', [PlayerPaymentController::class, 'index']);

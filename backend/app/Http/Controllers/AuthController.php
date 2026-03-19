@@ -12,7 +12,6 @@ use App\Mail\WelcomePlayer;
 use App\Models\PlayerProfile;
 use App\Models\TeamInvite;
 use App\Models\User;
-use App\Support\StatusResolver;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -64,10 +63,7 @@ class AuthController extends Controller
                 TeamInvite::query()
                     ->where('invited_email', $email)
                     ->whereNull('invited_user_id')
-                    ->where(
-                        'status_id',
-                        StatusResolver::getId('team_invite', 'sent')
-                    )
+                    ->whereHas('status', fn ($query) => $query->whereIn('code', ['pending', 'sent']))
                     ->update([
                         'invited_user_id' => $user->id,
                     ]);

@@ -132,12 +132,14 @@ class DemoTournamentSeeder extends Seeder
                     'team_id' => $team->id,
                     'user_id' => $userA->id,
                     'slot' => 1,
+                    'role' => \App\Models\TeamMember::ROLE_CAPTAIN,
                 ]);
 
                 TeamMember::create([
                     'team_id' => $team->id,
                     'user_id' => $userB->id,
                     'slot' => 2,
+                    'role' => \App\Models\TeamMember::ROLE_PARTNER,
                 ]);
 
                 $rankingA = $rankingValue++;

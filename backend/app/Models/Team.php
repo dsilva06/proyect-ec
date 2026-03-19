@@ -10,9 +10,18 @@ class Team extends Model
     /** @use HasFactory<\Database\Factories\TeamFactory> */
     use HasFactory;
 
+    public const STATUS_PENDING_PARTNER_ACCEPTANCE = 'pending_partner_acceptance';
+
+    public const STATUS_CONFIRMED = 'confirmed';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUS_EXPIRED = 'expired';
+
     protected $fillable = [
         'display_name',
         'created_by',
+        'status_id',
     ];
 
     public function creator()
@@ -28,7 +37,7 @@ class Team extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'team_members')
-            ->withPivot('slot')
+            ->withPivot(['slot', 'role'])
             ->withTimestamps();
     }
 
@@ -37,8 +46,18 @@ class Team extends Model
         return $this->hasMany(Registration::class);
     }
 
+    public function registration()
+    {
+        return $this->hasOne(Registration::class);
+    }
+
     public function invites()
     {
         return $this->hasMany(TeamInvite::class);
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(Status::class);
     }
 }

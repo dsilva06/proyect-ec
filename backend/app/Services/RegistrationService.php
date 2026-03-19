@@ -92,7 +92,6 @@ class RegistrationService
         }
 
         $existing = Registration::query()
-            ->where('tournament_category_id', $tournamentCategoryId)
             ->where('team_id', $teamId)
             ->first();
 

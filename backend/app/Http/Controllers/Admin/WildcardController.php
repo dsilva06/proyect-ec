@@ -245,12 +245,14 @@ class WildcardController extends Controller
         $team = Team::create([
             'display_name' => $user->name ?: 'Equipo',
             'created_by' => $user->id,
+            'status_id' => app(StatusService::class)->resolveStatusId('team', Team::STATUS_CONFIRMED),
         ]);
 
         TeamMember::create([
             'team_id' => $team->id,
             'user_id' => $user->id,
             'slot' => 1,
+            'role' => TeamMember::ROLE_CAPTAIN,
         ]);
 
         if ($partnerEmail) {
@@ -260,15 +262,19 @@ class WildcardController extends Controller
                     'team_id' => $team->id,
                     'user_id' => $partnerUser->id,
                     'slot' => 2,
+                    'role' => TeamMember::ROLE_PARTNER,
                 ]);
                 $team->display_name = trim(($user->name ?: 'Jugador').' / '.($partnerUser->name ?: 'Jugador'));
                 $team->save();
             } else {
+                $team->status_id = app(StatusService::class)->resolveStatusId('team', Team::STATUS_PENDING_PARTNER_ACCEPTANCE);
+                $team->save();
+
                 TeamInvite::create([
                     'team_id' => $team->id,
                     'invited_email' => $partnerEmail,
                     'token' => Str::uuid()->toString(),
-                    'status_id' => app(StatusService::class)->resolveStatusId('team_invite', 'sent'),
+                    'status_id' => app(StatusService::class)->resolveStatusId('team_invite', TeamInvite::STATUS_PENDING),
                     'expires_at' => now()->addDays(7),
                 ]);
             }

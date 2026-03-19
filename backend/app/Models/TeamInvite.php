@@ -10,6 +10,16 @@ class TeamInvite extends Model
     /** @use HasFactory<\Database\Factories\TeamInviteFactory> */
     use HasFactory;
 
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_ACCEPTED = 'accepted';
+
+    public const STATUS_REJECTED = 'rejected';
+
+    public const STATUS_EXPIRED = 'expired';
+
+    public const STATUS_REVOKED = 'revoked';
+
     protected $fillable = [
         'team_id',
         'invited_email',
@@ -20,11 +30,16 @@ class TeamInvite extends Model
         'token',
         'status_id',
         'expires_at',
+        'email_sent_at',
+        'email_last_error',
+        'email_attempts',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'email_sent_at' => 'datetime',
         'invited_ranking_value' => 'integer',
+        'email_attempts' => 'integer',
     ];
 
     public function team()

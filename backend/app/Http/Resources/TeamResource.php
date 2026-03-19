@@ -16,6 +16,7 @@ class TeamResource extends JsonResource
             'id' => $this->id,
             'display_name' => $this->display_name,
             'created_by' => $this->created_by,
+            'status' => new StatusResource($this->whenLoaded('status')),
             'members' => UserResource::collection($this->whenLoaded('users')),
         ];
     }

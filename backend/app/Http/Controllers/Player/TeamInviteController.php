@@ -46,4 +46,18 @@ class TeamInviteController extends Controller
 
         return new TeamInviteResource($invite);
     }
+
+    public function reject(Request $request, TeamInvite $teamInvite)
+    {
+        $invite = app(TeamService::class)->rejectInvite($request->user(), $teamInvite);
+
+        return new TeamInviteResource($invite);
+    }
+
+    public function resend(Request $request, TeamInvite $teamInvite)
+    {
+        $invite = app(TeamService::class)->resendInvite($request->user(), $teamInvite);
+
+        return new TeamInviteResource($invite);
+    }
 }
