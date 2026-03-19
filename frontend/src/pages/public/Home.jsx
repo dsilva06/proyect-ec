@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { publicLeadsApi } from '../../features/leads/api'
+import { publicTournamentsApi } from '../../features/tournaments/api'
 import BrandLockup from '../../components/shared/BrandLockup'
 import '../../App.css'
 
@@ -33,9 +34,81 @@ const steps = [
   },
 ]
 
+const normalizeCollection = (payload) => {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  return []
+}
+
+const formatDate = (value) => {
+  if (!value) return 'Por confirmar'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'Por confirmar'
+  return parsed.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+const formatDateTime = (value) => {
+  if (!value) return ''
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return parsed.toLocaleString('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
+const formatRange = (start, end) => {
+  const startLabel = formatDate(start)
+  const endLabel = formatDate(end)
+  if (startLabel === 'Por confirmar' && endLabel === 'Por confirmar') return 'Por confirmar'
+  if (startLabel !== 'Por confirmar' && endLabel !== 'Por confirmar') return `${startLabel} - ${endLabel}`
+  return startLabel !== 'Por confirmar' ? startLabel : endLabel
+}
+
+const formatRegistrationWindow = (start, end) => {
+  const startLabel = formatDateTime(start)
+  const endLabel = formatDateTime(end)
+  if (!startLabel && !endLabel) return 'Por confirmar'
+  if (startLabel && endLabel) return `${startLabel} - ${endLabel}`
+  return startLabel || endLabel
+}
+
+const statusPriority = (statusCode) => {
+  if (statusCode === 'registration_open') return 0
+  if (statusCode === 'published') return 1
+  return 10
+}
+
+const pickCurrentTournament = (tournaments) => {
+  if (!Array.isArray(tournaments) || tournaments.length === 0) return null
+
+  const sorted = [...tournaments].sort((a, b) => {
+    const statusDiff = statusPriority(a?.status?.code) - statusPriority(b?.status?.code)
+    if (statusDiff !== 0) return statusDiff
+
+    const aTime = new Date(a?.start_date || 0).getTime()
+    const bTime = new Date(b?.start_date || 0).getTime()
+    const safeATime = Number.isFinite(aTime) ? aTime : Number.MAX_SAFE_INTEGER
+    const safeBTime = Number.isFinite(bTime) ? bTime : Number.MAX_SAFE_INTEGER
+    return safeATime - safeBTime
+  })
+
+  return sorted[0] || null
+}
+
 export default function Home() {
   const location = useLocation()
   const { user, logout } = useAuth()
+  const [tournaments, setTournaments] = useState([])
+  const [tournamentsLoading, setTournamentsLoading] = useState(true)
+  const [tournamentsError, setTournamentsError] = useState('')
   const [contactForm, setContactForm] = useState({
     full_name: '',
     email: '',
@@ -54,6 +127,35 @@ export default function Home() {
     window.addEventListener('scroll', updateScroll, { passive: true })
 
     return () => window.removeEventListener('scroll', updateScroll)
+  }, [])
+
+  useEffect(() => {
+    let ignore = false
+
+    const loadTournaments = async () => {
+      setTournamentsLoading(true)
+      setTournamentsError('')
+
+      try {
+        const response = await publicTournamentsApi.list()
+        if (ignore) return
+        setTournaments(normalizeCollection(response))
+      } catch (error) {
+        if (ignore) return
+        setTournaments([])
+        setTournamentsError(error?.message || 'No pudimos cargar los torneos actuales.')
+      } finally {
+        if (!ignore) {
+          setTournamentsLoading(false)
+        }
+      }
+    }
+
+    loadTournaments()
+
+    return () => {
+      ignore = true
+    }
   }, [])
 
   useEffect(() => {
@@ -111,6 +213,9 @@ export default function Home() {
     )
   }
 
+  const currentTournament = useMemo(() => pickCurrentTournament(tournaments), [tournaments])
+  const currentCategoryCount = Array.isArray(currentTournament?.categories) ? currentTournament.categories.length : 0
+
   return (
     <div className="page home-page">
       <div className="background-orb orb-one" />
@@ -162,12 +267,12 @@ export default function Home() {
             </div>
             <div className="hero-stats home-stats-row">
               <div>
-                <strong>6</strong>
-                <span>Active categories</span>
+                <strong>{tournamentsLoading ? '...' : tournaments.length}</strong>
+                <span>Torneos públicos</span>
               </div>
               <div>
-                <strong>Top Rank</strong>
-                <span>Priority acceptance</span>
+                <strong>{tournamentsLoading ? '...' : currentCategoryCount}</strong>
+                <span>Categorías activas</span>
               </div>
               <div>
                 <strong>24h</strong>
@@ -175,35 +280,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          <aside className="hero-card home-ops-card">
-            <div className="hero-card-header">
-              <h3>Control Snapshot</h3>
-              <span className="tag">Live Workflow</span>
-            </div>
-            <div className="hero-card-body">
-              <div className="row">
-                <span>Entry model</span>
-                <strong>Ranking + waitlist</strong>
-              </div>
-              <div className="row">
-                <span>Payment trigger</span>
-                <strong>After acceptance</strong>
-              </div>
-              <div className="row">
-                <span>Draw publication</span>
-                <strong>Daily board updates</strong>
-              </div>
-              <div className="row">
-                <span>Player communication</span>
-                <strong>Email + status feed</strong>
-              </div>
-            </div>
-            <div className="home-ops-actions">
-              <Link className="secondary-button" to="/register">Join this season</Link>
-              <a className="ghost-button" href="#schedule">See schedule flow</a>
-            </div>
-          </aside>
         </section>
 
         <section className="home-signal-grid reveal">
@@ -228,28 +304,71 @@ export default function Home() {
           <div className="section-title home-section-title">
             <span className="section-kicker">Live Event Layer</span>
             <h2>Current Tournament</h2>
-            <p>Single-event mode now, designed to expand into a full calendar.</p>
+            <p>Este bloque se alimenta del torneo público creado y publicado desde Admin.</p>
           </div>
           <div className="card-grid home-tournament-grid">
-            <article className="card card-featured">
-              <div className="card-header">
-                <h3>Tournament name: TBD</h3>
-                <span className="tag muted">Announcing soon</span>
-              </div>
-              <p className="card-detail">Dates: to be confirmed.</p>
-              <p className="card-detail">Venue: to be confirmed.</p>
-              <p className="card-detail emphasis">Mode: pro / amateur divisions.</p>
-              <a className="ghost-button full" href="#contact">Get updates</a>
-            </article>
-            <article className="card home-mini-brief">
-              <div className="card-header">
-                <h3>Operator checklist</h3>
-                <span className="tag muted">Readiness</span>
-              </div>
-              <p className="card-detail">Categories configured with capacity rules.</p>
-              <p className="card-detail">Registration state and payment window linked.</p>
-              <p className="card-detail">Draw publication and match boards prepared.</p>
-            </article>
+            {tournamentsLoading ? (
+              <article className="card card-featured">
+                <div className="card-header">
+                  <h3>Cargando torneo actual...</h3>
+                  <span className="tag muted">Sincronizando</span>
+                </div>
+                <p className="card-detail">Actualizando la información pública del torneo.</p>
+              </article>
+            ) : currentTournament ? (
+              <>
+                <article className="card card-featured">
+                  <div className="card-header">
+                    <h3>{currentTournament.name}</h3>
+                    <span className="tag muted">{currentTournament.status?.label || 'Publicado'}</span>
+                  </div>
+                  <p className="card-detail">Fechas: {formatRange(currentTournament.start_date, currentTournament.end_date)}</p>
+                  <p className="card-detail">
+                    Sede: {currentTournament.venue_name || 'Por confirmar'}
+                    {currentTournament.city ? ` · ${currentTournament.city}` : ''}
+                  </p>
+                  <p className="card-detail emphasis">
+                    Modalidad: {currentTournament.mode || 'Por confirmar'}
+                  </p>
+                  <Link className="secondary-button full" to="/tournament">Ver torneo</Link>
+                </article>
+
+                <article className="card home-mini-brief">
+                  <div className="card-header">
+                    <h3>Estado operativo</h3>
+                    <span className="tag muted">Live</span>
+                  </div>
+                  <p className="card-detail">Inscripción: {formatRegistrationWindow(
+                    currentTournament.registration_open_at,
+                    currentTournament.registration_close_at,
+                  )}</p>
+                  <p className="card-detail">Categorías configuradas: {currentCategoryCount}</p>
+                  <p className="card-detail">
+                    Horario de juego: {currentTournament.day_start_time || '--:--'} - {currentTournament.day_end_time || '--:--'}
+                  </p>
+                </article>
+              </>
+            ) : (
+              <>
+                <article className="card card-featured">
+                  <div className="card-header">
+                    <h3>No hay torneos públicos todavía</h3>
+                    <span className="tag muted">Pendiente</span>
+                  </div>
+                  <p className="card-detail">Cuando el admin publique o abra inscripciones de un torneo, aparecerá aquí automáticamente.</p>
+                  <a className="ghost-button full" href="#contact">Solicitar aviso</a>
+                </article>
+                <article className="card home-mini-brief">
+                  <div className="card-header">
+                    <h3>Estado de conexión</h3>
+                    <span className="tag muted">{tournamentsError ? 'Error' : 'Sin datos'}</span>
+                  </div>
+                  <p className="card-detail">
+                    {tournamentsError || 'Aún no hay un torneo en estado público.'}
+                  </p>
+                </article>
+              </>
+            )}
           </div>
         </section>
 

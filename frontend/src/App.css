@@ -5096,6 +5096,18 @@ label,
 }
 
 /* ESTARS structure refresh: stronger layout changes, same palette */
+.home-page {
+  padding-inline: clamp(10px, 1.8vw, 24px);
+}
+
+.home-nav,
+.home-main,
+.home-footer,
+.home-marquee {
+  width: min(1460px, 100%);
+  margin-inline: auto;
+}
+
 .home-page .brand-logo {
   width: clamp(128px, 16vw, 188px);
   border-radius: 8px;
@@ -5130,8 +5142,8 @@ label,
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.85fr);
-  gap: clamp(16px, 2vw, 26px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(18px, 2.2vw, 30px);
   align-items: stretch;
 }
 
@@ -5140,19 +5152,8 @@ label,
 }
 
 .home-hero-main h1 {
-  max-width: 14ch;
-  font-size: clamp(2.5rem, 5.5vw, 5.2rem);
-}
-
-.home-ops-card {
-  display: grid;
-  align-content: start;
-  gap: 16px;
-}
-
-.home-ops-actions {
-  display: grid;
-  gap: 10px;
+  max-width: 16ch;
+  font-size: clamp(2.6rem, 5.2vw, 5.4rem);
 }
 
 .home-signal-grid {

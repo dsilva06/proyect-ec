@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import estarsSuiteLogo from '../../assets/estars-suite-logo.png'
-import estarsSuiteMark from '../../assets/estars-suite-mark.png'
+import estarsLogo from '../../assets/estars-logo.png'
+import estarsMark from '../../assets/estars-mark.png'
 
 export default function BrandLockup({
   to = '/',
@@ -11,7 +11,7 @@ export default function BrandLockup({
   textClassName = '',
 }) {
   const isCompact = variant === 'compact'
-  const logoSrc = isCompact ? estarsSuiteMark : estarsSuiteLogo
+  const logoSrc = isCompact ? estarsMark : estarsLogo
 
   return (
     <Link to={to} className={`brand-lockup ${className}`.trim()}>
