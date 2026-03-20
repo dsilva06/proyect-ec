@@ -49,25 +49,27 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Registration::class, RegistrationPolicy::class);
         Gate::policy(Payment::class, PaymentPolicy::class);
         Gate::policy(Tournament::class, TournamentPolicy::class);
-        VerifyEmail::toMailUsing(function (object $notifiable, string $_url) {
+        VerifyEmail::toMailUsing(function (object $notifiable, string $verificationUrl) {
             $name = trim((string) ($notifiable->name ?? 'Jugador'));
             $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
             $apiUrl = rtrim((string) config('app.url'), '/');
             $verificationExpireMinutes = (int) config('auth.verification.expire', 60);
 
-            $relativeVerificationPath = URL::temporarySignedRoute(
-                'verification.verify',
-                now()->addMinutes($verificationExpireMinutes),
-                [
-                    'id' => $notifiable->getKey(),
-                    'hash' => sha1($notifiable->getEmailForVerification()),
-                ],
-                absolute: false,
-            );
+            $verificationApiUrl = trim($verificationUrl);
+            if ($verificationApiUrl === '') {
+                $verificationApiUrl = URL::temporarySignedRoute(
+                    'verification.verify',
+                    now()->addMinutes($verificationExpireMinutes),
+                    [
+                        'id' => $notifiable->getKey(),
+                        'hash' => sha1($notifiable->getEmailForVerification()),
+                    ],
+                    absolute: true,
+                );
+            }
 
-            $verificationApiUrl = $apiUrl.$relativeVerificationPath;
             $loginUrl = $frontendUrl.'/login';
-            $verificationEntryUrl = $frontendUrl.'/verify-email?url='.rawurlencode($verificationApiUrl);
+            $verificationEntryUrl = $frontendUrl.'/verify-email/confirm?url='.rawurlencode($verificationApiUrl);
             $logoUrl = $apiUrl.'/emails/estars-logo.png';
 
             return (new MailMessage)

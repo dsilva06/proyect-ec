@@ -7,30 +7,30 @@ import BrandLockup from '../../components/shared/BrandLockup'
 import '../../App.css'
 
 const categories = [
-  { name: 'Masculino Open', rule: 'Nivel abierto' },
+  { name: 'Masculino Abierto', rule: 'Nivel abierto' },
   { name: 'Masculino 1era', rule: 'Nivel avanzado' },
   { name: 'Masculino 2da', rule: 'Nivel intermedio' },
-  { name: 'Femenino Open', rule: 'Nivel abierto' },
+  { name: 'Femenino Abierto', rule: 'Nivel abierto' },
   { name: 'Femenino 1era', rule: 'Nivel avanzado' },
   { name: 'Femenino 2da', rule: 'Nivel intermedio' },
 ]
 
 const steps = [
   {
-    title: 'Create your team',
-    detail: 'Register your pair, complete player profiles, and set rankings.',
+    title: 'Crea tu equipo',
+    detail: 'Registra tu dupla, completa perfiles de jugador y configura rankings.',
   },
   {
-    title: 'Join a category',
-    detail: 'Pick the category, see the waitlist rules, and confirm entry fee.',
+    title: 'Únete a una categoría',
+    detail: 'Elige la categoría, revisa la lista de espera y confirma tu cupo.',
   },
   {
-    title: 'Pay and confirm',
-    detail: 'Secure your place in the acceptance window with card payment.',
+    title: 'Paga y confirma',
+    detail: 'Asegura tu lugar dentro de la ventana de aceptación.',
   },
   {
-    title: 'Play the draw',
-    detail: 'Daily-updated matches, courts, and live results.',
+    title: 'Juega el cuadro',
+    detail: 'Partidos, canchas y resultados actualizados cada día.',
   },
 ]
 
@@ -84,6 +84,21 @@ const statusPriority = (statusCode) => {
   if (statusCode === 'registration_open') return 0
   if (statusCode === 'published') return 1
   return 10
+}
+
+const TOURNAMENT_STATUS_LABELS_ES = {
+  draft: 'Borrador',
+  published: 'Publicado',
+  registration_open: 'Inscripción abierta',
+  registration_closed: 'Inscripción cerrada',
+  in_progress: 'En curso',
+  completed: 'Completado',
+  cancelled: 'Cancelado',
+}
+
+const getTournamentStatusLabel = (status) => {
+  if (!status?.code) return 'Publicado'
+  return TOURNAMENT_STATUS_LABELS_ES[status.code] || status.label || 'Publicado'
 }
 
 const pickCurrentTournament = (tournaments) => {
@@ -207,7 +222,7 @@ export default function Home() {
   if (verificationUrl) {
     return (
       <Navigate
-        to={`/verify-email?url=${encodeURIComponent(verificationUrl)}`}
+        to={`/verify-email/confirm?url=${encodeURIComponent(verificationUrl)}`}
         replace
       />
     )
@@ -223,12 +238,12 @@ export default function Home() {
       <div className="background-grid" />
 
       <header className="nav home-nav">
-        <BrandLockup subtitle="Tournament Hub" />
+        <BrandLockup subtitle="Centro de torneos" />
         <nav className="nav-links">
-          <a href="#tournaments">Tournament</a>
-          <a href="#categories">Categories</a>
-          <a href="#schedule">Schedule</a>
-          <a href="#contact">Contact</a>
+          <a href="#tournaments">Torneo</a>
+          <a href="#categories">Categorías</a>
+          <a href="#schedule">Cronograma</a>
+          <a href="#contact">Contacto</a>
         </nav>
         <div className="nav-auth-actions">
           {user ? (
@@ -237,8 +252,8 @@ export default function Home() {
             </button>
           ) : (
             <>
-              <Link className="ghost-button" to="/login">Login</Link>
-              <Link className="primary-button" to="/register">Sign up</Link>
+              <Link className="ghost-button" to="/login">Iniciar sesión</Link>
+              <Link className="primary-button" to="/register">Registrarse</Link>
             </>
           )}
         </div>
@@ -246,24 +261,24 @@ export default function Home() {
 
       <div className="hero-marquee home-marquee" aria-hidden="true">
         <span>ESTARS PADEL TOUR</span>
-        <span>RANKED COMPETITION</span>
-        <span>LIVE DRAWS</span>
+        <span>COMPETENCIA RANKEADA</span>
+        <span>CUADROS EN VIVO</span>
         <span>ESTARS PADEL TOUR</span>
       </div>
 
       <main className="landing-main home-main">
         <section className="home-hero reveal">
           <div className="home-hero-main hero-copy">
-            <div className="pill">Season launch</div>
-            <h1>One hub for registrations, rankings, draws, and match-day updates.</h1>
+            <div className="pill">Temporada activa</div>
+            <h1>Un solo centro para inscripciones, rankings, cuadros y actualizaciones de jornada.</h1>
             <p>
-              ESTARS centralizes the full tournament operation so players and organizers work in one clean flow:
-              register, validate, pay, and compete with transparent status every day.
+              ESTARS centraliza toda la operación del torneo para que jugadores y organizadores trabajen en un
+              flujo claro: registro, validación, pago y competencia con estados transparentes cada día.
             </p>
             <div className="hero-actions">
-              <Link className="primary-button" to="/register">Create account</Link>
-              <Link className="secondary-button" to="/login">Login</Link>
-              <a className="ghost-button" href="#contact">Talk to us</a>
+              <Link className="primary-button" to="/register">Crear cuenta</Link>
+              <Link className="secondary-button" to="/login">Iniciar sesión</Link>
+              <a className="ghost-button" href="#contact">Hablar con nosotros</a>
             </div>
             <div className="hero-stats home-stats-row">
               <div>
@@ -276,7 +291,7 @@ export default function Home() {
               </div>
               <div>
                 <strong>24h</strong>
-                <span>Ops support</span>
+                <span>Soporte operativo</span>
               </div>
             </div>
           </div>
@@ -285,25 +300,25 @@ export default function Home() {
         <section className="home-signal-grid reveal">
           <article className="home-signal-card">
             <span className="tag muted">01</span>
-            <h3>Single source of truth</h3>
-            <p className="card-detail">Registrations, categories, and payments sync in one panel.</p>
+            <h3>Fuente única de control</h3>
+            <p className="card-detail">Inscripciones, categorías y pagos sincronizados en un solo panel.</p>
           </article>
           <article className="home-signal-card">
             <span className="tag muted">02</span>
-            <h3>Fair acceptance model</h3>
-            <p className="card-detail">Ranking-first logic and explicit pending/waitlist states.</p>
+            <h3>Aceptación transparente</h3>
+            <p className="card-detail">Lógica por ranking y estados claros de pendiente/lista de espera.</p>
           </article>
           <article className="home-signal-card">
             <span className="tag muted">03</span>
-            <h3>Fast operations</h3>
-            <p className="card-detail">Admins update draws and players see status immediately.</p>
+            <h3>Operación ágil</h3>
+            <p className="card-detail">Los administradores actualizan cuadros y los jugadores lo ven al instante.</p>
           </article>
         </section>
 
         <section id="tournaments" className="section section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
-            <span className="section-kicker">Live Event Layer</span>
-            <h2>Current Tournament</h2>
+            <span className="section-kicker">Evento en curso</span>
+            <h2>Torneo actual</h2>
             <p>Este bloque se alimenta del torneo público creado y publicado desde Admin.</p>
           </div>
           <div className="card-grid home-tournament-grid">
@@ -320,7 +335,7 @@ export default function Home() {
                 <article className="card card-featured">
                   <div className="card-header">
                     <h3>{currentTournament.name}</h3>
-                    <span className="tag muted">{currentTournament.status?.label || 'Publicado'}</span>
+                    <span className="tag muted">{getTournamentStatusLabel(currentTournament.status)}</span>
                   </div>
                   <p className="card-detail">Fechas: {formatRange(currentTournament.start_date, currentTournament.end_date)}</p>
                   <p className="card-detail">
@@ -336,7 +351,7 @@ export default function Home() {
                 <article className="card home-mini-brief">
                   <div className="card-header">
                     <h3>Estado operativo</h3>
-                    <span className="tag muted">Live</span>
+                    <span className="tag muted">En vivo</span>
                   </div>
                   <p className="card-detail">Inscripción: {formatRegistrationWindow(
                     currentTournament.registration_open_at,
@@ -374,9 +389,9 @@ export default function Home() {
 
         <section className="section flow section-block section-tone-solid reveal">
           <div className="section-title home-section-title">
-            <span className="section-kicker">How It Works</span>
-            <h2>Player Flow</h2>
-            <p>Every step is explicit, auditable, and designed to reduce friction.</p>
+            <span className="section-kicker">Cómo funciona</span>
+            <h2>Flujo del jugador</h2>
+            <p>Cada paso es claro, auditable y diseñado para reducir fricción.</p>
           </div>
           <div className="steps">
             {steps.map((step, index) => (
@@ -391,9 +406,9 @@ export default function Home() {
 
         <section id="categories" className="section section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
-            <span className="section-kicker">Divisions</span>
-            <h2>Competitive Categories</h2>
-            <p>Six divisions with transparent entry rules and dynamic capacity.</p>
+            <span className="section-kicker">Divisiones</span>
+            <h2>Categorías competitivas</h2>
+            <p>Seis divisiones con reglas de entrada transparentes y cupo dinámico.</p>
           </div>
           <div className="category-grid">
             {categories.map((category) => (
@@ -402,7 +417,7 @@ export default function Home() {
                   <h3>{category.name}</h3>
                   <p>{category.rule}</p>
                 </div>
-                <button className="secondary-button">Join</button>
+                <button className="secondary-button">Unirme</button>
               </div>
             ))}
           </div>
@@ -410,28 +425,28 @@ export default function Home() {
 
         <section id="schedule" className="section section-block section-tone-solid reveal">
           <div className="section-title home-section-title">
-            <span className="section-kicker">Tournament Ops</span>
-            <h2>Match Schedule</h2>
-            <p>Published once draws are locked and updated daily during tournament days.</p>
+            <span className="section-kicker">Operación del torneo</span>
+            <h2>Cronograma de partidos</h2>
+            <p>Se publica cuando los cuadros están cerrados y se actualiza durante los días de torneo.</p>
           </div>
           <div className="schedule">
             <div className="schedule-item">
-              <span className="tag">Schedule</span>
+              <span className="tag">Cronograma</span>
               <div>
-                <h3>Published per tournament</h3>
-                <p>Match times and courts will be announced after the draw.</p>
-                <p className="muted">Updates appear daily during play.</p>
+                <h3>Publicado por torneo</h3>
+                <p>Los horarios y canchas se anunciarán después del sorteo.</p>
+                <p className="muted">Las actualizaciones aparecen cada día durante la competencia.</p>
               </div>
             </div>
           </div>
-          <a className="primary-button" href="#contact">Ask for calendar link</a>
+          <a className="primary-button" href="#contact">Solicitar calendario</a>
         </section>
 
         <section id="contact" className="section contact section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
-            <span className="section-kicker">Partnerships</span>
-            <h2>Contact & Partnerships</h2>
-            <p>Tell us about sponsorships, venues, or strategic collaborations.</p>
+            <span className="section-kicker">Alianzas</span>
+            <h2>Contacto y alianzas</h2>
+            <p>Cuéntanos sobre patrocinios, sedes o colaboraciones estratégicas.</p>
           </div>
           <div className="contact-grid">
             <form className="contact-form" onSubmit={handleContactSubmit}>
@@ -439,7 +454,7 @@ export default function Home() {
                 Nombre completo
                 <input
                   type="text"
-                  placeholder="Your name"
+                  placeholder="Tu nombre"
                   value={contactForm.full_name}
                   onChange={(event) =>
                     setContactForm((prev) => ({ ...prev, full_name: event.target.value }))
@@ -450,7 +465,7 @@ export default function Home() {
                 Correo
                 <input
                   type="email"
-                  placeholder="name@email.com"
+                  placeholder="nombre@correo.com"
                   value={contactForm.email}
                   onChange={(event) =>
                     setContactForm((prev) => ({ ...prev, email: event.target.value }))
@@ -483,14 +498,14 @@ export default function Home() {
               {contactStatus && <p className="form-message">{contactStatus}</p>}
             </form>
             <div className="contact-panel">
-              <h3>Need help registering?</h3>
+              <h3>¿Necesitas ayuda para registrarte?</h3>
               <p>
-                Our team answers within 24 hours. We also support event
-                organizers, clubs, and brands that want a premium experience.
+                Nuestro equipo responde dentro de 24 horas. También apoyamos a organizadores,
+                clubes y marcas que buscan una experiencia premium.
               </p>
               <div className="contact-details">
                 <div>
-                  <span>Support</span>
+                  <span>Soporte</span>
                   <strong>support@estarspadeltour.com</strong>
                 </div>
                 <div>
@@ -506,12 +521,12 @@ export default function Home() {
       <footer className="footer home-footer">
         <div>
           <strong>ESTARS PADEL TOUR</strong>
-          <span>Smart tournaments for modern players.</span>
+          <span>Torneos inteligentes para jugadores modernos.</span>
         </div>
         <div className="footer-links">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="#">Status</a>
+          <a href="#">Privacidad</a>
+          <a href="#">Términos</a>
+          <a href="#">Estado</a>
         </div>
       </footer>
     </div>
