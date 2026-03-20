@@ -13,7 +13,7 @@ class VerificationEmailLinkTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_verification_email_points_to_frontend_confirm_route_and_uses_signed_api_url(): void
+    public function test_verification_email_points_to_frontend_root_entry_and_uses_signed_api_url(): void
     {
         config([
             'app.url' => 'https://api.example.com/api',
@@ -33,7 +33,7 @@ class VerificationEmailLinkTest extends TestCase
             $mailMessage = $notification->toMail($user);
             $rendered = $mailMessage->render();
 
-            return str_contains($rendered, 'https://app.example.com/verify-email/confirm?url=')
+            return str_contains($rendered, 'https://app.example.com/?url=')
                 && str_contains($rendered, '%2Fapi%2Fauth%2Femail%2Fverify%2F')
                 && ! str_contains($rendered, '/api/api/auth/email/verify/');
         });

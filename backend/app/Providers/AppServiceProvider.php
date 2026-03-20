@@ -69,7 +69,8 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $loginUrl = $frontendUrl.'/login';
-            $verificationEntryUrl = $frontendUrl.'/verify-email/confirm?url='.rawurlencode($verificationApiUrl);
+            // Use root entrypoint because some deployments may not rewrite deep SPA routes.
+            $verificationEntryUrl = $frontendUrl.'/?url='.rawurlencode($verificationApiUrl);
             $logoUrl = $apiUrl.'/emails/estars-logo.png';
 
             return (new MailMessage)
