@@ -2,20 +2,7 @@ import { httpClient } from '../../api/httpClient'
 
 function normalizeVerificationUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== 'string') return ''
-
-  let normalized = rawUrl.trim()
-
-  for (let index = 0; index < 3; index += 1) {
-    try {
-      const decoded = decodeURIComponent(normalized)
-      if (decoded === normalized) break
-      normalized = decoded
-    } catch {
-      break
-    }
-  }
-
-  return normalized
+  return rawUrl.trim()
 }
 
 async function verifyEmailByUrl(url) {

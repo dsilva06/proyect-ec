@@ -4,12 +4,7 @@ import BrandLockup from '../../components/shared/BrandLockup'
 
 function normalizeVerificationUrl(rawUrl) {
   if (!rawUrl) return ''
-
-  try {
-    return decodeURIComponent(rawUrl).trim()
-  } catch {
-    return rawUrl.trim()
-  }
+  return rawUrl.trim()
 }
 
 export default function VerifyEmailConfirm() {
