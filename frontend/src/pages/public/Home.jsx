@@ -122,13 +122,14 @@ const pickCurrentTournament = (tournaments) => {
 
 export default function Home() {
   const location = useLocation()
-  const { user, logout, establishSession } = useAuth()
+  const { user, logout } = useAuth()
   const [tournaments, setTournaments] = useState([])
   const [tournamentsLoading, setTournamentsLoading] = useState(true)
   const [tournamentsError, setTournamentsError] = useState('')
   const [verificationState, setVerificationState] = useState({
     status: 'idle',
     message: '',
+    name: '',
   })
   const [contactForm, setContactForm] = useState({
     full_name: '',
@@ -213,7 +214,7 @@ export default function Home() {
 
     setVerificationState({
       status: 'processing',
-      message: 'Estamos verificando tu correo y abriendo tu sesión...',
+      message: 'Estamos verificando tu correo...',
     })
 
     authApi
@@ -222,10 +223,10 @@ export default function Home() {
         if (cancelled) return
 
         writeVerificationContext(null)
-        establishSession(data)
         setVerificationState({
           status: 'success',
           message: data?.message || 'Tu correo fue verificado correctamente.',
+          name: data?.name || '',
         })
       })
       .catch((error) => {
@@ -245,7 +246,7 @@ export default function Home() {
     return () => {
       cancelled = true
     }
-  }, [verificationUrl, establishSession])
+  }, [verificationUrl])
 
   const handleContactSubmit = async (event) => {
     event.preventDefault()
@@ -273,7 +274,21 @@ export default function Home() {
   }
 
   if (verificationState.status === 'success') {
-    return <Navigate to="/player" replace />
+    const params = new URLSearchParams({
+      status: 'verified',
+    })
+
+    if (verificationState.name) {
+      params.set('name', verificationState.name)
+    }
+
+    return (
+      <Navigate
+        to={`/verify-email?${params.toString()}`}
+        state={{ message: verificationState.message }}
+        replace
+      />
+    )
   }
 
   if (verificationState.status === 'error') {

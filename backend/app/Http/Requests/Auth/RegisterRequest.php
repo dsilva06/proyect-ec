@@ -13,7 +13,12 @@ class RegisterRequest extends FormRequest
     {
         $firstName = trim((string) $this->input('first_name'));
         $lastName = trim((string) $this->input('last_name'));
-        $dni = strtoupper((string) preg_replace('/\s+/', '', trim((string) $this->input('dni'))));
+        $dniInput = strtoupper(trim((string) $this->input('dni')));
+        $dniPrefix = Str::substr($dniInput, 0, 1);
+        $dniDigits = preg_replace('/\D+/', '', $dniInput);
+        $dni = in_array($dniPrefix, ['V', 'E', 'P'], true) && $dniDigits !== ''
+            ? $dniPrefix.'-'.$dniDigits
+            : strtoupper((string) preg_replace('/\s+/', '', $dniInput));
         $email = trim((string) $this->input('email'));
         $phone = trim((string) $this->input('phone', ''));
         $provinceState = trim((string) $this->input('province_state', ''));
@@ -77,7 +82,7 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'dni.regex' => 'El DNI debe tener el formato V-12345678.',
+            'dni.regex' => 'El DNI debe tener el formato V-12345678, E-12345678 o P-12345678.',
             'phone.regex' => 'El teléfono debe incluir código de país y solo números, por ejemplo +584121234567.',
         ];
     }

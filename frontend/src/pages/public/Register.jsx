@@ -158,7 +158,7 @@ export default function Register() {
               <div className="auth-modern-grid">
                 <div className="auth-form-panel">
                   <h2>Crear cuenta</h2>
-                  <p className="muted">Registra tu perfil para unirte al torneo y gestionar tu equipo.</p>
+                  <p className="muted">Registra tu perfil para unirte al torneo y gestionar tu participación.</p>
 
                   {invite && (
                     <div className="auth-status">
@@ -213,11 +213,14 @@ export default function Register() {
                           value={form.dni_number}
                           onChange={(event) =>
                             setForm({ ...form, dni_number: onlyDigits(event.target.value, 10) })}
+                          maxLength={10}
                           disabled={isSubmitting}
                           required
                         />
                       </div>
-                      <small className="auth-field-hint">Formato obligatorio: V-12345678</small>
+                      <small className="auth-field-hint">
+                        Formato obligatorio: V-12345678, E-12345678 o P-12345678.
+                      </small>
                     </label>
                     <label>
                       Correo

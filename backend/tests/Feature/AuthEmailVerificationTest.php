@@ -167,6 +167,89 @@ class AuthEmailVerificationTest extends TestCase
             ->assertJsonValidationErrors(['dni']);
     }
 
+    public function test_register_accepts_passport_style_dni_prefix(): void
+    {
+        Mail::fake();
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'P-10000001',
+            'email' => 'verify-register-passport-prefix@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertCreated();
+    }
+
+    public function test_register_rejects_invalid_dni_prefix(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'X-12345678',
+            'email' => 'verify-register-invalid-prefix@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['dni']);
+    }
+
+    public function test_register_rejects_identity_numbers_longer_than_ten_digits(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'V-12345678901',
+            'email' => 'verify-register-invalid-length@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['dni']);
+    }
+
+    public function test_register_normalizes_dni_format_before_verification(): void
+    {
+        Mail::fake();
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => ' v12345678 ',
+            'email' => 'verify-register-normalized-dni@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])->assertCreated();
+
+        $verificationEntryUrl = null;
+
+        Mail::assertSent(PendingRegistrationVerificationMail::class, function (PendingRegistrationVerificationMail $mail) use (&$verificationEntryUrl): bool {
+            if (! $mail->hasTo('verify-register-normalized-dni@test.dev')) {
+                return false;
+            }
+
+            $verificationEntryUrl = $mail->verificationEntryUrl;
+
+            return true;
+        });
+
+        parse_str((string) parse_url((string) $verificationEntryUrl, PHP_URL_QUERY), $entryQuery);
+        $verificationApiUrl = (string) ($entryQuery['verify_url'] ?? '');
+        $parsedVerificationApiUrl = parse_url($verificationApiUrl);
+        $relativeVerificationUrl = (string) ($parsedVerificationApiUrl['path'] ?? '');
+        if (! empty($parsedVerificationApiUrl['query'])) {
+            $relativeVerificationUrl .= '?'.$parsedVerificationApiUrl['query'];
+        }
+
+        $this->getJson($relativeVerificationUrl)->assertOk();
+
+        $this->assertDatabaseHas('player_profiles', [
+            'dni' => 'V-12345678',
+        ]);
+    }
+
     public function test_register_rejects_invalid_phone_format(): void
     {
         $this->postJson('/api/auth/register', [
@@ -220,7 +303,7 @@ class AuthEmailVerificationTest extends TestCase
             ]);
     }
 
-    public function test_verification_link_marks_email_as_verified(): void
+    public function test_verification_link_marks_email_as_verified_without_authenticating_the_user(): void
     {
         Mail::fake();
 
@@ -258,13 +341,13 @@ class AuthEmailVerificationTest extends TestCase
             ->assertJsonStructure([
                 'message',
                 'verified',
-                'token',
-                'user' => ['id', 'email', 'role', 'is_active'],
+                'name',
             ])
             ->assertJson([
                 'message' => 'Email verified successfully.',
                 'verified' => true,
-            ]);
+            ])
+            ->assertJsonMissing(['token', 'user']);
 
         $this->assertDatabaseHas('users', [
             'email' => 'verify-link@test.dev',
@@ -272,7 +355,7 @@ class AuthEmailVerificationTest extends TestCase
         $this->assertNotNull(User::query()->where('email', 'verify-link@test.dev')->firstOrFail()->email_verified_at);
     }
 
-    public function test_already_verified_link_returns_auth_payload(): void
+    public function test_already_verified_link_returns_verification_message_without_auth_payload(): void
     {
         Mail::fake();
 
@@ -312,13 +395,13 @@ class AuthEmailVerificationTest extends TestCase
             ->assertJsonStructure([
                 'message',
                 'verified',
-                'token',
-                'user' => ['id', 'email', 'role', 'is_active'],
+                'name',
             ])
             ->assertJson([
                 'message' => 'Email is already verified.',
                 'verified' => true,
-            ]);
+            ])
+            ->assertJsonMissing(['token', 'user']);
     }
 
     public function test_resend_verification_email_works_for_unverified_user(): void

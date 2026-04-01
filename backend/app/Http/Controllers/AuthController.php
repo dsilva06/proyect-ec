@@ -123,11 +123,12 @@ class AuthController extends Controller
             }
 
             if ($request->expectsJson()) {
-                return $this->authPayloadResponse($user, [
+                return response()->json([
                     'message' => $wasJustVerified
                         ? 'Email verified successfully.'
                         : 'Email is already verified.',
                     'verified' => true,
+                    'name' => $user->name,
                 ]);
             }
 
@@ -152,9 +153,10 @@ class AuthController extends Controller
 
         if ($user->hasVerifiedEmail()) {
             if ($request->expectsJson()) {
-                return $this->authPayloadResponse($user, [
+                return response()->json([
                     'message' => 'Email is already verified.',
                     'verified' => true,
+                    'name' => $user->name,
                 ]);
             }
 
@@ -168,9 +170,10 @@ class AuthController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->authPayloadResponse($user, [
+            return response()->json([
                 'message' => 'Email verified successfully.',
                 'verified' => true,
+                'name' => $user->name,
             ]);
         }
 
