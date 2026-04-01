@@ -19,20 +19,20 @@ const categories = [
 
 const steps = [
   {
-    title: 'Crea tu equipo',
-    detail: 'Registra tu dupla, completa perfiles de jugador y configura rankings.',
+    title: 'Crea tu perfil',
+    detail: 'Registra tu cuenta y deja listo tu acceso para competir en el torneo.',
   },
   {
-    title: 'Únete a una categoría',
-    detail: 'Elige la categoría, revisa la lista de espera y confirma tu cupo.',
+    title: 'Elige tu categoría',
+    detail: 'Revisa las divisiones disponibles y postúlate en la categoría correcta.',
   },
   {
-    title: 'Paga y confirma',
-    detail: 'Asegura tu lugar dentro de la ventana de aceptación.',
+    title: 'Confirma tu cupo',
+    detail: 'Completa el pago dentro de la ventana de aceptación para asegurar tu lugar.',
   },
   {
-    title: 'Juega el cuadro',
-    detail: 'Partidos, canchas y resultados actualizados cada día.',
+    title: 'Sigue la competencia',
+    detail: 'Consulta horarios, cuadros y resultados a medida que avanza el torneo.',
   },
 ]
 
@@ -319,7 +319,7 @@ export default function Home() {
       <div className="background-grid" />
 
       <header className="nav home-nav">
-        <BrandLockup subtitle="Centro de torneos" />
+        <BrandLockup subtitle="Circuito competitivo" />
         <nav className="nav-links">
           <a href="#tournaments">Torneo</a>
           <a href="#categories">Categorías</a>
@@ -351,10 +351,11 @@ export default function Home() {
         <section className="home-hero reveal">
           <div className="home-hero-main hero-copy">
             <div className="pill">Temporada activa</div>
-            <h1>Un solo centro para inscripciones, rankings, cuadros y actualizaciones de jornada.</h1>
+            <h1>Un torneo de pádel con visión de circuito, construido para competir con seriedad.</h1>
             <p>
-              ESTARS centraliza toda la operación del torneo para que jugadores y organizadores trabajen en un
-              flujo claro: registro, validación, pago y competencia con estados transparentes cada día.
+              ESTARS PADEL TOUR organiza inscripciones, validación, pagos, categorías, cuadros y actualizaciones
+              de jornada en una sola experiencia. Queremos crecer hasta convertirnos en una referencia regional
+              del pádel competitivo, con una identidad y unos estándares cada vez más altos.
             </p>
             <div className="hero-actions">
               <Link className="primary-button" to="/register">Crear cuenta</Link>
@@ -381,26 +382,26 @@ export default function Home() {
         <section className="home-signal-grid reveal">
           <article className="home-signal-card">
             <span className="tag muted">01</span>
-            <h3>Fuente única de control</h3>
-            <p className="card-detail">Inscripciones, categorías y pagos sincronizados en un solo panel.</p>
+            <h3>Estructura de torneo</h3>
+            <p className="card-detail">Inscripciones, categorías y cuadros alineados con una operación ordenada.</p>
           </article>
           <article className="home-signal-card">
             <span className="tag muted">02</span>
-            <h3>Aceptación transparente</h3>
-            <p className="card-detail">Lógica por ranking y estados claros de pendiente/lista de espera.</p>
+            <h3>Criterio competitivo</h3>
+            <p className="card-detail">Ranking, aceptación y cupos con reglas claras para cada categoría.</p>
           </article>
           <article className="home-signal-card">
             <span className="tag muted">03</span>
-            <h3>Operación ágil</h3>
-            <p className="card-detail">Los administradores actualizan cuadros y los jugadores lo ven al instante.</p>
+            <h3>Competencia en tiempo real</h3>
+            <p className="card-detail">Los cuadros, horarios y resultados se reflejan al ritmo del torneo.</p>
           </article>
         </section>
 
         <section id="tournaments" className="section section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
-            <span className="section-kicker">Evento en curso</span>
-            <h2>Torneo actual</h2>
-            <p>Este bloque se alimenta del torneo público creado y publicado desde Admin.</p>
+            <span className="section-kicker">Temporada actual</span>
+            <h2>Torneo destacado</h2>
+            <p>Información pública del torneo activo, publicada directamente desde administración.</p>
           </div>
           <div className="card-grid home-tournament-grid">
             {tournamentsLoading ? (
@@ -409,7 +410,7 @@ export default function Home() {
                   <h3>Cargando torneo actual...</h3>
                   <span className="tag muted">Sincronizando</span>
                 </div>
-                <p className="card-detail">Actualizando la información pública del torneo.</p>
+                <p className="card-detail">Actualizando la información oficial del torneo.</p>
               </article>
             ) : currentTournament ? (
               <>
@@ -431,7 +432,7 @@ export default function Home() {
 
                 <article className="card home-mini-brief">
                   <div className="card-header">
-                    <h3>Estado operativo</h3>
+                    <h3>Estado del torneo</h3>
                     <span className="tag muted">En vivo</span>
                   </div>
                   <p className="card-detail">Inscripción: {formatRegistrationWindow(
@@ -448,19 +449,19 @@ export default function Home() {
               <>
                 <article className="card card-featured">
                   <div className="card-header">
-                    <h3>No hay torneos públicos todavía</h3>
+                    <h3>No hay torneos publicados todavía</h3>
                     <span className="tag muted">Pendiente</span>
                   </div>
-                  <p className="card-detail">Cuando el admin publique o abra inscripciones de un torneo, aparecerá aquí automáticamente.</p>
+                  <p className="card-detail">Cuando se publique un torneo o se abran inscripciones, aparecerá aquí automáticamente.</p>
                   <a className="ghost-button full" href="#contact">Solicitar aviso</a>
                 </article>
                 <article className="card home-mini-brief">
                   <div className="card-header">
-                    <h3>Estado de conexión</h3>
+                    <h3>Estado de publicación</h3>
                     <span className="tag muted">{tournamentsError ? 'Error' : 'Sin datos'}</span>
                   </div>
                   <p className="card-detail">
-                    {tournamentsError || 'Aún no hay un torneo en estado público.'}
+                    {tournamentsError || 'Todavía no hay un torneo visible en la vitrina pública.'}
                   </p>
                 </article>
               </>
@@ -472,7 +473,7 @@ export default function Home() {
           <div className="section-title home-section-title">
             <span className="section-kicker">Cómo funciona</span>
             <h2>Flujo del jugador</h2>
-            <p>Cada paso es claro, auditable y diseñado para reducir fricción.</p>
+            <p>Un recorrido claro desde el registro hasta la competencia.</p>
           </div>
           <div className="steps">
             {steps.map((step, index) => (
@@ -489,7 +490,7 @@ export default function Home() {
           <div className="section-title home-section-title">
             <span className="section-kicker">Divisiones</span>
             <h2>Categorías competitivas</h2>
-            <p>Seis divisiones con reglas de entrada transparentes y cupo dinámico.</p>
+            <p>Divisiones definidas para sostener un torneo ordenado, competitivo y con criterios claros.</p>
           </div>
           <div className="category-grid">
             {categories.map((category) => (
@@ -498,7 +499,7 @@ export default function Home() {
                   <h3>{category.name}</h3>
                   <p>{category.rule}</p>
                 </div>
-                <button className="secondary-button">Unirme</button>
+                <button className="secondary-button">Ver categoría</button>
               </div>
             ))}
           </div>
@@ -506,28 +507,28 @@ export default function Home() {
 
         <section id="schedule" className="section section-block section-tone-solid reveal">
           <div className="section-title home-section-title">
-            <span className="section-kicker">Operación del torneo</span>
+            <span className="section-kicker">Competencia</span>
             <h2>Cronograma de partidos</h2>
-            <p>Se publica cuando los cuadros están cerrados y se actualiza durante los días de torneo.</p>
+            <p>Se publica cuando el cuadro está cerrado y se actualiza durante cada jornada de competencia.</p>
           </div>
           <div className="schedule">
             <div className="schedule-item">
               <span className="tag">Cronograma</span>
               <div>
-                <h3>Publicado por torneo</h3>
-                <p>Los horarios y canchas se anunciarán después del sorteo.</p>
-                <p className="muted">Las actualizaciones aparecen cada día durante la competencia.</p>
+                <h3>Programación oficial</h3>
+                <p>Los horarios y canchas se anuncian después del cierre y armado del cuadro.</p>
+                <p className="muted">Las actualizaciones se publican a medida que avanza el torneo.</p>
               </div>
             </div>
           </div>
-          <a className="primary-button" href="#contact">Solicitar calendario</a>
+          <a className="primary-button" href="#contact">Solicitar información</a>
         </section>
 
         <section id="contact" className="section contact section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
             <span className="section-kicker">Alianzas</span>
             <h2>Contacto y alianzas</h2>
-            <p>Cuéntanos sobre patrocinios, sedes o colaboraciones estratégicas.</p>
+            <p>Cuéntanos sobre patrocinios, sedes o colaboraciones para seguir elevando el torneo.</p>
           </div>
           <div className="contact-grid">
             <form className="contact-form" onSubmit={handleContactSubmit}>
@@ -579,10 +580,10 @@ export default function Home() {
               {contactStatus && <p className="form-message">{contactStatus}</p>}
             </form>
             <div className="contact-panel">
-              <h3>¿Necesitas ayuda para registrarte?</h3>
+              <h3>¿Quieres formar parte del crecimiento del torneo?</h3>
               <p>
-                Nuestro equipo responde dentro de 24 horas. También apoyamos a organizadores,
-                clubes y marcas que buscan una experiencia premium.
+                Respondemos dentro de 24 horas. También trabajamos con clubes, marcas y aliados
+                que quieren impulsar una experiencia competitiva cada vez más sólida.
               </p>
               <div className="contact-details">
                 <div>
@@ -602,7 +603,7 @@ export default function Home() {
       <footer className="footer home-footer">
         <div>
           <strong>ESTARS PADEL TOUR</strong>
-          <span>Torneos inteligentes para jugadores modernos.</span>
+          <span>Un torneo con ambición de circuito y estándares cada vez más altos.</span>
         </div>
         <div className="footer-links">
           <a href="#">Privacidad</a>
