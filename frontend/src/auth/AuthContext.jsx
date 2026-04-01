@@ -65,21 +65,27 @@ export function AuthProvider({ children }) {
     }
   }, [clearAuth])
 
+  const establishSession = useCallback((payload) => {
+    if (!payload?.token || !payload?.user) {
+      throw new Error('Invalid auth payload')
+    }
+
+    writeAuthToken(payload.token)
+    writeAuthUser(payload.user)
+    setUser(payload.user)
+    setStatus('authenticated')
+    setError(null)
+
+    return payload.user
+  }, [])
+
   const login = useCallback(
     async (payload) => {
       setError(null)
 
       try {
         const data = await authApi.login(payload)
-
-        if (!data?.token || !data?.user) {
-          throw new Error('Invalid auth payload')
-        }
-
-        writeAuthToken(data.token)
-        writeAuthUser(data.user)
-        setUser(data.user)
-        setStatus('authenticated')
+        establishSession(data)
 
         return data.user
       } catch (err) {
@@ -89,7 +95,7 @@ export function AuthProvider({ children }) {
         throw err
       }
     },
-    [clearAuth],
+    [clearAuth, establishSession],
   )
 
   const register = useCallback(
@@ -134,11 +140,12 @@ export function AuthProvider({ children }) {
       isAuthenticated: status === 'authenticated',
       isLoading: status === 'loading',
       login,
+      establishSession,
       register,
       logout,
       refresh,
     }),
-    [user, status, error, login, register, logout, refresh],
+    [user, status, error, login, establishSession, register, logout, refresh],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

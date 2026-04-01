@@ -5,7 +5,7 @@ export default function ProtectedRoute() {
   const { user, status } = useAuth()
 
   if (status === 'loading') {
-    return <div style={{ padding: '24px' }}>Loading...</div>
+    return <div style={{ padding: '24px' }}>Cargando...</div>
   }
 
   if (!user) {

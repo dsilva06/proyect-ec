@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { readVerificationContext, writeVerificationContext } from '../../auth/storage'
 import { authApi } from '../../features/auth/api'
 import BrandLockup from '../../components/shared/BrandLockup'
 
@@ -9,12 +10,14 @@ export default function VerifyEmailPending() {
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search])
   const stateMessage = location.state?.message
   const status = searchParams.get('status')
-  const verificationUrl = searchParams.get('url')
+  const verificationUrl = searchParams.get('verify_url') || searchParams.get('url')
   const verifiedName = searchParams.get('name')
   const isVerified = status === 'verified'
   const isInvalidOrExpired = status === 'invalid_or_expired'
   const [email, setEmail] = useState(location.state?.email || '')
-  const [isAutoVerifying, setIsAutoVerifying] = useState(false)
+  const [verificationContext, setVerificationContext] = useState(
+    location.state?.verificationContext || readVerificationContext() || '',
+  )
   const [message, setMessage] = useState(
     stateMessage ||
       (isVerified
@@ -44,38 +47,18 @@ export default function VerifyEmailPending() {
   useEffect(() => {
     if (!verificationUrl || status) return
 
-    let cancelled = false
-    setIsAutoVerifying(true)
-    setError('')
-
-    authApi
-      .verifyEmailByUrl(verificationUrl)
-      .then((data) => {
-        if (cancelled) return
-
-        const name = data?.name ? `&name=${encodeURIComponent(data.name)}` : ''
-        navigate(`/verify-email?status=verified${name}`, { replace: true })
-      })
-      .catch((err) => {
-        if (cancelled) return
-        const fallbackMessage = 'El enlace de verificación es inválido o expiró. Puedes solicitar uno nuevo.'
-        const message = err?.data?.message || err?.message || fallbackMessage
-
-        navigate('/verify-email?status=invalid_or_expired', {
-          replace: true,
-          state: { message },
-        })
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsAutoVerifying(false)
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
+    navigate(`/?verify_url=${encodeURIComponent(verificationUrl)}`, { replace: true })
   }, [navigate, status, verificationUrl])
+
+  useEffect(() => {
+    writeVerificationContext(verificationContext || null)
+  }, [verificationContext])
+
+  useEffect(() => {
+    if (isVerified) {
+      setVerificationContext('')
+    }
+  }, [isVerified])
 
   const handleResend = async (event) => {
     event.preventDefault()
@@ -85,9 +68,17 @@ export default function VerifyEmailPending() {
     setIsSubmitting(true)
 
     try {
-      const data = await authApi.resendVerification({ email })
+      const data = await authApi.resendVerification({
+        email,
+        verification_context: verificationContext || undefined,
+      })
+
+      if (data?.verification_context) {
+        setVerificationContext(data.verification_context)
+      }
+
       setMessage(
-        data?.message || 'If the account exists and is not yet verified, a verification email has been sent.',
+        data?.message || 'Si la cuenta existe y aún no está verificada, enviamos un correo de verificación.',
       )
     } catch (err) {
       setError(err?.data?.message || err?.message || 'No pudimos reenviar el correo de verificación.')
@@ -103,9 +94,9 @@ export default function VerifyEmailPending() {
       <div className="background-grid" />
 
       <header className="nav auth-nav">
-        <BrandLockup subtitle="Verification Center" />
+        <BrandLockup subtitle="Centro de verificación" />
         <div className="nav-auth-actions">
-          <Link className="ghost-button" to="/login">Login</Link>
+          <Link className="ghost-button" to="/login">Iniciar sesión</Link>
           <span className="tag muted">{isVerified ? 'Verificación lista' : 'Verificación pendiente'}</span>
         </div>
       </header>
@@ -117,9 +108,7 @@ export default function VerifyEmailPending() {
               <h2>{isVerified ? 'Verificación lista' : 'Revisa tu correo'}</h2>
               <p className="muted">{message}</p>
 
-              {isAutoVerifying ? (
-                <p className="auth-loading">Validando tu enlace de verificación...</p>
-              ) : isVerified ? (
+              {isVerified ? (
                 <Link className="primary-button auth-submit" to="/login?verified=1">
                   Ir a iniciar sesión
                 </Link>
@@ -129,7 +118,7 @@ export default function VerifyEmailPending() {
                     Correo
                     <input
                       type="email"
-                      placeholder="name@email.com"
+                      placeholder="nombre@correo.com"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       required

@@ -90,10 +90,10 @@ export default function Login() {
       <div className="background-grid" />
 
       <header className="nav auth-nav">
-        <BrandLockup subtitle="Player Access" />
+        <BrandLockup subtitle="Acceso de jugadores" />
         <div className="nav-auth-actions">
-          <span className="tag muted">Player Access</span>
-          <Link className="primary-button" to="/register">Sign up</Link>
+          <span className="tag muted">Acceso de jugadores</span>
+          <Link className="primary-button" to="/register">Registrarse</Link>
         </div>
       </header>
 
@@ -117,7 +117,7 @@ export default function Login() {
                       Correo
                       <input
                         type="email"
-                        placeholder="name@email.com"
+                        placeholder="nombre@correo.com"
                         value={form.email}
                         onChange={(event) => setForm({ ...form, email: event.target.value })}
                         disabled={isSubmitting}
@@ -138,7 +138,7 @@ export default function Login() {
                     </label>
 
                     <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? 'Entrando...' : 'Entrar'}
+                      {isSubmitting ? 'Ingresando...' : 'Iniciar sesión'}
                     </button>
                   </form>
 
@@ -154,12 +154,12 @@ export default function Login() {
                   )}
 
                   <p className="auth-switch">
-                    No tienes cuenta? <Link to="/register">Crear cuenta</Link>
+                    ¿No tienes cuenta? <Link to="/register">Crear cuenta</Link>
                   </p>
                 </div>
 
                 <aside className="auth-side-panel">
-                  <span className="tag muted">Estars Access</span>
+                  <span className="tag muted">Acceso ESTARS</span>
                   <h3>Tu consola de competencia</h3>
                   <p>
                     Desde aquí gestionas tu perfil, recibes invitaciones y haces seguimiento de estados en tiempo real.

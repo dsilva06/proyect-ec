@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { authApi } from '../../features/auth/api'
 import BrandLockup from '../../components/shared/BrandLockup'
 
 function normalizeVerificationUrl(rawUrl) {
@@ -18,34 +17,15 @@ export default function VerifyEmailConfirm() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    let cancelled = false
+    const params = new URLSearchParams(location.search)
+    const verificationUrl = normalizeVerificationUrl(params.get('url') || params.get('verify_url'))
 
-    async function verify() {
-      const params = new URLSearchParams(location.search)
-      const verificationUrl = normalizeVerificationUrl(params.get('url'))
-
-      if (!verificationUrl) {
-        navigate('/verify-email?status=invalid_or_expired', { replace: true })
-        return
-      }
-
-      try {
-        await authApi.verifyEmailByUrl(verificationUrl)
-        if (!cancelled) {
-          navigate('/verify-email?status=verified', { replace: true })
-        }
-      } catch {
-        if (!cancelled) {
-          navigate('/verify-email?status=invalid_or_expired', { replace: true })
-        }
-      }
+    if (!verificationUrl) {
+      navigate('/verify-email?status=invalid_or_expired', { replace: true })
+      return
     }
 
-    verify()
-
-    return () => {
-      cancelled = true
-    }
+    navigate(`/?verify_url=${encodeURIComponent(verificationUrl)}`, { replace: true })
   }, [location.search, navigate])
 
   return (
@@ -55,9 +35,9 @@ export default function VerifyEmailConfirm() {
       <div className="background-grid" />
 
       <header className="nav auth-nav">
-        <BrandLockup subtitle="Verification Center" />
+        <BrandLockup subtitle="Centro de verificación" />
         <div className="nav-auth-actions">
-          <Link className="ghost-button" to="/login">Login</Link>
+          <Link className="ghost-button" to="/login">Iniciar sesión</Link>
           <span className="tag muted">Verificando</span>
         </div>
       </header>

@@ -22,11 +22,11 @@ async function verifyEmailByUrl(url) {
   const normalizedUrl = normalizeVerificationUrl(url)
 
   if (!normalizedUrl) {
-    throw new Error('Missing verification URL.')
+    throw new Error('Falta la URL de verificación.')
   }
 
   if (!/^https?:\/\//i.test(normalizedUrl)) {
-    throw new Error('Invalid verification URL format.')
+    throw new Error('Formato de URL de verificación inválido.')
   }
 
   let response

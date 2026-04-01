@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Mail\PendingRegistrationVerificationMail;
+use App\Models\PlayerProfile;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\Sanctum;
@@ -17,6 +20,8 @@ class AuthEmailVerificationTest extends TestCase
 
     public function test_register_returns_created_with_verify_email_message_and_no_token(): void
     {
+        Mail::fake();
+
         $response = $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
@@ -27,15 +32,19 @@ class AuthEmailVerificationTest extends TestCase
         ]);
 
         $response->assertCreated()
-            ->assertExactJson([
+            ->assertJson([
                 'message' => 'Account created. Please verify your email before logging in.',
+            ])
+            ->assertJsonStructure([
+                'message',
+                'verification_context',
             ])
             ->assertJsonMissing(['token']);
     }
 
     public function test_registration_sends_verification_notification(): void
     {
-        Notification::fake();
+        Mail::fake();
 
         $response = $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
@@ -47,14 +56,130 @@ class AuthEmailVerificationTest extends TestCase
         ]);
 
         $response->assertCreated()
-            ->assertExactJson([
+            ->assertJson([
                 'message' => 'Account created. Please verify your email before logging in.',
-            ]);
+            ])
+            ->assertJsonStructure([
+                'message',
+                'verification_context',
+            ])
+            ->assertJsonMissing(['token']);
 
-        $user = User::query()->where('email', 'verify-register-notify@test.dev')->firstOrFail();
+        $this->assertDatabaseMissing('users', [
+            'email' => 'verify-register-notify@test.dev',
+        ]);
 
-        $this->assertNull($user->email_verified_at);
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Mail::assertSent(PendingRegistrationVerificationMail::class, function (PendingRegistrationVerificationMail $mail): bool {
+            return $mail->hasTo('verify-register-notify@test.dev');
+        });
+    }
+
+    public function test_register_does_not_persist_user_until_email_is_verified(): void
+    {
+        Mail::fake();
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'V-10000009',
+            'email' => 'pending-register@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])->assertCreated();
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'pending-register@test.dev',
+        ]);
+    }
+
+    public function test_register_purges_legacy_unverified_user_records_before_sending_new_verification(): void
+    {
+        Mail::fake();
+
+        $legacyUser = User::factory()->unverified()->create([
+            'email' => 'legacy-pending@test.dev',
+            'phone' => '+584121234567',
+            'password_hash' => Hash::make('Password123!'),
+            'is_active' => true,
+        ]);
+
+        PlayerProfile::query()->create([
+            'user_id' => $legacyUser->id,
+            'first_name' => 'Legacy',
+            'last_name' => 'Pending',
+            'dni' => 'V-10000123',
+            'province_state' => 'Unknown',
+            'ranking_source' => 'NONE',
+        ]);
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'V-10000123',
+            'email' => 'legacy-pending@test.dev',
+            'phone' => '+584121234567',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])->assertCreated();
+
+        $this->assertDatabaseMissing('users', [
+            'id' => $legacyUser->id,
+        ]);
+
+        $this->assertDatabaseMissing('player_profiles', [
+            'user_id' => $legacyUser->id,
+        ]);
+
+        Mail::assertSent(PendingRegistrationVerificationMail::class, function (PendingRegistrationVerificationMail $mail): bool {
+            return $mail->hasTo('legacy-pending@test.dev');
+        });
+    }
+
+    public function test_register_still_rejects_email_for_verified_users(): void
+    {
+        User::factory()->create([
+            'email' => 'verified-register@test.dev',
+        ]);
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'V-10000124',
+            'email' => 'verified-register@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_register_rejects_invalid_dni_format(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => '10000001',
+            'email' => 'verify-register-invalid-dni@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['dni']);
+    }
+
+    public function test_register_rejects_invalid_phone_format(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'V-10000001',
+            'email' => 'verify-register-invalid-phone@test.dev',
+            'phone' => '0412-12',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['phone']);
     }
 
     public function test_login_is_blocked_when_email_is_unverified(): void
@@ -97,27 +222,103 @@ class AuthEmailVerificationTest extends TestCase
 
     public function test_verification_link_marks_email_as_verified(): void
     {
-        $user = User::factory()->unverified()->create([
+        Mail::fake();
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'V-10000010',
             'email' => 'verify-link@test.dev',
-        ]);
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])->assertCreated();
 
-        $url = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            [
-                'id' => $user->id,
-                'hash' => sha1($user->getEmailForVerification()),
-            ],
-            absolute: false,
-        );
+        $verificationEntryUrl = null;
 
-        $this->getJson($url)
+        Mail::assertSent(PendingRegistrationVerificationMail::class, function (PendingRegistrationVerificationMail $mail) use (&$verificationEntryUrl): bool {
+            if (! $mail->hasTo('verify-link@test.dev')) {
+                return false;
+            }
+
+            $verificationEntryUrl = $mail->verificationEntryUrl;
+
+            return true;
+        });
+
+        parse_str((string) parse_url((string) $verificationEntryUrl, PHP_URL_QUERY), $entryQuery);
+        $verificationApiUrl = (string) ($entryQuery['verify_url'] ?? '');
+        $parsedVerificationApiUrl = parse_url($verificationApiUrl);
+        $relativeVerificationUrl = (string) ($parsedVerificationApiUrl['path'] ?? '');
+        if (! empty($parsedVerificationApiUrl['query'])) {
+            $relativeVerificationUrl .= '?'.$parsedVerificationApiUrl['query'];
+        }
+
+        $this->getJson($relativeVerificationUrl)
             ->assertOk()
+            ->assertJsonStructure([
+                'message',
+                'verified',
+                'token',
+                'user' => ['id', 'email', 'role', 'is_active'],
+            ])
             ->assertJson([
                 'message' => 'Email verified successfully.',
+                'verified' => true,
             ]);
 
-        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->assertDatabaseHas('users', [
+            'email' => 'verify-link@test.dev',
+        ]);
+        $this->assertNotNull(User::query()->where('email', 'verify-link@test.dev')->firstOrFail()->email_verified_at);
+    }
+
+    public function test_already_verified_link_returns_auth_payload(): void
+    {
+        Mail::fake();
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'dni' => 'V-10000011',
+            'email' => 'already-verified-link@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])->assertCreated();
+
+        $verificationEntryUrl = null;
+
+        Mail::assertSent(PendingRegistrationVerificationMail::class, function (PendingRegistrationVerificationMail $mail) use (&$verificationEntryUrl): bool {
+            if (! $mail->hasTo('already-verified-link@test.dev')) {
+                return false;
+            }
+
+            $verificationEntryUrl = $mail->verificationEntryUrl;
+
+            return true;
+        });
+
+        parse_str((string) parse_url((string) $verificationEntryUrl, PHP_URL_QUERY), $entryQuery);
+        $verificationApiUrl = (string) ($entryQuery['verify_url'] ?? '');
+        $parsedVerificationApiUrl = parse_url($verificationApiUrl);
+        $relativeVerificationUrl = (string) ($parsedVerificationApiUrl['path'] ?? '');
+        if (! empty($parsedVerificationApiUrl['query'])) {
+            $relativeVerificationUrl .= '?'.$parsedVerificationApiUrl['query'];
+        }
+
+        $this->getJson($relativeVerificationUrl)->assertOk();
+
+        $this->getJson($relativeVerificationUrl)
+            ->assertOk()
+            ->assertJsonStructure([
+                'message',
+                'verified',
+                'token',
+                'user' => ['id', 'email', 'role', 'is_active'],
+            ])
+            ->assertJson([
+                'message' => 'Email is already verified.',
+                'verified' => true,
+            ]);
     }
 
     public function test_resend_verification_email_works_for_unverified_user(): void
@@ -285,6 +486,7 @@ class AuthEmailVerificationTest extends TestCase
             ->assertStatus(403)
             ->assertJson([
                 'message' => 'Invalid or expired verification link.',
-            ]);
+            ])
+            ->assertJsonMissing(['token']);
     }
 }

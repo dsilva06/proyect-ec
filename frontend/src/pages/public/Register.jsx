@@ -2,8 +2,28 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { inviteStorage } from '../../auth/inviteStorage'
+import { writeVerificationContext } from '../../auth/storage'
 import { publicTeamInvitesApi } from '../../features/teamInvites/api'
 import BrandLockup from '../../components/shared/BrandLockup'
+
+const PHONE_COUNTRY_OPTIONS = [
+  { code: 'VE', label: 'Venezuela', dial: '+58', localLength: 10, placeholder: '4121234567' },
+  { code: 'CO', label: 'Colombia', dial: '+57', localLength: 10, placeholder: '3001234567' },
+  { code: 'US', label: 'Estados Unidos', dial: '+1', localLength: 10, placeholder: '2025550147' },
+  { code: 'ES', label: 'España', dial: '+34', localLength: 9, placeholder: '612345678' },
+]
+
+const DNI_PREFIX_OPTIONS = ['V', 'E', 'P']
+
+const DEFAULT_PHONE_COUNTRY = PHONE_COUNTRY_OPTIONS[0]
+
+function onlyDigits(value, maxLength) {
+  return value.replace(/\D/g, '').slice(0, maxLength)
+}
+
+function findPhoneCountry(dialCode) {
+  return PHONE_COUNTRY_OPTIONS.find((country) => country.dial === dialCode) ?? DEFAULT_PHONE_COUNTRY
+}
 
 export default function Register() {
   const navigate = useNavigate()
@@ -11,9 +31,11 @@ export default function Register() {
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
-    dni: '',
+    dni_prefix: 'V',
+    dni_number: '',
     email: '',
-    phone: '',
+    phone_country: DEFAULT_PHONE_COUNTRY.dial,
+    phone_local: '',
     password: '',
     password_confirmation: '',
   })
@@ -38,7 +60,7 @@ export default function Register() {
       })
       .catch(() => {
         if (!isMounted) return
-        setInviteError('No pudimos cargar la invitacion. Intenta nuevamente.')
+        setInviteError('No pudimos cargar la invitación. Intenta nuevamente.')
         inviteStorage.clearToken()
       })
 
@@ -46,6 +68,41 @@ export default function Register() {
       isMounted = false
     }
   }, [])
+
+  const selectedPhoneCountry = findPhoneCountry(form.phone_country)
+
+  const buildRegisterPayload = () => {
+    const dniNumber = onlyDigits(form.dni_number, 10)
+
+    if (dniNumber.length < 7 || dniNumber.length > 10) {
+      setError('El DNI debe tener entre 7 y 10 números.')
+      return null
+    }
+
+    const phoneLocal = onlyDigits(form.phone_local, selectedPhoneCountry.localLength)
+    let normalizedPhone = ''
+
+    if (phoneLocal) {
+      if (phoneLocal.length !== selectedPhoneCountry.localLength) {
+        setError(
+          `El número de ${selectedPhoneCountry.label} debe tener ${selectedPhoneCountry.localLength} dígitos.`,
+        )
+        return null
+      }
+
+      normalizedPhone = `${selectedPhoneCountry.dial}${phoneLocal}`
+    }
+
+    return {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      dni: `${form.dni_prefix}-${dniNumber}`,
+      email: form.email,
+      phone: normalizedPhone,
+      password: form.password,
+      password_confirmation: form.password_confirmation,
+    }
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -56,17 +113,25 @@ export default function Register() {
     setIsSubmitting(true)
 
     try {
-      const data = await register(form)
+      const payload = buildRegisterPayload()
+      if (!payload) {
+        setIsSubmitting(false)
+        return
+      }
+
+      const data = await register(payload)
+      writeVerificationContext(data?.verification_context || null)
 
       navigate('/verify-email', {
         replace: true,
         state: {
           email: form.email,
           message: data?.message,
+          verificationContext: data?.verification_context || null,
         },
       })
     } catch (err) {
-      setError(err?.data?.message || err?.message || 'Registration failed.')
+      setError(err?.data?.message || err?.message || 'No pudimos completar el registro.')
     } finally {
       setIsSubmitting(false)
     }
@@ -79,10 +144,10 @@ export default function Register() {
       <div className="background-grid" />
 
       <header className="nav auth-nav">
-        <BrandLockup subtitle="Player Access" />
+        <BrandLockup subtitle="Acceso de jugadores" />
         <div className="nav-auth-actions">
-          <Link className="ghost-button" to="/login">Login</Link>
-          <span className="tag muted">Player Access</span>
+          <Link className="ghost-button" to="/login">Iniciar sesión</Link>
+          <span className="tag muted">Acceso de jugadores</span>
         </div>
       </header>
 
@@ -97,11 +162,11 @@ export default function Register() {
 
                   {invite && (
                     <div className="auth-status">
-                      <span className="tag">Invitacion pendiente</span>
+                      <span className="tag">Invitación pendiente</span>
                       <p>
                         Equipo: <strong>{invite.team?.display_name || 'Equipo'}</strong>
                       </p>
-                      <p>Usa este correo para reclamar tu invitacion automaticamente.</p>
+                      <p>Usa este correo para reclamar tu invitación automáticamente.</p>
                     </div>
                   )}
 
@@ -130,20 +195,35 @@ export default function Register() {
                     </label>
                     <label>
                       DNI
-                      <input
-                        type="text"
-                        placeholder="Ej: 12345678"
-                        value={form.dni}
-                        onChange={(event) => setForm({ ...form, dni: event.target.value })}
-                        disabled={isSubmitting}
-                        required
-                      />
+                      <div className="auth-inline-input">
+                        <select
+                          value={form.dni_prefix}
+                          onChange={(event) => setForm({ ...form, dni_prefix: event.target.value })}
+                          disabled={isSubmitting}
+                          required
+                        >
+                          {DNI_PREFIX_OPTIONS.map((prefix) => (
+                            <option key={prefix} value={prefix}>{prefix}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="12345678"
+                          value={form.dni_number}
+                          onChange={(event) =>
+                            setForm({ ...form, dni_number: onlyDigits(event.target.value, 10) })}
+                          disabled={isSubmitting}
+                          required
+                        />
+                      </div>
+                      <small className="auth-field-hint">Formato obligatorio: V-12345678</small>
                     </label>
                     <label>
                       Correo
                       <input
                         type="email"
-                        placeholder="name@email.com"
+                        placeholder="nombre@email.com"
                         value={form.email}
                         disabled={Boolean(invite?.invited_email) || isSubmitting}
                         onChange={(event) => setForm({ ...form, email: event.target.value })}
@@ -151,20 +231,42 @@ export default function Register() {
                       />
                     </label>
                     <label>
-                      Telefono (opcional)
-                      <input
-                        type="text"
-                        placeholder="+34 600 000 000"
-                        value={form.phone}
-                        onChange={(event) => setForm({ ...form, phone: event.target.value })}
-                        disabled={isSubmitting}
-                      />
+                      Teléfono (opcional)
+                      <div className="auth-inline-input">
+                        <select
+                          value={form.phone_country}
+                          onChange={(event) => setForm({ ...form, phone_country: event.target.value })}
+                          disabled={isSubmitting}
+                        >
+                          {PHONE_COUNTRY_OPTIONS.map((country) => (
+                            <option key={country.code} value={country.dial}>
+                              {country.label} ({country.dial})
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          placeholder={selectedPhoneCountry.placeholder}
+                          maxLength={selectedPhoneCountry.localLength}
+                          value={form.phone_local}
+                          onChange={(event) =>
+                            setForm({
+                              ...form,
+                              phone_local: onlyDigits(event.target.value, selectedPhoneCountry.localLength),
+                            })}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <small className="auth-field-hint">
+                        Selecciona país y escribe solo el número local.
+                      </small>
                     </label>
                     <label>
-                      Contrasena
+                      Contraseña
                       <input
                         type="password"
-                        placeholder="Minimo 8 caracteres"
+                        placeholder="Mínimo 8 caracteres"
                         value={form.password}
                         onChange={(event) => setForm({ ...form, password: event.target.value })}
                         disabled={isSubmitting}
@@ -172,10 +274,10 @@ export default function Register() {
                       />
                     </label>
                     <label>
-                      Confirmar contrasena
+                      Confirmar contraseña
                       <input
                         type="password"
-                        placeholder="Repite la contrasena"
+                        placeholder="Repite la contraseña"
                         value={form.password_confirmation}
                         onChange={(event) => setForm({ ...form, password_confirmation: event.target.value })}
                         disabled={isSubmitting}
@@ -183,7 +285,7 @@ export default function Register() {
                       />
                     </label>
                     <button className="primary-button auth-submit" type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
+                      {isSubmitting ? 'Creando cuenta...' : 'Registrarme'}
                     </button>
                   </form>
 
@@ -191,7 +293,7 @@ export default function Register() {
                   {error && <p className="auth-error">{error}</p>}
 
                   <p className="auth-switch">
-                    Ya tienes cuenta? <Link to="/login">Inicia sesion</Link>
+                    ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
                   </p>
                 </div>
 

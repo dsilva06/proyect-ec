@@ -34,7 +34,7 @@ class AuthRateLimitTest extends TestCase
             $this->postJson('/api/auth/register', [
                 'first_name' => 'Rate',
                 'last_name' => 'Limited',
-                'dni' => 'DNI-'.$attempt,
+                'dni' => 'V-1000000'.$attempt,
                 'email' => "rate-register-{$attempt}@example.com",
                 'password' => 'Password123!',
                 'password_confirmation' => 'Password123!',
@@ -44,7 +44,7 @@ class AuthRateLimitTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Rate',
             'last_name' => 'Limited',
-            'dni' => 'DNI-999',
+            'dni' => 'V-19999999',
             'email' => 'rate-register-overflow@example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',

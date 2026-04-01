@@ -26,7 +26,7 @@ const formatDateShort = (value) => {
   if (!value) return ''
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return String(value)
-  return parsed.toLocaleDateString('en-US', {
+  return parsed.toLocaleDateString('es-ES', {
     month: 'short',
     day: 'numeric',
   })
@@ -36,7 +36,7 @@ const formatDateTimeShort = (value) => {
   if (!value) return ''
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return String(value)
-  return parsed.toLocaleString('en-US', {
+  return parsed.toLocaleString('es-ES', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -49,14 +49,14 @@ const formatRange = (start, end, formatter) => {
   const startLabel = formatter(start)
   const endLabel = formatter(end)
   if (startLabel && endLabel) return `${startLabel} → ${endLabel}`
-  return startLabel || endLabel || 'TBD'
+  return startLabel || endLabel || 'Por confirmar'
 }
 
 const formatMoney = (value) => {
-  if (value === null || value === undefined || value === '') return 'TBD'
+  if (value === null || value === undefined || value === '') return 'Por confirmar'
   const amount = Number(value)
-  if (!Number.isFinite(amount)) return 'TBD'
-  return new Intl.NumberFormat('en-US', {
+  if (!Number.isFinite(amount)) return 'Por confirmar'
+  return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
@@ -258,7 +258,7 @@ export default function Tournament() {
                     <strong>{categories.length}</strong>
                   </div>
                   <div>
-                    <span>Prize money</span>
+                    <span>Premio total</span>
                     <strong>{formatMoney(tournament.prize_money)}</strong>
                   </div>
                 </div>
@@ -321,7 +321,7 @@ export default function Tournament() {
                         <strong>{formatRange(tournament.registration_open_at, tournament.registration_close_at, formatDateTimeShort)}</strong>
                       </div>
                       <div>
-                        <span>Prize money</span>
+                        <span>Premio total</span>
                         <strong>{formatMoney(tournament.prize_money)}</strong>
                       </div>
                     </div>

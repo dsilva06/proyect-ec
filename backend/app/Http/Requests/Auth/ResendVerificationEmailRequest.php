@@ -13,6 +13,7 @@ class ResendVerificationEmailRequest extends FormRequest
 
         $this->merge([
             'email' => Str::lower($email),
+            'verification_context' => trim((string) $this->input('verification_context', '')) ?: null,
         ]);
     }
 
@@ -25,6 +26,7 @@ class ResendVerificationEmailRequest extends FormRequest
     {
         return [
             'email' => ['required', 'string', 'email', 'max:255'],
+            'verification_context' => ['nullable', 'string'],
         ];
     }
 }

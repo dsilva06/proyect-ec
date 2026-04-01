@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
+import { writeVerificationContext } from '../../auth/storage'
 import { useAuth } from '../../auth/useAuth'
+import { authApi } from '../../features/auth/api'
 import { publicLeadsApi } from '../../features/leads/api'
 import { publicTournamentsApi } from '../../features/tournaments/api'
 import BrandLockup from '../../components/shared/BrandLockup'
@@ -120,10 +122,14 @@ const pickCurrentTournament = (tournaments) => {
 
 export default function Home() {
   const location = useLocation()
-  const { user, logout } = useAuth()
+  const { user, logout, establishSession } = useAuth()
   const [tournaments, setTournaments] = useState([])
   const [tournamentsLoading, setTournamentsLoading] = useState(true)
   const [tournamentsError, setTournamentsError] = useState('')
+  const [verificationState, setVerificationState] = useState({
+    status: 'idle',
+    message: '',
+  })
   const [contactForm, setContactForm] = useState({
     full_name: '',
     email: '',
@@ -131,7 +137,10 @@ export default function Home() {
     message: '',
   })
   const [contactStatus, setContactStatus] = useState('')
-  const verificationUrl = new URLSearchParams(location.search).get('verify_url')
+  const verificationParams = new URLSearchParams(location.search)
+  const verificationUrl = verificationParams.get('verify_url') || verificationParams.get('url')
+  const currentTournament = useMemo(() => pickCurrentTournament(tournaments), [tournaments])
+  const currentCategoryCount = Array.isArray(currentTournament?.categories) ? currentTournament.categories.length : 0
 
   useEffect(() => {
     const updateScroll = () => {
@@ -194,6 +203,50 @@ export default function Home() {
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    if (!verificationUrl) {
+      setVerificationState({ status: 'idle', message: '' })
+      return
+    }
+
+    let cancelled = false
+
+    setVerificationState({
+      status: 'processing',
+      message: 'Estamos verificando tu correo y abriendo tu sesión...',
+    })
+
+    authApi
+      .verifyEmailByUrl(verificationUrl)
+      .then((data) => {
+        if (cancelled) return
+
+        writeVerificationContext(null)
+        establishSession(data)
+        setVerificationState({
+          status: 'success',
+          message: data?.message || 'Tu correo fue verificado correctamente.',
+        })
+      })
+      .catch((error) => {
+        if (cancelled) return
+
+        const message =
+          error?.data?.message ||
+          error?.message ||
+          'No pudimos verificar tu correo.'
+
+        setVerificationState({
+          status: 'error',
+          message,
+        })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [verificationUrl, establishSession])
+
   const handleContactSubmit = async (event) => {
     event.preventDefault()
     setContactStatus('')
@@ -219,17 +272,45 @@ export default function Home() {
     }
   }
 
-  if (verificationUrl) {
+  if (verificationState.status === 'success') {
+    return <Navigate to="/player" replace />
+  }
+
+  if (verificationState.status === 'error') {
     return (
       <Navigate
-        to={`/verify-email/confirm?url=${encodeURIComponent(verificationUrl)}`}
+        to="/verify-email?status=invalid_or_expired"
+        state={{ message: verificationState.message }}
         replace
       />
     )
   }
 
-  const currentTournament = useMemo(() => pickCurrentTournament(tournaments), [tournaments])
-  const currentCategoryCount = Array.isArray(currentTournament?.categories) ? currentTournament.categories.length : 0
+  if (verificationState.status === 'processing') {
+    return (
+      <div className="page auth-page">
+        <div className="background-orb orb-one" />
+        <div className="background-orb orb-two" />
+        <div className="background-grid" />
+
+        <header className="nav auth-nav">
+          <BrandLockup subtitle="Centro de verificación" />
+        </header>
+
+        <main>
+          <section className="section auth-standalone">
+            <div className="auth-shell single-card">
+              <div className="auth-card">
+                <h2>Verificando correo</h2>
+                <p className="muted">{verificationState.message}</p>
+                <p className="auth-loading">Espera un momento.</p>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="page home-page">
