@@ -5,19 +5,13 @@ import BrandLockup from '../components/shared/BrandLockup'
 
 const AUTH_WARNING_KEY = 'auth_login_warning'
 const PLAYER_NAV_ITEMS = [
-  { to: '/player', label: 'Resumen', shortLabel: 'Inicio', description: 'Panel rápido con lo importante del día', end: true },
-  { to: '/player/tournaments', label: 'Torneos', shortLabel: 'Torneos', description: 'Explora torneos y regístrate desde el móvil' },
-  { to: '/player/invitations', label: 'Invitaciones', shortLabel: 'Invites', description: 'Acepta tu pareja pendiente y confirma tu lugar' },
-  { to: '/player/registrations', label: 'Inscripciones', shortLabel: 'Inscrip.', description: 'Revisa estado, cola y próximos pasos' },
-  { to: '/player/ranking', label: 'Mi ranking', shortLabel: 'Ranking', description: 'Actualiza tu ranking y mantén tu perfil listo' },
-  { to: '/player/payments', label: 'Pagos', shortLabel: 'Pagos', description: 'Consulta montos, estados y movimientos registrados' },
-]
-
-const PLAYER_DOCK_ITEMS = [
-  { to: '/player', label: 'Inicio', end: true },
-  { to: '/player/tournaments', label: 'Torneos' },
-  { to: '/player/registrations', label: 'Inscrip.' },
-  { to: '/player/invitations', label: 'Invites' },
+  { to: '/player', label: 'Resumen', shortLabel: 'Inicio', description: 'Lo clave de tu torneo, hoy', end: true },
+  { to: '/player/profile', label: 'Perfil', shortLabel: 'Perfil', description: 'Revisa tus datos de jugador y documento' },
+  { to: '/player/tournaments', label: 'Torneos', shortLabel: 'Torneos', description: 'Revisa torneos e inscríbete con tu pareja' },
+  { to: '/player/invitations', label: 'Invitaciones', shortLabel: 'Invites', description: 'Confirma tu pareja y asegura tu lugar' },
+  { to: '/player/registrations', label: 'Inscripciones', shortLabel: 'Inscrip.', description: 'Consulta estado, cola y próximos pasos' },
+  { to: '/player/ranking', label: 'Mi ranking', shortLabel: 'Ranking', description: 'Deja listo tu ranking para competir' },
+  { to: '/player/payments', label: 'Pagos', shortLabel: 'Pagos', description: 'Revisa pagos ligados a tu inscripción' },
 ]
 
 export default function PlayerLayout() {
@@ -56,7 +50,7 @@ export default function PlayerLayout() {
 
       <aside className={`admin-sidebar-frame ${isSidebarOpen ? 'is-open' : ''}`}>
         <div className="admin-sidebar-top">
-          <BrandLockup subtitle="Panel de jugador" className="admin-brand-lockup" variant="compact" />
+          <BrandLockup subtitle="Zona de torneo" className="admin-brand-lockup" variant="compact" />
           <span className="tag muted">Jugador</span>
         </div>
 
@@ -91,9 +85,7 @@ export default function PlayerLayout() {
           </div>
           <div className="admin-user player-user-panel">
             <div className="player-user-copy">
-              <span className="player-user-kicker">Sesión activa</span>
               <strong>{firstName}</strong>
-              <span className="admin-email">{user?.email}</span>
             </div>
             <div className="player-header-actions">
               <button className="secondary-button" type="button" onClick={logout}>
@@ -125,24 +117,6 @@ export default function PlayerLayout() {
           <Outlet />
         </div>
       </section>
-
-      <nav className="player-mobile-dock" aria-label="Accesos rápidos del jugador">
-        {PLAYER_DOCK_ITEMS.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.end} className="player-mobile-dock-link">
-            {item.label}
-          </NavLink>
-        ))}
-        <button
-          className={`player-mobile-dock-link player-mobile-dock-trigger${isSidebarOpen ? ' is-open' : ''}`}
-          type="button"
-          aria-label="Abrir más opciones"
-          aria-expanded={isSidebarOpen}
-          aria-controls="player-sidebar-nav"
-          onClick={() => setIsSidebarOpen((prev) => !prev)}
-        >
-          Más
-        </button>
-      </nav>
     </div>
   )
 }

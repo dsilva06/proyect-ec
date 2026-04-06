@@ -9,7 +9,7 @@ const getHeadline = ({ pendingInvites, pendingPayments, tournaments }) => {
   if (pendingInvites > 0) return 'Tienes una invitación pendiente por responder.'
   if (pendingPayments > 0) return 'Hay una inscripción esperando tu pago.'
   if (tournaments > 0) return 'Ya puedes revisar torneos y decidir tu próxima inscripción.'
-  return 'Tu panel está listo para cuando abramos nuevos torneos.'
+  return 'Tu torneo estará listo aquí cuando abramos nuevas fechas.'
 }
 
 export default function Dashboard() {
@@ -30,7 +30,7 @@ export default function Dashboard() {
       setRegistrations(registrationsData)
       setInvites(invitesData)
     } catch (err) {
-      setError(err?.message || 'No pudimos cargar tu panel.')
+      setError(err?.message || 'No pudimos cargar tu resumen de torneo.')
     }
   }
 
@@ -57,9 +57,9 @@ export default function Dashboard() {
     <section className="player-page player-dashboard-page">
       <div className="player-page-header">
         <div>
-          <span className="player-section-kicker">Panel de jugador</span>
+          <span className="player-section-kicker">Resumen de torneo</span>
           <h3>Todo lo importante, claro y rápido en tu teléfono.</h3>
-          <p>Revisa tus pendientes, responde invitaciones y entra a torneos sin perderte en pantallas de escritorio.</p>
+          <p>Revisa tus pendientes, responde invitaciones y entra a cada torneo sin perderte en pantallas de escritorio.</p>
         </div>
         <div className="player-page-actions">
           <button className="secondary-button" type="button" onClick={load}>
@@ -82,7 +82,7 @@ export default function Dashboard() {
         </div>
         <div className="player-cta-row">
           <Link className="primary-button" to={pendingInvites.length > 0 ? '/player/invitations' : '/player/tournaments'}>
-            {pendingInvites.length > 0 ? 'Ver invitaciones' : 'Explorar torneos'}
+            {pendingInvites.length > 0 ? 'Ver invitaciones' : 'Ver torneos'}
           </Link>
           <Link className="ghost-button" to="/player/registrations">
             Ver mis inscripciones

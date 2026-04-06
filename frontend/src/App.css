@@ -5053,8 +5053,7 @@ label,
   justify-content: flex-end;
 }
 
-.player-quick-strip,
-.player-mobile-dock {
+.player-quick-strip {
   display: none;
 }
 
@@ -5430,50 +5429,8 @@ label,
     justify-content: space-between;
   }
 
-  .player-mobile-dock {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    z-index: 42;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 8px;
-    padding: 8px;
-    border-radius: 22px;
-    border: 1px solid rgba(239, 231, 211, 0.18);
-    background: rgba(8, 12, 56, 0.94);
-    box-shadow: 0 18px 40px rgba(3, 6, 24, 0.48);
-    backdrop-filter: blur(16px);
-  }
-
-  .player-mobile-dock-link,
-  .player-mobile-dock-trigger {
-    min-height: 50px;
-    border-radius: 16px;
-    border: 1px solid transparent;
-    background: rgba(255, 255, 255, 0.03);
-    color: rgba(239, 231, 211, 0.82);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 6px;
-  }
-
-  .player-mobile-dock-link.active,
-  .player-mobile-dock-trigger.is-open {
-    color: #160918;
-    border-color: rgba(183, 207, 79, 0.72);
-    background: linear-gradient(120deg, rgba(183, 207, 79, 0.94), #d9ec88);
-  }
-
   .admin-shell-player .admin-main .admin-content {
-    padding-bottom: 110px;
+    padding-bottom: 24px;
   }
 
   .admin-shell-player .tournament-meta {
@@ -5521,7 +5478,7 @@ label,
   }
 
   .admin-shell-player {
-    padding: 14px 12px 112px;
+    padding: 14px 12px 24px;
     gap: 12px;
   }
 
@@ -5580,20 +5537,6 @@ label,
   .player-metadata-grid,
   .admin-shell-player .tournament-meta {
     grid-template-columns: 1fr;
-  }
-
-  .player-mobile-dock {
-    left: 10px;
-    right: 10px;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    gap: 6px;
-    padding: 7px;
-  }
-
-  .player-mobile-dock-link,
-  .player-mobile-dock-trigger {
-    min-height: 48px;
-    font-size: 0.68rem;
   }
 
   .admin-shell-player .tournament-page-header,
