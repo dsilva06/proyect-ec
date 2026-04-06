@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { playerTeamInvitesApi } from '../../features/teamInvites/api'
+import { formatPlayerDate, getPlayerStatusTone } from './ui'
 
 export default function Invitations() {
   const [invites, setInvites] = useState([])
@@ -37,17 +38,24 @@ export default function Invitations() {
     }
   }
 
-  const pendingInvites = invites.filter((invite) => invite.status?.code === 'sent')
-  const acceptedInvites = invites.filter((invite) => invite.status?.code === 'accepted')
+  const pendingInvites = useMemo(
+    () => invites.filter((invite) => String(invite.status?.code || '').toLowerCase() === 'sent'),
+    [invites],
+  )
+  const acceptedInvites = useMemo(
+    () => invites.filter((invite) => String(invite.status?.code || '').toLowerCase() === 'accepted'),
+    [invites],
+  )
 
   return (
-    <section className="admin-page">
-      <div className="admin-page-header">
+    <section className="player-page">
+      <div className="player-page-header">
         <div>
-          <h3>Invitaciones pendientes</h3>
-          <p>Acepta tu lugar en el equipo desde aquí.</p>
+          <span className="player-section-kicker">Invitaciones</span>
+          <h3>Confirma tu pareja sin perderte.</h3>
+          <p>Si tienes una invitación pendiente, aquí la aceptas y quedas dentro del equipo con un solo toque.</p>
         </div>
-        <div className="admin-page-actions">
+        <div className="player-page-actions">
           <button className="secondary-button" type="button" onClick={load}>
             Actualizar
           </button>
@@ -56,71 +64,93 @@ export default function Invitations() {
 
       {error && <div className="empty-state">{error}</div>}
 
-      <div className="admin-grid">
-        <div className="panel-card">
-          <div className="panel-header">
-            <h4>Resumen</h4>
-            <span className="tag muted">{pendingInvites.length} pendientes</span>
-          </div>
-          <div className="registration-list">
-            <div className="registration-item">
-              <div>
-                <span>Pendientes</span>
-                <strong>{pendingInvites.length}</strong>
-              </div>
-              <div>
-                <span>Aceptadas</span>
-                <strong>{acceptedInvites.length}</strong>
-              </div>
-              <div>
-                <span>Total</span>
-                <strong>{invites.length}</strong>
-              </div>
-            </div>
-          </div>
-          <p className="form-message">
-            Tu partner envió la invitación a tu correo. Acepta para quedar dentro del equipo.
-          </p>
+      <div className="player-stat-grid">
+        <article className="player-stat-card">
+          <span>Pendientes</span>
+          <strong>{pendingInvites.length}</strong>
+          <small>Esperando tu respuesta.</small>
+        </article>
+        <article className="player-stat-card">
+          <span>Aceptadas</span>
+          <strong>{acceptedInvites.length}</strong>
+          <small>Equipos ya confirmados contigo.</small>
+        </article>
+        <article className="player-stat-card">
+          <span>Total</span>
+          <strong>{invites.length}</strong>
+          <small>Historial general de invitaciones.</small>
+        </article>
+      </div>
+
+      <section className="panel-card player-surface-card">
+        <div className="panel-header">
+          <h4>Invitaciones por responder</h4>
+          <span className="tag muted">{pendingInvites.length}</span>
         </div>
 
-        <div className="panel-card">
-          <div className="panel-header">
-            <h4>Invitaciones pendientes</h4>
-          </div>
-
-          {loading ? (
-            <div className="empty-state">Cargando invitaciones...</div>
-          ) : pendingInvites.length === 0 ? (
-            <div className="empty-state">No tienes invitaciones pendientes.</div>
-          ) : (
-            <div className="registration-list">
-              {pendingInvites.map((invite) => (
-                <div key={invite.id} className="registration-item">
+        {loading ? (
+          <div className="player-empty-state">Cargando invitaciones...</div>
+        ) : pendingInvites.length === 0 ? (
+          <div className="player-empty-state">No tienes invitaciones pendientes en este momento.</div>
+        ) : (
+          <div className="player-card-stack">
+            {pendingInvites.map((invite) => (
+              <article key={invite.id} className="player-info-card player-action-card">
+                <div className="player-card-topline">
+                  <span className={`player-status-pill tone-${getPlayerStatusTone(invite.status?.code)}`}>
+                    {invite.status?.label || 'Pendiente'}
+                  </span>
+                  <span className="player-soft-note">Vence {formatPlayerDate(invite.expires_at, { year: 'numeric' })}</span>
+                </div>
+                <h5>{invite.team?.display_name || 'Equipo'}</h5>
+                <p>Tu partner envió la invitación a <strong>{invite.invited_email}</strong>.</p>
+                <div className="player-metadata-grid">
                   <div>
-                    <strong>{invite.team?.display_name || 'Equipo'}</strong>
-                    <span>{invite.invited_email}</span>
-                    <span>Vence: {invite.expires_at?.slice(0, 10) || 'Pronto'}</span>
+                    <span>Equipo</span>
+                    <strong>{invite.team?.display_name || 'Por confirmar'}</strong>
                   </div>
                   <div>
-                    <span>Estado</span>
-                    <strong>{invite.status?.label || 'Pendiente'}</strong>
-                  </div>
-                  <div>
-                    <button
-                      className="primary-button"
-                      type="button"
-                      onClick={() => handleAccept(invite.id)}
-                      disabled={actionId === invite.id}
-                    >
-                      {actionId === invite.id ? 'Aceptando...' : 'Aceptar invitación'}
-                    </button>
+                    <span>Correo invitado</span>
+                    <strong>{invite.invited_email || 'Sin correo'}</strong>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                <div className="player-cta-row">
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={() => handleAccept(invite.id)}
+                    disabled={actionId === invite.id}
+                  >
+                    {actionId === invite.id ? 'Aceptando...' : 'Aceptar invitación'}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {acceptedInvites.length > 0 ? (
+        <section className="panel-card player-surface-card">
+          <div className="panel-header">
+            <h4>Invitaciones ya aceptadas</h4>
+            <span className="tag muted">{acceptedInvites.length}</span>
+          </div>
+          <div className="player-card-stack">
+            {acceptedInvites.slice(0, 4).map((invite) => (
+              <article key={invite.id} className="player-info-card compact">
+                <div className="player-card-topline">
+                  <span className={`player-status-pill tone-${getPlayerStatusTone(invite.status?.code)}`}>
+                    {invite.status?.label || 'Aceptada'}
+                  </span>
+                </div>
+                <h5>{invite.team?.display_name || 'Equipo'}</h5>
+                <p>{invite.invited_email || 'Sin correo asociado'}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </section>
   )
 }

@@ -4,12 +4,31 @@ import { useAuth } from '../auth/useAuth'
 import BrandLockup from '../components/shared/BrandLockup'
 
 const AUTH_WARNING_KEY = 'auth_login_warning'
+const PLAYER_NAV_ITEMS = [
+  { to: '/player', label: 'Resumen', shortLabel: 'Inicio', description: 'Panel rápido con lo importante del día', end: true },
+  { to: '/player/tournaments', label: 'Torneos', shortLabel: 'Torneos', description: 'Explora torneos y regístrate desde el móvil' },
+  { to: '/player/invitations', label: 'Invitaciones', shortLabel: 'Invites', description: 'Acepta tu pareja pendiente y confirma tu lugar' },
+  { to: '/player/registrations', label: 'Inscripciones', shortLabel: 'Inscrip.', description: 'Revisa estado, cola y próximos pasos' },
+  { to: '/player/ranking', label: 'Mi ranking', shortLabel: 'Ranking', description: 'Actualiza tu ranking y mantén tu perfil listo' },
+  { to: '/player/payments', label: 'Pagos', shortLabel: 'Pagos', description: 'Consulta montos, estados y movimientos registrados' },
+]
+
+const PLAYER_DOCK_ITEMS = [
+  { to: '/player', label: 'Inicio', end: true },
+  { to: '/player/tournaments', label: 'Torneos' },
+  { to: '/player/registrations', label: 'Inscrip.' },
+  { to: '/player/invitations', label: 'Invites' },
+]
 
 export default function PlayerLayout() {
   const { user, logout } = useAuth()
   const [authWarning, setAuthWarning] = useState('')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const location = useLocation()
+  const currentSection = PLAYER_NAV_ITEMS.find((item) =>
+    item.end ? location.pathname === item.to : location.pathname.startsWith(item.to),
+  ) || PLAYER_NAV_ITEMS[0]
+  const firstName = String(user?.name || 'Jugador').trim().split(/\s+/)[0] || 'Jugador'
 
   useEffect(() => {
     const message = sessionStorage.getItem(AUTH_WARNING_KEY)
@@ -37,7 +56,7 @@ export default function PlayerLayout() {
 
       <aside className={`admin-sidebar-frame ${isSidebarOpen ? 'is-open' : ''}`}>
         <div className="admin-sidebar-top">
-          <BrandLockup subtitle="Consola de jugador" className="admin-brand-lockup" variant="compact" />
+          <BrandLockup subtitle="Panel de jugador" className="admin-brand-lockup" variant="compact" />
           <span className="tag muted">Jugador</span>
         </div>
 
@@ -53,48 +72,77 @@ export default function PlayerLayout() {
               Cerrar
             </button>
           </div>
-          <NavLink to="/player" end onClick={handleCloseSidebar}>Resumen</NavLink>
-          <NavLink to="/player/tournaments" onClick={handleCloseSidebar}>Torneos</NavLink>
-          <NavLink to="/player/invitations" onClick={handleCloseSidebar}>Invitaciones</NavLink>
-          <NavLink to="/player/ranking" onClick={handleCloseSidebar}>Mi ranking</NavLink>
-          <NavLink to="/player/registrations" onClick={handleCloseSidebar}>Mis inscripciones</NavLink>
-          <NavLink to="/player/payments" onClick={handleCloseSidebar}>Mis pagos</NavLink>
+          {PLAYER_NAV_ITEMS.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} onClick={handleCloseSidebar}>
+              <span className="player-nav-item-title">{item.label}</span>
+              <small className="player-nav-item-meta">{item.description}</small>
+            </NavLink>
+          ))}
         </nav>
       </aside>
 
       <section className="admin-main">
-        <header className="admin-header">
-          <div>
-            <h2>Panel de jugador</h2>
-            <p className="admin-subtitle">Gestiona tus inscripciones y pagos.</p>
+        <header className="admin-header player-header">
+          <div className="player-header-copy">
+            <span className="tag muted">Jugador</span>
+            <h2>{currentSection.label}</h2>
+            <p className="admin-subtitle">{currentSection.description}</p>
             {authWarning && <p className="auth-error">{authWarning}</p>}
           </div>
-          <div className="admin-user">
-            <div>
-              <span className="tag muted">Sesión activa</span>
-              <strong>{user?.name || 'Jugador'}</strong>
+          <div className="admin-user player-user-panel">
+            <div className="player-user-copy">
+              <span className="player-user-kicker">Sesión activa</span>
+              <strong>{firstName}</strong>
               <span className="admin-email">{user?.email}</span>
             </div>
-            <button className="secondary-button" type="button" onClick={logout}>
-              Cerrar sesión
-            </button>
-            <button
-              className="ghost-button admin-menu-toggle"
-              type="button"
-              aria-label="Abrir menú de navegación"
-              aria-expanded={isSidebarOpen}
-              aria-controls="player-sidebar-nav"
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
-            >
-              Menú
-            </button>
+            <div className="player-header-actions">
+              <button className="secondary-button" type="button" onClick={logout}>
+                Cerrar sesión
+              </button>
+              <button
+                className="ghost-button admin-menu-toggle"
+                type="button"
+                aria-label="Abrir menú de navegación"
+                aria-expanded={isSidebarOpen}
+                aria-controls="player-sidebar-nav"
+                onClick={() => setIsSidebarOpen((prev) => !prev)}
+              >
+                Menú
+              </button>
+            </div>
           </div>
         </header>
+
+        <nav className="player-quick-strip" aria-label="Secciones del jugador">
+          {PLAYER_NAV_ITEMS.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} className="player-quick-pill">
+              {item.shortLabel}
+            </NavLink>
+          ))}
+        </nav>
 
         <div className="admin-content">
           <Outlet />
         </div>
       </section>
+
+      <nav className="player-mobile-dock" aria-label="Accesos rápidos del jugador">
+        {PLAYER_DOCK_ITEMS.map((item) => (
+          <NavLink key={item.to} to={item.to} end={item.end} className="player-mobile-dock-link">
+            {item.label}
+          </NavLink>
+        ))}
+        <button
+          className={`player-mobile-dock-link player-mobile-dock-trigger${isSidebarOpen ? ' is-open' : ''}`}
+          type="button"
+          aria-label="Abrir más opciones"
+          aria-expanded={isSidebarOpen}
+          aria-controls="player-sidebar-nav"
+          onClick={() => setIsSidebarOpen((prev) => !prev)}
+        >
+          Más
+        </button>
+      </nav>
     </div>
   )
 }
