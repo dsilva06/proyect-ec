@@ -5462,14 +5462,15 @@ label,
   .admin-shell-player .admin-sidebar-frame {
     position: fixed;
     top: 0;
-    right: 0;
+    left: 0;
+    right: auto;
     width: min(84vw, 330px);
     height: 100dvh;
     border-radius: 0;
     border: 0;
-    border-left: 1px solid rgba(239, 231, 211, 0.18);
+    border-right: 1px solid rgba(239, 231, 211, 0.18);
     padding: 14px;
-    transform: translateX(106%);
+    transform: translateX(-106%);
     transition: transform 0.24s ease;
     z-index: 34;
   }
@@ -5503,6 +5504,37 @@ label,
 
   .player-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .player-quick-strip {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .player-quick-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .player-quick-pill {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(239, 231, 211, 0.16);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(239, 231, 211, 0.84);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .player-quick-pill.active {
+    color: #160918;
+    border-color: rgba(183, 207, 79, 0.78);
+    background: linear-gradient(120deg, rgba(183, 207, 79, 0.92), #d9ec88);
   }
 
   .player-header {

@@ -13,6 +13,7 @@ const PLAYER_MENU_ITEMS = [
   { to: '/player/ranking', label: 'Mi ranking', shortLabel: 'Ranking', description: 'Deja listo tu ranking para competir' },
   { to: '/player/payments', label: 'Pagos', shortLabel: 'Pagos', description: 'Revisa pagos ligados a tu inscripción' },
 ]
+const PLAYER_HUB_ITEMS = PLAYER_MENU_ITEMS.filter((item) => item.to !== '/player/profile')
 
 export default function PlayerLayout() {
   const { user, logout } = useAuth()
@@ -112,6 +113,14 @@ export default function PlayerLayout() {
             </div>
           </div>
         </header>
+
+        <nav className="player-quick-strip" aria-label="Accesos rápidos del torneo">
+          {PLAYER_HUB_ITEMS.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} className="player-quick-pill">
+              {item.shortLabel}
+            </NavLink>
+          ))}
+        </nav>
 
         <div className="admin-content">
           <Outlet />
