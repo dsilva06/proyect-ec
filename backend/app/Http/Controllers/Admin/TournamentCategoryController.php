@@ -20,7 +20,7 @@ class TournamentCategoryController extends Controller
             $data['acceptance_type'] = 'waitlist';
         }
         if (! isset($data['seeding_rule'])) {
-            $data['seeding_rule'] = $tournament->mode === 'amateur' ? 'fifo' : 'ranking_desc';
+            $data['seeding_rule'] = in_array($tournament->mode, ['amateur', 'open'], true) ? 'fifo' : 'ranking_desc';
         }
 
         $category = TournamentCategory::create($data);

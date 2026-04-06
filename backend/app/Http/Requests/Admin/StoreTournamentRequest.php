@@ -19,7 +19,7 @@ class StoreTournamentRequest extends FormRequest
             'circuit_id' => ['nullable', 'exists:circuits,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'mode' => ['required', 'in:pro,amateur'],
+            'mode' => ['required', 'in:pro,amateur,open'],
             'status_id' => ['nullable', 'exists:statuses,id'],
             'venue_name' => ['nullable', 'string', 'max:255'],
             'venue_address' => ['nullable', 'string', 'max:255'],

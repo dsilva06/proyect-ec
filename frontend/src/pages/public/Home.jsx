@@ -439,9 +439,6 @@ export default function Home() {
                     Sede: {currentTournament.venue_name || 'Por confirmar'}
                     {currentTournament.city ? ` · ${currentTournament.city}` : ''}
                   </p>
-                  <p className="card-detail emphasis">
-                    Modalidad: {currentTournament.mode || 'Por confirmar'}
-                  </p>
                   <Link className="secondary-button full" to="/tournament">Ver torneo</Link>
                 </article>
 

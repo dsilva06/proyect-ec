@@ -23,6 +23,9 @@ const getStatusCode = (registration) => String(registration.status?.code || '')
 const isProRegistration = (registration) =>
   String(registration?.tournament_category?.tournament?.mode || '').toLowerCase() === 'pro'
 
+const isOpenTournamentRegistration = (registration) =>
+  String(registration?.tournament_category?.tournament?.mode || '').toLowerCase() === 'open'
+
 const hasTournamentStarted = (registration) => {
   const startDate = registration?.tournament_category?.tournament?.start_date
   if (!startDate) return false
@@ -435,6 +438,7 @@ export default function Registrations() {
       || 'Categoría'
     const isWildcard = Boolean(registration.is_wildcard)
     const hasRankings = hasRankingInfo(registration)
+    const isOpenMode = isOpenTournamentRegistration(registration)
     const isOperationalCard = !compact && draggable
 
     return (
@@ -469,7 +473,7 @@ export default function Registrations() {
         </div>
         <div className="registrations-trello-card-badges">
           {isWildcard ? <span className="tag registrations-tag-wildcard">Wildcard</span> : null}
-          {isWildcard && !hasRankings ? <span className="tag muted">Sin ranking</span> : null}
+          {(isOpenMode || (isWildcard && !hasRankings)) ? <span className="tag muted">Sin ranking</span> : null}
           {isWildcard ? (
             <span className="tag muted">{registration.wildcard_fee_waived ? 'Pago exonerado' : 'Pago normal'}</span>
           ) : null}
@@ -598,6 +602,7 @@ export default function Registrations() {
               </header>
 
               <div className="registration-drawer-content">
+                {isOpenTournamentRegistration(selectedRegistration) ? null : (
                 <section className="registration-detail-panel">
                   <h5>Detalle de inscripción</h5>
                   <div className="registration-detail-grid">
@@ -627,6 +632,39 @@ export default function Registrations() {
                     </div>
                   </div>
                 </section>
+                )}
+
+                {isOpenTournamentRegistration(selectedRegistration) ? (
+                  <section className="registration-detail-panel">
+                    <h5>Detalle de inscripción</h5>
+                    <div className="registration-detail-grid">
+                      <div>
+                        <span>Estado actual</span>
+                        <strong>{selectedRegistration.status?.label || 'Sin estado'}</strong>
+                      </div>
+                      <div>
+                        <span>Posición cola</span>
+                        <strong>{selectedRegistration.queue_position ?? '—'}</strong>
+                      </div>
+                      <div>
+                        <span>Ranking equipo</span>
+                        <strong>No aplica</strong>
+                      </div>
+                      <div>
+                        <span>Fecha registro</span>
+                        <strong>{formatDateShort(selectedRegistration.created_at)}</strong>
+                      </div>
+                      <div>
+                        <span>Tipo</span>
+                        <strong>{selectedRegistration.is_wildcard ? 'Wildcard' : 'Regular'}</strong>
+                      </div>
+                      <div>
+                        <span>Pago wildcard</span>
+                        <strong>{selectedRegistration.wildcard_fee_waived ? 'Exonerado' : 'Normal'}</strong>
+                      </div>
+                    </div>
+                  </section>
+                ) : null}
 
                 <section className="registration-edit-panel">
                   <h5>Editar inscripción</h5>
@@ -661,60 +699,62 @@ export default function Registrations() {
                   </div>
                 </section>
 
-                <section className="registration-edit-panel">
-                  <h5>Ranking de inscripción</h5>
-                  <div className="registration-ranking-list">
-                    {rankingDraft.map((row) => (
-                      <div key={row.slot} className="registration-ranking-row">
-                        <div>
-                          <span>Slot {row.slot}</span>
-                          <strong>{row.player_name}</strong>
+                {isOpenTournamentRegistration(selectedRegistration) ? null : (
+                  <section className="registration-edit-panel">
+                    <h5>Ranking de inscripción</h5>
+                    <div className="registration-ranking-list">
+                      {rankingDraft.map((row) => (
+                        <div key={row.slot} className="registration-ranking-row">
+                          <div>
+                            <span>Slot {row.slot}</span>
+                            <strong>{row.player_name}</strong>
+                          </div>
+                          <label>
+                            Ranking {row.ranking_source}
+                            <input
+                              type="number"
+                              min="1"
+                              value={row.ranking_value}
+                              onChange={handleRankingFieldChange(row.slot, 'ranking_value')}
+                              placeholder="Sin ranking"
+                            />
+                          </label>
+                          <label>
+                            Fuente
+                            <select
+                              value={row.ranking_source}
+                              onChange={handleRankingFieldChange(row.slot, 'ranking_source')}
+                            >
+                              {selectedRankingSourceOptions.map((source) => (
+                                <option key={source} value={source}>
+                                  {source}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="checkbox-row">
+                            <input
+                              type="checkbox"
+                              checked={row.is_verified}
+                              onChange={handleRankingFieldChange(row.slot, 'is_verified')}
+                            />
+                            Verificado
+                          </label>
                         </div>
-                        <label>
-                          Ranking {row.ranking_source}
-                          <input
-                            type="number"
-                            min="1"
-                            value={row.ranking_value}
-                            onChange={handleRankingFieldChange(row.slot, 'ranking_value')}
-                            placeholder="Sin ranking"
-                          />
-                        </label>
-                        <label>
-                          Fuente
-                          <select
-                            value={row.ranking_source}
-                            onChange={handleRankingFieldChange(row.slot, 'ranking_source')}
-                          >
-                            {selectedRankingSourceOptions.map((source) => (
-                              <option key={source} value={source}>
-                                {source}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="checkbox-row">
-                          <input
-                            type="checkbox"
-                            checked={row.is_verified}
-                            onChange={handleRankingFieldChange(row.slot, 'is_verified')}
-                          />
-                          Verificado
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="form-actions">
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={handleSaveRankings}
-                      disabled={isSavingRankings}
-                    >
-                      {isSavingRankings ? 'Guardando...' : 'Guardar ranking'}
-                    </button>
-                  </div>
-                </section>
+                      ))}
+                    </div>
+                    <div className="form-actions">
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={handleSaveRankings}
+                        disabled={isSavingRankings}
+                      >
+                        {isSavingRankings ? 'Guardando...' : 'Guardar ranking'}
+                      </button>
+                    </div>
+                  </section>
+                )}
               </div>
             </>
           ) : (

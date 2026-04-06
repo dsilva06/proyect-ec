@@ -52,6 +52,13 @@ const resolveTournamentBoardColumn = (statusCode) => {
   return 'planning'
 }
 
+const getTournamentModeLabel = (mode) => {
+  const normalized = String(mode || '').toLowerCase()
+  if (normalized === 'pro') return 'PRO'
+  if (normalized === 'open') return 'OPEN'
+  return 'Amateur'
+}
+
 
 export default function TournamentSettings() {
   const [tournaments, setTournaments] = useState([])
@@ -481,7 +488,7 @@ export default function TournamentSettings() {
           </div>
         </div>
         <div className="registrations-trello-card-foot">
-          <span className="registrations-trello-category">{tournament.mode === 'pro' ? 'PRO' : 'Amateur'}</span>
+          <span className="registrations-trello-category">{getTournamentModeLabel(tournament.mode)}</span>
           <span className="tag muted">{categoryCount} categorías</span>
         </div>
       </article>
@@ -595,6 +602,7 @@ export default function TournamentSettings() {
               >
                 <option value="amateur">Amateur</option>
                 <option value="pro">Pro</option>
+                <option value="open">OPEN</option>
               </select>
             </label>
             <label>
@@ -1003,6 +1011,7 @@ export default function TournamentSettings() {
                 <select value={form.mode} onChange={handleTournamentChange('mode')}>
                   <option value="amateur">Amateur</option>
                   <option value="pro">Pro</option>
+                  <option value="open">OPEN</option>
                 </select>
               </label>
               <label>

@@ -31,6 +31,7 @@ class AdminRegistrationRankingsTest extends TestCase
             'role' => 'admin',
             'is_active' => true,
         ]);
+        $admin->forceFill(['email_verified_at' => now()])->save();
 
         $playerA = User::query()->create([
             'name' => 'Player A',

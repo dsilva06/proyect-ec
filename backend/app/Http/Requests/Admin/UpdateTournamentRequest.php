@@ -19,7 +19,7 @@ class UpdateTournamentRequest extends FormRequest
             'circuit_id' => ['nullable', 'exists:circuits,id'],
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'mode' => ['sometimes', 'in:pro,amateur'],
+            'mode' => ['sometimes', 'in:pro,amateur,open'],
             'status_id' => ['nullable', 'exists:statuses,id'],
             'venue_name' => ['nullable', 'string', 'max:255'],
             'venue_address' => ['nullable', 'string', 'max:255'],

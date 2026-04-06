@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { playerRegistrationsApi } from '../../features/registrations/api'
 
+const isOpenTournamentRegistration = (registration) =>
+  String(registration?.tournament_category?.tournament?.mode || '').toLowerCase() === 'open'
+
 export default function PlayerRegistrations() {
   const [registrations, setRegistrations] = useState([])
   const [error, setError] = useState('')
@@ -46,7 +49,7 @@ export default function PlayerRegistrations() {
               </div>
               <div>
                 <span>Ranking equipo</span>
-                <strong>{registration.team_ranking_score ?? 'Pendiente'}</strong>
+                <strong>{isOpenTournamentRegistration(registration) ? 'No aplica' : registration.team_ranking_score ?? 'Pendiente'}</strong>
               </div>
               <div>
                 <span>Posición</span>

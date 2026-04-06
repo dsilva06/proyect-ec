@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Jobs\SendTeamInviteEmailJob;
 use App\Models\Category;
 use App\Models\Registration;
+use App\Models\RegistrationRanking;
 use App\Models\Status;
 use App\Models\Team;
 use App\Models\TeamInvite;
@@ -107,6 +108,36 @@ class TeamTournamentRegistrationFlowTest extends TestCase
         $this->assertSame(1, Registration::query()->count());
         $this->assertSame(1, Team::query()->count());
         $this->assertSame(1, TeamInvite::query()->count());
+    }
+
+    public function test_open_tournament_registration_does_not_require_or_store_rankings(): void
+    {
+        Queue::fake();
+
+        $captain = $this->makePlayer('captain-open@test.dev');
+        $partner = $this->makePlayer('partner-open@test.dev');
+        $category = $this->makeTournamentCategory('open');
+
+        Sanctum::actingAs($captain);
+
+        $response = $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
+            'partner_email' => $partner->email,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('tournament_category_id', $category->id)
+            ->assertJsonPath('team.status.code', Team::STATUS_PENDING_PARTNER_ACCEPTANCE);
+
+        $rankings = RegistrationRanking::query()
+            ->where('tournament_category_id', $category->id)
+            ->orderBy('slot')
+            ->get();
+
+        $this->assertCount(2, $rankings);
+        $this->assertTrue($rankings->every(fn (RegistrationRanking $ranking) => $ranking->ranking_value === null));
+        $this->assertTrue($rankings->every(fn (RegistrationRanking $ranking) => $ranking->ranking_source === null));
+        Queue::assertPushed(SendTeamInviteEmailJob::class, 1);
     }
 
     public function test_partner_can_accept_invite_when_authenticated_and_verified(): void
@@ -326,7 +357,7 @@ class TeamTournamentRegistrationFlowTest extends TestCase
         ]);
     }
 
-    private function makeTournamentCategory(): TournamentCategory
+    private function makeTournamentCategory(string $mode = 'amateur'): TournamentCategory
     {
         $category = Category::query()->create([
             'name' => 'Masculino 2da',
@@ -338,7 +369,7 @@ class TeamTournamentRegistrationFlowTest extends TestCase
 
         $tournament = Tournament::query()->create([
             'name' => 'Test Tournament',
-            'mode' => 'pairs',
+            'mode' => $mode,
             'status_id' => $this->statusId('tournament', 'registration_open'),
             'start_date' => now()->toDateString(),
             'end_date' => now()->addDay()->toDateString(),

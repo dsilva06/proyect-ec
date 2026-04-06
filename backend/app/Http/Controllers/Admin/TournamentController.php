@@ -92,7 +92,7 @@ class TournamentController extends Controller
             $tournament->update($data);
         }
         if ($modeChanged) {
-            $seedingRule = $tournament->mode === 'amateur' ? 'fifo' : 'ranking_desc';
+            $seedingRule = in_array($tournament->mode, ['amateur', 'open'], true) ? 'fifo' : 'ranking_desc';
             $tournament->categories()
                 ->where('seeding_rule', '!=', 'manual')
                 ->update(['seeding_rule' => $seedingRule]);

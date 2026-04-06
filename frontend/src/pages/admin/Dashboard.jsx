@@ -54,6 +54,13 @@ const formatDateTimeRange = (start, end) => {
   return left || right
 }
 
+const formatTournamentModeLabel = (mode) => {
+  const normalized = String(mode || '').toLowerCase()
+  if (normalized === 'pro') return 'PRO'
+  if (normalized === 'open') return 'OPEN'
+  return 'Amateur'
+}
+
 const countByStatus = (items = []) => {
   return items.reduce((acc, item) => {
     const code = item?.status?.code || 'unknown'
@@ -390,7 +397,7 @@ export default function Dashboard() {
                   <div className="dashboard-stat">
                     <span>Fechas</span>
                     <strong>{formatDateRange(activeTournament.start_date, activeTournament.end_date)}</strong>
-                    <p>Modo: {activeTournament.mode}</p>
+                    <p>Modo: {formatTournamentModeLabel(activeTournament.mode)}</p>
                   </div>
                   <div className="dashboard-stat">
                     <span>Inscripciones</span>

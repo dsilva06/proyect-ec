@@ -50,8 +50,9 @@ class RegistrationService
         }
 
         $category = TournamentCategory::query()
-            ->with(['category'])
+            ->with(['category', 'tournament'])
             ->findOrFail($tournamentCategoryId);
+        $requiresRanking = $this->tournamentRequiresRanking($category);
 
         $selfRanking = (int) ($rankingData['self_ranking_value'] ?? 0);
         $partnerRanking = (int) ($rankingData['partner_ranking_value'] ?? 0);
@@ -59,7 +60,7 @@ class RegistrationService
         $selfSource = strtoupper((string) ($rankingData['self_ranking_source'] ?? $defaultSource));
         $partnerSource = strtoupper((string) ($rankingData['partner_ranking_source'] ?? $defaultSource));
 
-        if (! $isWildcard) {
+        if (! $isWildcard && $requiresRanking) {
             if ($selfRanking <= 0 || $partnerRanking <= 0) {
                 throw ValidationException::withMessages([
                     'ranking' => 'Debes ingresar el ranking de ambos jugadores.',
@@ -87,6 +88,11 @@ class RegistrationService
             $this->assertRankingSourceMatchesCategory($partnerSource, $category, 'partner_ranking_source');
             $this->validateGlobalRanking($category, $selfRanking, $partnerRanking, $selfSource, $partnerSource);
             $this->validateLowerCategoryDrawEligibility($team, $category);
+        } elseif (! $requiresRanking) {
+            $selfRanking = 0;
+            $partnerRanking = 0;
+            $selfSource = null;
+            $partnerSource = null;
         } else {
             $this->ensureWildcardCapacity($category);
         }
@@ -109,6 +115,7 @@ class RegistrationService
             $selfSource,
             $partnerSource,
             $rankingData,
+            $requiresRanking,
             $isWildcard,
             $wildcardFeeWaived,
             $wildcardInvitationId
@@ -141,8 +148,8 @@ class RegistrationService
                 'tournament_category_id' => $tournamentCategoryId,
                 'slot' => 1,
                 'user_id' => $user->id,
-                'ranking_value' => $isWildcard ? ($selfRanking > 0 ? $selfRanking : null) : $selfRanking,
-                'ranking_source' => ($isWildcard && $selfRanking <= 0) ? null : $selfSource,
+                'ranking_value' => (! $requiresRanking || ($isWildcard && $selfRanking <= 0)) ? null : $selfRanking,
+                'ranking_source' => (! $requiresRanking || ($isWildcard && $selfRanking <= 0)) ? null : $selfSource,
             ]);
 
             RegistrationRanking::create([
@@ -151,8 +158,8 @@ class RegistrationService
                 'slot' => 2,
                 'user_id' => $partnerUserId,
                 'invited_email' => $partnerEmail,
-                'ranking_value' => $isWildcard ? ($partnerRanking > 0 ? $partnerRanking : null) : $partnerRanking,
-                'ranking_source' => ($isWildcard && $partnerRanking <= 0) ? null : $partnerSource,
+                'ranking_value' => (! $requiresRanking || ($isWildcard && $partnerRanking <= 0)) ? null : $partnerRanking,
+                'ranking_source' => (! $requiresRanking || ($isWildcard && $partnerRanking <= 0)) ? null : $partnerSource,
             ]);
 
             $this->acceptanceService->recalculateForTournamentCategory($tournamentCategoryId);
@@ -189,6 +196,7 @@ class RegistrationService
             'team.users',
             'team.members',
             'tournamentCategory.category',
+            'tournamentCategory.tournament',
         ]);
 
         $category = $registration->tournamentCategory;
@@ -197,6 +205,7 @@ class RegistrationService
                 'registration' => 'La inscripción no tiene categoría asociada.',
             ]);
         }
+        $requiresRanking = $this->tournamentRequiresRanking($category);
 
         $normalized = collect($rankingsData)
             ->keyBy(fn ($item) => (int) ($item['slot'] ?? 0));
@@ -204,7 +213,7 @@ class RegistrationService
         $slotOneValue = $normalized->get(1)['ranking_value'] ?? null;
         $slotTwoValue = $normalized->get(2)['ranking_value'] ?? null;
 
-        if (! $registration->is_wildcard) {
+        if (! $registration->is_wildcard && $requiresRanking) {
             if (! $slotOneValue || ! $slotTwoValue) {
                 throw ValidationException::withMessages([
                     'rankings' => 'Debes ingresar ranking para ambos jugadores.',
@@ -224,7 +233,7 @@ class RegistrationService
             ->map(fn ($value) => (int) $value)
             ->values();
 
-        if ($rankingValues->isNotEmpty()) {
+        if ($requiresRanking && $rankingValues->isNotEmpty()) {
             $exists = RegistrationRanking::query()
                 ->where('tournament_category_id', $registration->tournament_category_id)
                 ->where('registration_id', '!=', $registration->id)
@@ -238,7 +247,7 @@ class RegistrationService
             }
         }
 
-        DB::transaction(function () use ($registration, $normalized, $category, $actor) {
+        DB::transaction(function () use ($registration, $normalized, $category, $actor, $requiresRanking) {
             $defaultSource = $this->defaultRankingSourceForCategory($category);
 
             foreach ([1, 2] as $slot) {
@@ -260,17 +269,19 @@ class RegistrationService
                     ? (int) $input['ranking_value']
                     : null;
                 $inputSource = strtoupper((string) ($input['ranking_source'] ?? $ranking->ranking_source ?? $defaultSource));
-                $this->assertRankingSourceMatchesCategory($inputSource, $category, 'rankings');
-                $source = $value ? $inputSource : null;
+                if ($requiresRanking && $value) {
+                    $this->assertRankingSourceMatchesCategory($inputSource, $category, 'rankings');
+                }
+                $source = ($requiresRanking && $value) ? $inputSource : null;
 
-                if ($value) {
+                if ($requiresRanking && $value) {
                     $this->enforceRankingRange($value, $source, $category, 'rankings');
                 }
 
-                $ranking->ranking_value = $value;
+                $ranking->ranking_value = $requiresRanking ? $value : null;
                 $ranking->ranking_source = $source;
 
-                $isVerified = (bool) ($input['is_verified'] ?? false);
+                $isVerified = $requiresRanking && (bool) ($input['is_verified'] ?? false);
                 $ranking->is_verified = $isVerified;
                 if ($isVerified) {
                     $ranking->verified_at = $ranking->verified_at ?: now();
@@ -288,7 +299,7 @@ class RegistrationService
             }
         });
 
-        if (! $registration->is_wildcard) {
+        if (! $registration->is_wildcard && $requiresRanking) {
             $this->validateLowerCategoryDrawEligibility($registration->team, $category);
         }
 
@@ -417,6 +428,11 @@ class RegistrationService
                 'ranking' => "No elegible: para draw {$drawSize} necesitas ranking mayor a {$drawSize}. Tu ranking es {$bestHigherCategoryRanking}.",
             ]);
         }
+    }
+
+    private function tournamentRequiresRanking(TournamentCategory $category): bool
+    {
+        return strtolower((string) ($category->tournament?->mode ?? '')) !== 'open';
     }
 
     private function defaultRankingSourceForCategory(TournamentCategory $category): string

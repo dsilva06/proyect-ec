@@ -49,6 +49,7 @@ class TeamService
         $category = TournamentCategory::query()
             ->with('tournament')
             ->findOrFail($tournamentCategoryId);
+        $requiresRanking = strtolower((string) ($category->tournament?->mode ?? '')) !== 'open';
 
         $existing = $this->findPendingRegistrationByCaptainTournamentAndPartner(
             $captain->id,
@@ -69,7 +70,8 @@ class TeamService
             $partner,
             $tournamentCategoryId,
             $normalizedEmail,
-            $registrationData
+            $registrationData,
+            $requiresRanking
         ): Registration {
             $pendingAgain = $this->findPendingRegistrationByCaptainTournamentAndPartner(
                 $captain->id,
@@ -118,8 +120,8 @@ class TeamService
                 'tournament_category_id' => $tournamentCategoryId,
                 'slot' => 1,
                 'user_id' => $captain->id,
-                'ranking_value' => $selfRanking,
-                'ranking_source' => $selfRanking ? $selfSource : null,
+                'ranking_value' => $requiresRanking ? $selfRanking : null,
+                'ranking_source' => ($requiresRanking && $selfRanking) ? $selfSource : null,
             ]);
 
             RegistrationRanking::query()->create([
@@ -128,8 +130,8 @@ class TeamService
                 'slot' => 2,
                 'user_id' => $partner->id,
                 'invited_email' => $normalizedEmail,
-                'ranking_value' => $partnerRanking,
-                'ranking_source' => $partnerRanking ? $partnerSource : null,
+                'ranking_value' => $requiresRanking ? $partnerRanking : null,
+                'ranking_source' => ($requiresRanking && $partnerRanking) ? $partnerSource : null,
             ]);
 
             $invite = TeamInvite::query()->create([
