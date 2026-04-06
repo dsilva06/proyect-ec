@@ -90,26 +90,29 @@ export default function PlayerLayout() {
 
       <section className="admin-main">
         <header className="admin-header player-header">
-          <div className="player-header-copy">
-            <span className="tag muted">Jugador</span>
-            <h2>{currentSection.label}</h2>
-            <p className="admin-subtitle">{currentSection.description}</p>
-            {authWarning && <p className="auth-error">{authWarning}</p>}
+          <div className="player-header-lead">
+            <button
+              className="ghost-button admin-menu-toggle player-menu-toggle"
+              type="button"
+              aria-label="Abrir menú"
+              aria-expanded={isSidebarOpen}
+              aria-controls="player-sidebar-nav"
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+            >
+              <span className="player-menu-toggle-bars" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            </button>
+            <div className="player-header-copy">
+              <span className="tag muted">Jugador</span>
+              <h2>{currentSection.label}</h2>
+              <p className="admin-subtitle">{currentSection.description}</p>
+              {authWarning && <p className="auth-error">{authWarning}</p>}
+            </div>
           </div>
-          <button
-            className="ghost-button admin-menu-toggle player-menu-toggle"
-            type="button"
-            aria-label="Abrir menú"
-            aria-expanded={isSidebarOpen}
-            aria-controls="player-sidebar-nav"
-            onClick={() => setIsSidebarOpen((prev) => !prev)}
-          >
-            <span className="player-menu-toggle-bars" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </span>
-          </button>
+          <div className="player-header-spacer" aria-hidden="true" />
         </header>
 
         <nav className="player-quick-strip" aria-label="Secciones del jugador">
