@@ -4,7 +4,7 @@ import { useAuth } from '../auth/useAuth'
 import BrandLockup from '../components/shared/BrandLockup'
 
 const AUTH_WARNING_KEY = 'auth_login_warning'
-const PLAYER_NAV_ITEMS = [
+const PLAYER_MENU_ITEMS = [
   { to: '/player', label: 'Resumen', shortLabel: 'Inicio', description: 'Lo clave de tu torneo, hoy', end: true },
   { to: '/player/profile', label: 'Perfil', shortLabel: 'Perfil', description: 'Revisa tus datos de jugador y documento' },
   { to: '/player/tournaments', label: 'Torneos', shortLabel: 'Torneos', description: 'Revisa torneos e inscríbete con tu pareja' },
@@ -13,15 +13,16 @@ const PLAYER_NAV_ITEMS = [
   { to: '/player/ranking', label: 'Mi ranking', shortLabel: 'Ranking', description: 'Deja listo tu ranking para competir' },
   { to: '/player/payments', label: 'Pagos', shortLabel: 'Pagos', description: 'Revisa pagos ligados a tu inscripción' },
 ]
+const PLAYER_QUICK_ITEMS = PLAYER_MENU_ITEMS.filter((item) => item.to !== '/player/profile')
 
 export default function PlayerLayout() {
   const { user, logout } = useAuth()
   const [authWarning, setAuthWarning] = useState('')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const location = useLocation()
-  const currentSection = PLAYER_NAV_ITEMS.find((item) =>
+  const currentSection = PLAYER_MENU_ITEMS.find((item) =>
     item.end ? location.pathname === item.to : location.pathname.startsWith(item.to),
-  ) || PLAYER_NAV_ITEMS[0]
+  ) || PLAYER_MENU_ITEMS[0]
   const firstName = String(user?.name || 'Jugador').trim().split(/\s+/)[0] || 'Jugador'
 
   useEffect(() => {
@@ -66,12 +67,24 @@ export default function PlayerLayout() {
               Cerrar
             </button>
           </div>
-          {PLAYER_NAV_ITEMS.map((item) => (
+          <div className="player-menu-user">
+            <span className="player-user-kicker">Jugador</span>
+            <strong>{firstName}</strong>
+          </div>
+          {PLAYER_MENU_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} onClick={handleCloseSidebar}>
               <span className="player-nav-item-title">{item.label}</span>
               <small className="player-nav-item-meta">{item.description}</small>
             </NavLink>
           ))}
+          <div className="player-menu-divider" />
+          <button
+            className="secondary-button player-menu-logout"
+            type="button"
+            onClick={logout}
+          >
+            Cerrar sesión
+          </button>
         </nav>
       </aside>
 
@@ -83,30 +96,24 @@ export default function PlayerLayout() {
             <p className="admin-subtitle">{currentSection.description}</p>
             {authWarning && <p className="auth-error">{authWarning}</p>}
           </div>
-          <div className="admin-user player-user-panel">
-            <div className="player-user-copy">
-              <strong>{firstName}</strong>
-            </div>
-            <div className="player-header-actions">
-              <button className="secondary-button" type="button" onClick={logout}>
-                Cerrar sesión
-              </button>
-              <button
-                className="ghost-button admin-menu-toggle"
-                type="button"
-                aria-label="Abrir menú de navegación"
-                aria-expanded={isSidebarOpen}
-                aria-controls="player-sidebar-nav"
-                onClick={() => setIsSidebarOpen((prev) => !prev)}
-              >
-                Menú
-              </button>
-            </div>
-          </div>
+          <button
+            className="ghost-button admin-menu-toggle player-menu-toggle"
+            type="button"
+            aria-label="Abrir menú"
+            aria-expanded={isSidebarOpen}
+            aria-controls="player-sidebar-nav"
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+          >
+            <span className="player-menu-toggle-bars" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          </button>
         </header>
 
         <nav className="player-quick-strip" aria-label="Secciones del jugador">
-          {PLAYER_NAV_ITEMS.map((item) => (
+          {PLAYER_QUICK_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className="player-quick-pill">
               {item.shortLabel}
             </NavLink>
