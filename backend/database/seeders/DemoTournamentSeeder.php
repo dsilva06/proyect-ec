@@ -59,6 +59,8 @@ class DemoTournamentSeeder extends Seeder
             'timezone' => 'America/Caracas',
             'start_date' => $startDate->toDateString(),
             'end_date' => $endDate->toDateString(),
+            'entry_fee_amount' => 20,
+            'entry_fee_currency' => 'USD',
             'registration_open_at' => $startDate->copy()->subDays(5),
             'registration_close_at' => $startDate->copy()->subDay(),
             'day_start_time' => '08:00',

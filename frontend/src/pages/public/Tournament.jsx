@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { playerRegistrationsApi } from '../../features/registrations/api'
-import { playerTeamsApi } from '../../features/teams/api'
 import { publicTournamentsApi } from '../../features/tournaments/api'
 import { playerBracketsApi } from '../../features/brackets/api'
 import BracketView from '../../components/brackets/BracketView'
@@ -78,12 +77,44 @@ const isOpenTournament = (tournament) => String(tournament?.mode || '').toLowerC
 
 const isOpenCategory = (category) => String(category?.category?.level_code || '').toLowerCase() === 'open'
 
+const getRegistrationMessage = (registrationStatusCode) => {
+  const code = String(registrationStatusCode || '').toLowerCase()
+
+  if (code === 'awaiting_partner_acceptance') {
+    return 'Pago realizado. Enviamos la invitación a tu pareja para completar la inscripción.'
+  }
+
+  if (code === 'waitlisted') {
+    return 'Inscripción recibida. Tu equipo quedó en lista de espera y todavía no se realiza el pago.'
+  }
+
+  if (code === 'pending') {
+    return 'Inscripción recibida. Aún no está habilitada para pago.'
+  }
+
+  if (code === 'paid') {
+    return 'Inscripción completada correctamente.'
+  }
+
+  return 'Inscripción enviada correctamente.'
+}
+
 const getRankingSourceOptions = (category) => {
   if (isOpenCategory(category)) {
     return ['FIP', 'FEP']
   }
 
   return ['FEP']
+}
+
+const formatTournamentFee = (tournament) => {
+  const amount = Number(tournament?.entry_fee_amount || 0)
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: tournament?.entry_fee_currency || 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount)
 }
 
 export default function Tournament() {
@@ -176,13 +207,8 @@ export default function Tournament() {
     }
 
     try {
-      const team = await playerTeamsApi.create({
-        partner_email: form.partnerEmail,
-      })
-
-      await playerRegistrationsApi.create({
+      const registration = await playerRegistrationsApi.create({
         tournament_category_id: form.categoryId,
-        team_id: team.id,
         partner_email: form.partnerEmail,
         self_ranking_value: isOpenMode ? null : Number(form.selfRanking),
         self_ranking_source: isOpenMode ? null : selfSource,
@@ -190,7 +216,19 @@ export default function Tournament() {
         partner_ranking_source: isOpenMode ? null : partnerSource,
       })
 
-      setMessage('Inscripción enviada correctamente.')
+      const registrationStatusCode = String(registration?.status?.code || '').toLowerCase()
+
+      if (['accepted', 'payment_pending'].includes(registrationStatusCode)) {
+        const checkout = await playerRegistrationsApi.pay(registration.id)
+        if (checkout?.checkout_url) {
+          window.location.assign(checkout.checkout_url)
+          return
+        }
+        setMessage('No pudimos abrir la pasarela de pago.')
+      } else {
+        setMessage(getRegistrationMessage(registrationStatusCode))
+      }
+
       setActiveTournamentId(null)
       setBrackets([])
       await load()
@@ -204,7 +242,7 @@ export default function Tournament() {
       <div className="tournament-page-header">
         <div>
           <h1>Torneos abiertos</h1>
-          <p>Registra tu equipo en las categorías disponibles.</p>
+          <p>Registra tu pareja en la categoría disponible. Un solo pago cubre al equipo completo.</p>
         </div>
         <div className="tournament-page-actions">
           <button className="secondary-button" type="button" onClick={load}>
@@ -260,10 +298,14 @@ export default function Tournament() {
                     <span>Categorías</span>
                     <strong>{categories.length}</strong>
                   </div>
-                    <div>
-                      <span>Premio total</span>
-                      <strong>{formatMoney(tournament.prize_money)}</strong>
-                    </div>
+                  <div>
+                    <span>Costo inscripción</span>
+                    <strong>{formatTournamentFee(tournament)}</strong>
+                  </div>
+                  <div>
+                    <span>Premio total</span>
+                    <strong>{formatMoney(tournament.prize_money)}</strong>
+                  </div>
                 </div>
                 <div className="tournament-actions">
                   {user ? (
@@ -323,6 +365,10 @@ export default function Tournament() {
                       <div>
                         <span>Inscripciones</span>
                         <strong>{formatRange(tournament.registration_open_at, tournament.registration_close_at, formatDateTimeShort)}</strong>
+                      </div>
+                      <div>
+                        <span>Costo inscripción</span>
+                        <strong>{formatTournamentFee(tournament)}</strong>
                       </div>
                       <div>
                         <span>Premio total</span>

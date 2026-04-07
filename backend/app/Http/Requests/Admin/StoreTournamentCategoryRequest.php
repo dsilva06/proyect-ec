@@ -17,7 +17,7 @@ class StoreTournamentCategoryRequest extends FormRequest
             'category_id' => ['required', 'exists:categories,id'],
             'max_teams' => ['nullable', 'integer', 'in:32,64,128'],
             'wildcard_slots' => ['nullable', 'integer', 'min:0'],
-            'entry_fee_amount' => ['required', 'integer', 'min:0'],
+            'entry_fee_amount' => ['nullable', 'integer', 'min:0'],
             'currency' => ['nullable', 'string', 'max:10'],
             'acceptance_type' => ['nullable', 'in:immediate,waitlist'],
             'acceptance_window_hours' => ['nullable', 'integer', 'min:1'],

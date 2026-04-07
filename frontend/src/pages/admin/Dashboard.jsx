@@ -19,7 +19,7 @@ const PAYMENT_PENDING_CODES = new Set([
   'processing',
 ])
 
-const ACCEPTED_CODES = new Set(['accepted', 'payment_pending', 'paid'])
+const ACCEPTED_CODES = new Set(['accepted', 'payment_pending', 'awaiting_partner_acceptance', 'paid'])
 
 const formatDateRange = (start, end) => {
   if (!start && !end) return 'Por definir'
@@ -182,7 +182,7 @@ export default function Dashboard() {
         registrations: {
           total: registrations?.length || 0,
           pending: registrationStatus?.pending || 0,
-          accepted: registrationStatus?.accepted || 0,
+          accepted: (registrationStatus?.accepted || 0) + (registrationStatus?.awaiting_partner_acceptance || 0),
           waitlisted: registrationStatus?.waitlisted || 0,
           paid: registrationStatus?.paid || 0,
         },

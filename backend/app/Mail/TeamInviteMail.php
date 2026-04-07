@@ -3,37 +3,49 @@
 namespace App\Mail;
 
 use App\Models\TeamInvite;
-use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
 class TeamInviteMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(public TeamInvite $invite)
     {
     }
 
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Invitación para unirte a un equipo',
-        );
-    }
+        $invite = $this->invite->loadMissing([
+            'invitedUser',
+            'team.creator',
+            'team.registration.tournamentCategory.tournament',
+            'team.registration.tournamentCategory.category',
+        ]);
 
-    public function content(): Content
-    {
-        $frontendUrl = rtrim(config('app.frontend_url'), '/');
+        $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
+        $apiUrl = rtrim((string) config('app.url'), '/');
+        $hasExistingAccount = $invite->invitedUser !== null;
+        $tournamentName = (string) ($invite->team?->registration?->tournamentCategory?->tournament?->name ?? 'ESTARS PADEL TOUR');
+        $captainName = (string) ($invite->team?->creator?->name ?? 'Un jugador');
 
-        return new Content(
-            view: 'emails.team-invite',
-            with: [
-                'invite' => $this->invite,
-                'acceptUrl' => "{$frontendUrl}/invite/{$this->invite->token}",
-            ],
-        );
+        return $this
+            ->subject($hasExistingAccount
+                ? "{$captainName} te invito a {$tournamentName}"
+                : "Completa tu registro para reclamar tu invitacion en {$tournamentName}")
+            ->view('emails.team-invite')
+            ->with([
+                'invite' => $invite,
+                'logoUrl' => $apiUrl.'/emails/estars-logo.png',
+                'hasExistingAccount' => $hasExistingAccount,
+                'captainName' => $captainName,
+                'tournamentName' => $tournamentName,
+                'categoryName' => (string) ($invite->team?->registration?->tournamentCategory?->category?->display_name
+                    ?: $invite->team?->registration?->tournamentCategory?->category?->name
+                    ?: 'Categoria por confirmar'),
+                'actionUrl' => $hasExistingAccount
+                    ? $frontendUrl.'/login'
+                    : "{$frontendUrl}/invite/{$invite->token}",
+                'actionLabel' => $hasExistingAccount
+                    ? 'Revisar mis invitaciones'
+                    : 'Registrar mi cuenta',
+            ]);
     }
 }

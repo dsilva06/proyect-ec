@@ -9,4 +9,5 @@ export const adminRegistrationsApi = {
 export const playerRegistrationsApi = {
   list: () => httpClient.get('/api/player/registrations'),
   create: (payload) => httpClient.post('/api/player/registrations', payload),
+  pay: (id) => httpClient.post(`/api/player/registrations/${id}/pay`),
 }

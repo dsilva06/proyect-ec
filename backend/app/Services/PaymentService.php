@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Payment;
+use App\Models\Team;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -46,15 +47,20 @@ class PaymentService
             }
 
             if ($status->code === 'succeeded' && $registration) {
+                $registration->loadMissing('team.status');
                 if (! $registration->accepted_at) {
                     $registration->accepted_at = now();
                 }
-                $paidStatusId = $this->statusService->resolveStatusId('registration', 'paid');
-                if ((int) $registration->status_id !== (int) $paidStatusId) {
+                $registrationStatusCode = $registration->team?->status?->code === Team::STATUS_PENDING_PARTNER_ACCEPTANCE
+                    ? 'awaiting_partner_acceptance'
+                    : 'paid';
+                $nextStatusId = $this->statusService->resolveStatusId('registration', $registrationStatusCode);
+
+                if ((int) $registration->status_id !== (int) $nextStatusId) {
                     $this->statusService->transition(
                         $registration,
                         'registration',
-                        $paidStatusId,
+                        $nextStatusId,
                         $actor?->id,
                         'payment_succeeded'
                     );

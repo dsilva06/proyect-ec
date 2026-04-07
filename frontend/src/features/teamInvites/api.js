@@ -8,4 +8,6 @@ export const playerTeamInvitesApi = {
   list: () => httpClient.get('/api/player/team-invites'),
   claim: (token) => httpClient.post('/api/player/team-invites/claim', { token }),
   accept: (id) => httpClient.post(`/api/player/team-invites/${id}/accept`),
+  reject: (id) => httpClient.post(`/api/player/team-invites/${id}/reject`),
+  resend: (id) => httpClient.post(`/api/player/team-invites/${id}/resend`),
 }

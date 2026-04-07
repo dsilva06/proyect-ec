@@ -27,6 +27,7 @@ class AdminPlayerPrizePayoutRulesTest extends TestCase
             'role' => 'admin',
             'is_active' => true,
         ]);
+        $admin->forceFill(['email_verified_at' => now()])->save();
 
         $player = User::query()->create([
             'name' => 'Player',

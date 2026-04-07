@@ -39,15 +39,15 @@ export default function Dashboard() {
   }, [])
 
   const pendingInvites = useMemo(
-    () => invites.filter((invite) => String(invite.status?.code || '').toLowerCase() === 'sent'),
+    () => invites.filter((invite) => String(invite.status?.code || '').toLowerCase() === 'pending'),
     [invites],
   )
   const pendingPayments = useMemo(
-    () => registrations.filter((registration) => String(registration.status?.code || '').toLowerCase() === 'payment_pending'),
+    () => registrations.filter((registration) => ['accepted', 'payment_pending'].includes(String(registration.status?.code || '').toLowerCase())),
     [registrations],
   )
   const confirmedRegistrations = useMemo(
-    () => registrations.filter((registration) => ['accepted', 'paid'].includes(String(registration.status?.code || '').toLowerCase())),
+    () => registrations.filter((registration) => ['awaiting_partner_acceptance', 'paid'].includes(String(registration.status?.code || '').toLowerCase())),
     [registrations],
   )
   const recentRegistrations = registrations.slice(0, 3)

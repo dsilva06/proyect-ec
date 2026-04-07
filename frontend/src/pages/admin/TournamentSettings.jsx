@@ -16,9 +16,10 @@ const initialTournamentForm = {
   description: '',
   start_date: '',
   end_date: '',
+  entry_fee_amount: '',
+  entry_fee_currency: 'USD',
   registration_open_at: '',
   registration_close_at: '',
-  day_start_time: '',
   match_duration_minutes: '',
   courts_count: '',
   prize_money: '',
@@ -59,6 +60,26 @@ const getTournamentModeLabel = (mode) => {
   return 'Amateur'
 }
 
+const tournamentUsesRanking = (mode) => String(mode || '').toLowerCase() !== 'open'
+
+const buildRankingRangePayload = (values, usesRanking) => {
+  if (!usesRanking) {
+    return {
+      min_fip_rank: null,
+      max_fip_rank: null,
+      min_fep_rank: null,
+      max_fep_rank: null,
+    }
+  }
+
+  return {
+    min_fip_rank: values.min_fip_rank || null,
+    max_fip_rank: values.max_fip_rank || null,
+    min_fep_rank: values.min_fep_rank || null,
+    max_fep_rank: values.max_fep_rank || null,
+  }
+}
+
 
 export default function TournamentSettings() {
   const [tournaments, setTournaments] = useState([])
@@ -73,8 +94,6 @@ export default function TournamentSettings() {
   const [categoryDefaults, setCategoryDefaults] = useState({
     max_teams: 32,
     wildcard_slots: 0,
-    entry_fee_amount: 20,
-    currency: 'USD',
     acceptance_type: 'waitlist',
     min_fip_rank: '',
     max_fip_rank: '',
@@ -244,8 +263,10 @@ export default function TournamentSettings() {
     try {
       const payload = cleanPayload({
         ...form,
+        entry_fee_amount: Number(form.entry_fee_amount || 0),
       })
       const tournament = await adminTournamentsApi.create(payload)
+      const rankingRangePayload = buildRankingRangePayload(categoryDefaults, tournamentUsesRanking(form.mode))
 
       if (categorySelection.length) {
         await Promise.all(
@@ -254,13 +275,8 @@ export default function TournamentSettings() {
               category_id: categoryId,
               max_teams: Number(categoryDefaults.max_teams || 0),
               wildcard_slots: Number(categoryDefaults.wildcard_slots || 0),
-              entry_fee_amount: Number(categoryDefaults.entry_fee_amount || 0),
-              currency: categoryDefaults.currency || 'USD',
               acceptance_type: categoryDefaults.acceptance_type || 'waitlist',
-              min_fip_rank: categoryDefaults.min_fip_rank || null,
-              max_fip_rank: categoryDefaults.max_fip_rank || null,
-              min_fep_rank: categoryDefaults.min_fep_rank || null,
-              max_fep_rank: categoryDefaults.max_fep_rank || null,
+              ...rankingRangePayload,
             }),
           ),
         )
@@ -330,8 +346,6 @@ export default function TournamentSettings() {
           category_id: '',
           max_teams: 32,
           wildcard_slots: 0,
-          entry_fee_amount: 20,
-          currency: 'USD',
           acceptance_type: 'waitlist',
           min_fip_rank: '',
           max_fip_rank: '',
@@ -351,12 +365,14 @@ export default function TournamentSettings() {
     }
 
     try {
+      const tournament = tournaments.find((item) => String(item.id) === String(tournamentId))
+      const rankingRangePayload = buildRankingRangePayload(payload, tournamentUsesRanking(tournament?.mode))
       await adminTournamentsApi.addCategory(tournamentId, cleanPayload({
         ...payload,
-        entry_fee_amount: Number(payload.entry_fee_amount || 0),
         max_teams: Number(payload.max_teams || 0),
         wildcard_slots: Number(payload.wildcard_slots || 0),
         acceptance_type: payload.acceptance_type || 'waitlist',
+        ...rankingRangePayload,
       }))
       setCategoryForms((prev) => ({ ...prev, [tournamentId]: null }))
       await load()
@@ -486,6 +502,10 @@ export default function TournamentSettings() {
             <span className="muted">Prize money</span>
             <strong>{formatMoney(tournament.prize_money, tournament.prize_currency)}</strong>
           </div>
+          <div>
+            <span className="muted">Costo inscripción</span>
+            <strong>{formatMoney(tournament.entry_fee_amount, tournament.entry_fee_currency)}</strong>
+          </div>
         </div>
         <div className="registrations-trello-card-foot">
           <span className="registrations-trello-category">{getTournamentModeLabel(tournament.mode)}</span>
@@ -497,6 +517,8 @@ export default function TournamentSettings() {
 
   const renderTournamentCard = (tournament) => {
     const categoryForm = categoryForms[tournament.id] || {}
+    const currentMode = tournamentEdits[tournament.id]?.mode ?? tournament.mode
+    const usesRanking = tournamentUsesRanking(currentMode)
     return (
       <article key={tournament.id} className="tournament-card settings-tournament-card">
         <div className="tournament-card-header">
@@ -535,6 +557,10 @@ export default function TournamentSettings() {
           <div>
             <span>Prize money</span>
             <strong>{formatMoney(tournament.prize_money, tournament.prize_currency)}</strong>
+          </div>
+          <div>
+            <span>Costo inscripción</span>
+            <strong>{formatMoney(tournament.entry_fee_amount, tournament.entry_fee_currency)}</strong>
           </div>
         </div>
 
@@ -620,6 +646,29 @@ export default function TournamentSettings() {
               />
             </label>
             <label>
+              Costo inscripción
+              <input
+                type="number"
+                min="0"
+                step="1"
+                className="no-spinner"
+                value={tournamentEdits[tournament.id]?.entry_fee_amount ?? tournament.entry_fee_amount ?? ''}
+                onChange={(event) =>
+                  handleTournamentEdit(tournament.id, 'entry_fee_amount', event.target.value)
+                }
+              />
+            </label>
+            <label>
+              Moneda inscripción
+              <select
+                value={tournamentEdits[tournament.id]?.entry_fee_currency ?? tournament.entry_fee_currency ?? 'USD'}
+                onChange={(event) => handleTournamentEdit(tournament.id, 'entry_fee_currency', event.target.value)}
+              >
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </label>
+            <label>
               Apertura inscripciones
               <DateTimePicker
                 value={tournamentEdits[tournament.id]?.registration_open_at ?? tournament.registration_open_at ?? ''}
@@ -631,22 +680,6 @@ export default function TournamentSettings() {
               <DateTimePicker
                 value={tournamentEdits[tournament.id]?.registration_close_at ?? tournament.registration_close_at ?? ''}
                 onChange={(value) => handleTournamentEdit(tournament.id, 'registration_close_at', value)}
-              />
-            </label>
-            <label>
-              Hora inicio día
-              <input
-                type="time"
-                value={tournamentEdits[tournament.id]?.day_start_time ?? tournament.day_start_time ?? ''}
-                onChange={(event) => handleTournamentEdit(tournament.id, 'day_start_time', event.target.value)}
-              />
-            </label>
-            <label>
-              Hora fin día
-              <input
-                type="time"
-                value={tournamentEdits[tournament.id]?.day_end_time ?? tournament.day_end_time ?? ''}
-                onChange={(event) => handleTournamentEdit(tournament.id, 'day_end_time', event.target.value)}
               />
             </label>
             <label>
@@ -743,17 +776,6 @@ export default function TournamentSettings() {
                       />
                     </div>
                     <div>
-                      <span>Fee (monto)</span>
-                      <input
-                        type="number"
-                        step="1"
-                        value={edits.entry_fee_amount ?? category.entry_fee_amount}
-                        onChange={(event) =>
-                          handleCategoryEdit(category.id, 'entry_fee_amount', event.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
                       <span>Aceptación</span>
                       <select
                         value={edits.acceptance_type ?? category.acceptance_type ?? 'waitlist'}
@@ -765,46 +787,50 @@ export default function TournamentSettings() {
                         <option value="immediate">Inmediata</option>
                       </select>
                     </div>
-                    <div>
-                      <span>FIP min</span>
-                      <input
-                        type="number"
-                        value={edits.min_fip_rank ?? category.min_fip_rank ?? ''}
-                        onChange={(event) =>
-                          handleCategoryEdit(category.id, 'min_fip_rank', event.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <span>FIP max</span>
-                      <input
-                        type="number"
-                        value={edits.max_fip_rank ?? category.max_fip_rank ?? ''}
-                        onChange={(event) =>
-                          handleCategoryEdit(category.id, 'max_fip_rank', event.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <span>FEP min</span>
-                      <input
-                        type="number"
-                        value={edits.min_fep_rank ?? category.min_fep_rank ?? ''}
-                        onChange={(event) =>
-                          handleCategoryEdit(category.id, 'min_fep_rank', event.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <span>FEP max</span>
-                      <input
-                        type="number"
-                        value={edits.max_fep_rank ?? category.max_fep_rank ?? ''}
-                        onChange={(event) =>
-                          handleCategoryEdit(category.id, 'max_fep_rank', event.target.value)
-                        }
-                      />
-                    </div>
+                    {usesRanking ? (
+                      <>
+                        <div>
+                          <span>FIP min</span>
+                          <input
+                            type="number"
+                            value={edits.min_fip_rank ?? category.min_fip_rank ?? ''}
+                            onChange={(event) =>
+                              handleCategoryEdit(category.id, 'min_fip_rank', event.target.value)
+                            }
+                          />
+                        </div>
+                        <div>
+                          <span>FIP max</span>
+                          <input
+                            type="number"
+                            value={edits.max_fip_rank ?? category.max_fip_rank ?? ''}
+                            onChange={(event) =>
+                              handleCategoryEdit(category.id, 'max_fip_rank', event.target.value)
+                            }
+                          />
+                        </div>
+                        <div>
+                          <span>FEP min</span>
+                          <input
+                            type="number"
+                            value={edits.min_fep_rank ?? category.min_fep_rank ?? ''}
+                            onChange={(event) =>
+                              handleCategoryEdit(category.id, 'min_fep_rank', event.target.value)
+                            }
+                          />
+                        </div>
+                        <div>
+                          <span>FEP max</span>
+                          <input
+                            type="number"
+                            value={edits.max_fep_rank ?? category.max_fep_rank ?? ''}
+                            onChange={(event) =>
+                              handleCategoryEdit(category.id, 'max_fep_rank', event.target.value)
+                            }
+                          />
+                        </div>
+                      </>
+                    ) : null}
                     <div className="form-actions category-row-actions">
                       <Link
                         className="ghost-button"
@@ -883,17 +909,6 @@ export default function TournamentSettings() {
               />
             </label>
             <label>
-              Fee (monto)
-              <input
-                type="number"
-                step="1"
-                value={categoryForm.entry_fee_amount || 20}
-                onChange={(event) =>
-                  handleCategoryFormChange(tournament.id, 'entry_fee_amount', event.target.value)
-                }
-              />
-            </label>
-            <label>
               Tipo de aceptación
               <select
                 value={categoryForm.acceptance_type || 'waitlist'}
@@ -905,46 +920,50 @@ export default function TournamentSettings() {
                 <option value="immediate">Inmediata</option>
               </select>
             </label>
-            <label>
-              FIP min
-              <input
-                type="number"
-                value={categoryForm.min_fip_rank || ''}
-                onChange={(event) =>
-                  handleCategoryFormChange(tournament.id, 'min_fip_rank', event.target.value)
-                }
-              />
-            </label>
-            <label>
-              FIP max
-              <input
-                type="number"
-                value={categoryForm.max_fip_rank || ''}
-                onChange={(event) =>
-                  handleCategoryFormChange(tournament.id, 'max_fip_rank', event.target.value)
-                }
-              />
-            </label>
-            <label>
-              FEP min
-              <input
-                type="number"
-                value={categoryForm.min_fep_rank || ''}
-                onChange={(event) =>
-                  handleCategoryFormChange(tournament.id, 'min_fep_rank', event.target.value)
-                }
-              />
-            </label>
-            <label>
-              FEP max
-              <input
-                type="number"
-                value={categoryForm.max_fep_rank || ''}
-                onChange={(event) =>
-                  handleCategoryFormChange(tournament.id, 'max_fep_rank', event.target.value)
-                }
-              />
-            </label>
+            {usesRanking ? (
+              <>
+                <label>
+                  FIP min
+                  <input
+                    type="number"
+                    value={categoryForm.min_fip_rank || ''}
+                    onChange={(event) =>
+                      handleCategoryFormChange(tournament.id, 'min_fip_rank', event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  FIP max
+                  <input
+                    type="number"
+                    value={categoryForm.max_fip_rank || ''}
+                    onChange={(event) =>
+                      handleCategoryFormChange(tournament.id, 'max_fip_rank', event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  FEP min
+                  <input
+                    type="number"
+                    value={categoryForm.min_fep_rank || ''}
+                    onChange={(event) =>
+                      handleCategoryFormChange(tournament.id, 'min_fep_rank', event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  FEP max
+                  <input
+                    type="number"
+                    value={categoryForm.max_fep_rank || ''}
+                    onChange={(event) =>
+                      handleCategoryFormChange(tournament.id, 'max_fep_rank', event.target.value)
+                    }
+                  />
+                </label>
+              </>
+            ) : null}
             <div className="form-actions field-span-2">
               <button
                 className="primary-button"
@@ -1043,6 +1062,27 @@ export default function TournamentSettings() {
                 <DatePicker value={form.end_date} onChange={handleValueChange('end_date')} />
               </label>
               <label>
+                Costo inscripción
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  className="no-spinner"
+                  value={form.entry_fee_amount}
+                  onChange={handleTournamentChange('entry_fee_amount')}
+                />
+              </label>
+              <label>
+                Moneda inscripción
+                <select
+                  value={form.entry_fee_currency}
+                  onChange={handleTournamentChange('entry_fee_currency')}
+                >
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </label>
+              <label>
                 Apertura inscripciones
                 <DateTimePicker
                   value={form.registration_open_at}
@@ -1054,14 +1094,6 @@ export default function TournamentSettings() {
                 <DateTimePicker
                   value={form.registration_close_at}
                   onChange={handleValueChange('registration_close_at')}
-                />
-              </label>
-              <label>
-                Hora inicio día
-                <input
-                  type="time"
-                  value={form.day_start_time}
-                  onChange={handleTournamentChange('day_start_time')}
                 />
               </label>
               <label>
@@ -1127,15 +1159,6 @@ export default function TournamentSettings() {
                     />
                   </label>
                   <label>
-                    Fee (monto)
-                    <input
-                      type="number"
-                      step="1"
-                      value={categoryDefaults.entry_fee_amount}
-                      onChange={handleCategoryDefaultsChange('entry_fee_amount')}
-                    />
-                  </label>
-                  <label>
                     Tipo de aceptación
                     <select
                       value={categoryDefaults.acceptance_type}
@@ -1145,38 +1168,42 @@ export default function TournamentSettings() {
                       <option value="immediate">Inmediata</option>
                     </select>
                   </label>
-                  <label>
-                    FIP min (default)
-                    <input
-                      type="number"
-                      value={categoryDefaults.min_fip_rank}
-                      onChange={handleCategoryDefaultsChange('min_fip_rank')}
-                    />
-                  </label>
-                  <label>
-                    FIP max (default)
-                    <input
-                      type="number"
-                      value={categoryDefaults.max_fip_rank}
-                      onChange={handleCategoryDefaultsChange('max_fip_rank')}
-                    />
-                  </label>
-                  <label>
-                    FEP min (default)
-                    <input
-                      type="number"
-                      value={categoryDefaults.min_fep_rank}
-                      onChange={handleCategoryDefaultsChange('min_fep_rank')}
-                    />
-                  </label>
-                  <label>
-                    FEP max (default)
-                    <input
-                      type="number"
-                      value={categoryDefaults.max_fep_rank}
-                      onChange={handleCategoryDefaultsChange('max_fep_rank')}
-                    />
-                  </label>
+                  {tournamentUsesRanking(form.mode) ? (
+                    <>
+                      <label>
+                        FIP min (default)
+                        <input
+                          type="number"
+                          value={categoryDefaults.min_fip_rank}
+                          onChange={handleCategoryDefaultsChange('min_fip_rank')}
+                        />
+                      </label>
+                      <label>
+                        FIP max (default)
+                        <input
+                          type="number"
+                          value={categoryDefaults.max_fip_rank}
+                          onChange={handleCategoryDefaultsChange('max_fip_rank')}
+                        />
+                      </label>
+                      <label>
+                        FEP min (default)
+                        <input
+                          type="number"
+                          value={categoryDefaults.min_fep_rank}
+                          onChange={handleCategoryDefaultsChange('min_fep_rank')}
+                        />
+                      </label>
+                      <label>
+                        FEP max (default)
+                        <input
+                          type="number"
+                          value={categoryDefaults.max_fep_rank}
+                          onChange={handleCategoryDefaultsChange('max_fep_rank')}
+                        />
+                      </label>
+                    </>
+                  ) : null}
                   <div className="category-selection-toolbar field-span-2">
                     <label className="category-selection-search">
                       Buscar categoría

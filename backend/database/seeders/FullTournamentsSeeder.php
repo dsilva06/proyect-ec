@@ -97,6 +97,8 @@ class FullTournamentsSeeder extends Seeder
                     'timezone' => 'America/Caracas',
                     'start_date' => $start->toDateString(),
                     'end_date' => $end->toDateString(),
+                    'entry_fee_amount' => 30,
+                    'entry_fee_currency' => 'EUR',
                     'registration_open_at' => $start->copy()->subDays(20),
                     'registration_close_at' => $start->copy()->subDays(1),
                     'day_start_time' => '08:00',

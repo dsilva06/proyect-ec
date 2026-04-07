@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { playerTeamInvitesApi } from '../../features/teamInvites/api'
-import { formatPlayerDate, getPlayerStatusTone } from './ui'
+import { formatPlayerDate, getPlayerStatusTone, getPlayerRegistrationStageLabel } from './ui'
 
 export default function Invitations() {
   const [invites, setInvites] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionId, setActionId] = useState(null)
+  const [actionType, setActionType] = useState('')
 
   const load = async () => {
     setLoading(true)
@@ -27,6 +28,7 @@ export default function Invitations() {
 
   const handleAccept = async (inviteId) => {
     setActionId(inviteId)
+    setActionType('accept')
     setError('')
     try {
       await playerTeamInvitesApi.accept(inviteId)
@@ -35,11 +37,27 @@ export default function Invitations() {
       setError(err?.data?.message || err?.message || 'No pudimos aceptar la invitación.')
     } finally {
       setActionId(null)
+      setActionType('')
+    }
+  }
+
+  const handleReject = async (inviteId) => {
+    setActionId(inviteId)
+    setActionType('reject')
+    setError('')
+    try {
+      await playerTeamInvitesApi.reject(inviteId)
+      await load()
+    } catch (err) {
+      setError(err?.data?.message || err?.message || 'No pudimos rechazar la invitación.')
+    } finally {
+      setActionId(null)
+      setActionType('')
     }
   }
 
   const pendingInvites = useMemo(
-    () => invites.filter((invite) => String(invite.status?.code || '').toLowerCase() === 'sent'),
+    () => invites.filter((invite) => String(invite.status?.code || '').toLowerCase() === 'pending'),
     [invites],
   )
   const acceptedInvites = useMemo(
@@ -52,8 +70,8 @@ export default function Invitations() {
       <div className="player-page-header">
         <div>
           <span className="player-section-kicker">Invitaciones</span>
-          <h3>Confirma tu pareja sin perderte.</h3>
-          <p>Si tienes una invitación pendiente, aquí la aceptas y quedas dentro del equipo con un solo toque.</p>
+          <h3>Confirma tu lugar en el torneo.</h3>
+          <p>Aquí ves quién te invitó, en qué torneo entras y si el pago del equipo ya quedó cubierto.</p>
         </div>
         <div className="player-page-actions">
           <button className="secondary-button" type="button" onClick={load}>
@@ -102,12 +120,24 @@ export default function Invitations() {
                   </span>
                   <span className="player-soft-note">Vence {formatPlayerDate(invite.expires_at, { year: 'numeric' })}</span>
                 </div>
-                <h5>{invite.team?.display_name || 'Equipo'}</h5>
-                <p>Tu partner envió la invitación a <strong>{invite.invited_email}</strong>.</p>
+                <h5>{invite.tournament_name || invite.team?.display_name || 'Equipo'}</h5>
+                <p>
+                  <strong>{invite.captain_name || 'Tu pareja'}</strong> te invitó a jugar
+                  {' '}
+                  <strong>{invite.category_name || 'esta categoría'}</strong>.
+                </p>
                 <div className="player-metadata-grid">
                   <div>
-                    <span>Equipo</span>
-                    <strong>{invite.team?.display_name || 'Por confirmar'}</strong>
+                    <span>Capitán</span>
+                    <strong>{invite.captain_name || 'Por confirmar'}</strong>
+                  </div>
+                  <div>
+                    <span>Inscripción</span>
+                    <strong>{getPlayerRegistrationStageLabel(invite.registration_status_code)}</strong>
+                  </div>
+                  <div>
+                    <span>Pago del equipo</span>
+                    <strong>{invite.payment_is_covered ? 'Cubierto' : 'Pendiente'}</strong>
                   </div>
                   <div>
                     <span>Correo invitado</span>
@@ -121,7 +151,15 @@ export default function Invitations() {
                     onClick={() => handleAccept(invite.id)}
                     disabled={actionId === invite.id}
                   >
-                    {actionId === invite.id ? 'Aceptando...' : 'Aceptar invitación'}
+                    {actionId === invite.id && actionType === 'accept' ? 'Aceptando...' : 'Aceptar invitación'}
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => handleReject(invite.id)}
+                    disabled={actionId === invite.id}
+                  >
+                    {actionId === invite.id && actionType === 'reject' ? 'Rechazando...' : 'Rechazar'}
                   </button>
                 </div>
               </article>
@@ -144,8 +182,8 @@ export default function Invitations() {
                     {invite.status?.label || 'Aceptada'}
                   </span>
                 </div>
-                <h5>{invite.team?.display_name || 'Equipo'}</h5>
-                <p>{invite.invited_email || 'Sin correo asociado'}</p>
+                <h5>{invite.tournament_name || invite.team?.display_name || 'Equipo'}</h5>
+                <p>{invite.category_name || invite.invited_email || 'Sin correo asociado'}</p>
               </article>
             ))}
           </div>

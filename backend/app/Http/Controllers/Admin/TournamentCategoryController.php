@@ -16,6 +16,10 @@ class TournamentCategoryController extends Controller
     {
         $data = $request->validated();
         $data['tournament_id'] = $tournament->id;
+        $data['entry_fee_amount'] = array_key_exists('entry_fee_amount', $data)
+            ? (int) $data['entry_fee_amount']
+            : (int) ($tournament->entry_fee_amount ?? 0);
+        $data['currency'] = $data['currency'] ?? (string) ($tournament->entry_fee_currency ?: 'USD');
         if (! isset($data['acceptance_type'])) {
             $data['acceptance_type'] = 'waitlist';
         }

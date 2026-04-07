@@ -7,6 +7,7 @@ use App\Http\Requests\Player\StoreRegistrationRequest;
 use App\Http\Resources\RegistrationResource;
 use App\Models\Registration;
 use App\Services\RegistrationService;
+use App\Services\StripePaymentService;
 use App\Services\TeamService;
 use Illuminate\Http\Request;
 
@@ -20,6 +21,9 @@ class RegistrationController extends Controller
             ->whereHas('team.users', fn ($query) => $query->where('users.id', $user->id))
             ->with([
                 'status',
+                'payments.status',
+                'team.status',
+                'team.creator',
                 'team.users.playerProfile',
                 'rankings.user.playerProfile',
                 'rankings.verifier',
@@ -47,6 +51,9 @@ class RegistrationController extends Controller
 
             $registration->load([
                 'status',
+                'payments.status',
+                'team.status',
+                'team.creator',
                 'team.users.playerProfile',
                 'rankings.user.playerProfile',
                 'rankings.verifier',
@@ -63,5 +70,12 @@ class RegistrationController extends Controller
         }
 
         return new RegistrationResource($registration);
+    }
+
+    public function pay(Request $request, Registration $registration)
+    {
+        return response()->json(
+            app(StripePaymentService::class)->createCheckoutSession($request->user(), $registration)
+        );
     }
 }

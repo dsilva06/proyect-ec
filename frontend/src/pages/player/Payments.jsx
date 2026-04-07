@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { playerPaymentsApi } from '../../features/payments/api'
-import { formatPlayerDate, formatPlayerMoneyFromCents, getPlayerStatusTone } from './ui'
+import { formatPlayerDate, formatPlayerMoneyFromCents, getPlayerStatusTone, getPlayerRegistrationStageLabel } from './ui'
 
 export default function PlayerPayments() {
   const [payments, setPayments] = useState([])
@@ -25,7 +25,7 @@ export default function PlayerPayments() {
     [payments],
   )
   const pendingPayments = useMemo(
-    () => payments.filter((payment) => ['pending', 'payment_pending'].includes(String(payment.status?.code || '').toLowerCase())),
+    () => payments.filter((payment) => ['created', 'pending', 'requires_action', 'processing'].includes(String(payment.status?.code || '').toLowerCase())),
     [payments],
   )
   const totalPaid = useMemo(
@@ -38,8 +38,8 @@ export default function PlayerPayments() {
       <div className="player-page-header">
         <div>
           <span className="player-section-kicker">Pagos</span>
-          <h3>Tu historial financiero, claro y legible en móvil.</h3>
-          <p>Consulta cuánto has pagado, qué está pendiente y a qué inscripción corresponde cada movimiento.</p>
+          <h3>El pago del equipo, claro y legible en móvil.</h3>
+          <p>Consulta qué equipos ya quedaron pagados y cuáles todavía están esperando la aceptación de la pareja.</p>
         </div>
         <div className="player-page-actions">
           <button className="secondary-button" type="button" onClick={load}>
@@ -95,6 +95,10 @@ export default function PlayerPayments() {
                 <div>
                   <span>Categoría</span>
                   <strong>{payment.registration?.tournament_category?.category?.display_name || payment.registration?.tournament_category?.category?.name || 'Por confirmar'}</strong>
+                </div>
+                <div>
+                  <span>Etapa</span>
+                  <strong>{getPlayerRegistrationStageLabel(payment.registration?.status?.code)}</strong>
                 </div>
               </div>
             </article>

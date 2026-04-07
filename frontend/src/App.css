@@ -5955,3 +5955,374 @@ label,
     justify-content: flex-start;
   }
 }
+
+/* Admin refinement layer: stronger hierarchy, same palette */
+.admin-shell-pro {
+  gap: clamp(18px, 2vw, 28px);
+}
+
+.admin-sidebar-frame {
+  max-height: calc(100vh - 28px);
+  overflow: hidden;
+  gap: 16px;
+  padding: 16px;
+}
+
+.admin-sidebar-top {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 2px 4px 12px;
+}
+
+.admin-sidebar-section {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-nav-section-label {
+  padding: 0 4px;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.68);
+}
+
+.admin-shell-pro .admin-sidebar {
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.admin-shell-pro .admin-nav a {
+  display: grid;
+  gap: 4px;
+  min-height: 58px;
+  align-content: center;
+  padding: 12px 14px;
+}
+
+.admin-nav-item-title {
+  display: block;
+}
+
+.admin-nav-item-meta {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(239, 231, 211, 0.68);
+}
+
+.admin-shell-pro .admin-nav a.active .admin-nav-item-meta {
+  color: rgba(24, 10, 24, 0.76);
+}
+
+.admin-main {
+  gap: 18px;
+}
+
+.admin-main .admin-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 20px;
+  background:
+    linear-gradient(155deg, rgba(8, 12, 56, 0.88), rgba(28, 6, 42, 0.84)),
+    radial-gradient(circle at 100% 0%, rgba(255, 154, 61, 0.1), transparent 42%);
+  box-shadow: 0 16px 28px rgba(3, 7, 24, 0.34);
+}
+
+.admin-header-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-header-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 231, 211, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.8);
+}
+
+.admin-header h2 {
+  margin: 0;
+  font-size: clamp(1.85rem, 2.8vw, 2.45rem);
+  letter-spacing: 0.01em;
+}
+
+.admin-subtitle {
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.55;
+}
+
+.admin-user {
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.admin-user-card {
+  min-width: min(100%, 260px);
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 231, 211, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-user-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-content {
+  gap: 28px;
+  padding: 6px 2px 18px;
+}
+
+.admin-page {
+  gap: 20px;
+}
+
+.admin-page-header {
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.admin-page-header h3 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2vw, 1.9rem);
+  line-height: 1.05;
+}
+
+.admin-page-header p {
+  max-width: 74ch;
+  line-height: 1.55;
+}
+
+.admin-page-actions {
+  align-items: center;
+}
+
+.admin-page-actions .primary-button,
+.admin-page-actions .secondary-button,
+.admin-page-actions .ghost-button,
+.admin-page-actions select,
+.admin-page-actions input {
+  min-height: 44px;
+}
+
+.panel-card {
+  gap: 18px;
+  padding: 22px;
+  border-radius: 22px;
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.24);
+}
+
+.panel-header {
+  align-items: flex-start;
+}
+
+.panel-header h4 {
+  margin: 0;
+  font-size: 1.08rem;
+  letter-spacing: 0.02em;
+}
+
+.panel-header p {
+  margin: 6px 0 0;
+  color: rgba(239, 231, 211, 0.82);
+  line-height: 1.5;
+}
+
+.kpi-grid,
+.dashboard-hero-grid,
+.dashboard-category-grid,
+.trend-grid,
+.alert-grid {
+  gap: 14px;
+}
+
+.kpi-card,
+.dashboard-stat,
+.dashboard-category-card,
+.trend-card,
+.alert-card {
+  min-height: 100%;
+  border-color: rgba(239, 231, 211, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.dashboard-stat,
+.kpi-card {
+  padding: 18px;
+}
+
+.dashboard-stat span,
+.kpi-card span,
+.alert-card span,
+.trend-item span,
+.category-row span,
+.category-meta,
+.registration-item span {
+  color: rgba(239, 231, 211, 0.74);
+}
+
+.dashboard-stat strong,
+.kpi-card strong,
+.alert-card strong {
+  font-size: clamp(1.3rem, 2vw, 1.75rem);
+  line-height: 1;
+}
+
+.dashboard-grid {
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.92fr);
+}
+
+.dashboard-main,
+.dashboard-side {
+  gap: 20px;
+}
+
+.dashboard-category-card,
+.trend-card,
+.alert-card {
+  padding: 18px;
+}
+
+.registration-list {
+  gap: 12px;
+}
+
+.registration-item {
+  padding: 16px 18px;
+  border: 1px solid rgba(239, 231, 211, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  gap: 18px;
+}
+
+.registration-item strong {
+  line-height: 1.3;
+}
+
+.registration-item select,
+.registration-item input,
+.registration-item textarea {
+  min-height: 40px;
+}
+
+.payments-page .kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.payments-list {
+  gap: 14px;
+}
+
+.payment-row {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.payment-row > div:first-child strong {
+  font-size: 1.02rem;
+}
+
+.form-message {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(239, 231, 211, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.empty-state {
+  padding: 22px 20px;
+}
+
+@media (max-width: 1180px) {
+  .admin-main .admin-header {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-user {
+    justify-content: space-between;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 980px) {
+  .admin-sidebar-frame {
+    max-height: none;
+  }
+
+  .admin-main .admin-header {
+    padding: 16px;
+  }
+
+  .admin-user {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-user-card {
+    min-width: 0;
+  }
+
+  .admin-user-actions {
+    width: 100%;
+  }
+
+  .admin-user-actions .secondary-button,
+  .admin-user-actions .ghost-button {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-shell-pro {
+    padding: 14px;
+  }
+
+  .panel-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .admin-page-header,
+  .panel-header {
+    gap: 12px;
+  }
+
+  .admin-page-actions {
+    width: 100%;
+  }
+
+  .admin-page-actions .primary-button,
+  .admin-page-actions .secondary-button,
+  .admin-page-actions .ghost-button,
+  .admin-page-actions select,
+  .admin-page-actions input {
+    width: 100%;
+  }
+
+  .registration-item,
+  .payment-row {
+    grid-template-columns: 1fr;
+  }
+}

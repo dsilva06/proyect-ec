@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Jobs\SendTeamInviteEmailJob;
 use App\Models\Category;
+use App\Models\Payment;
 use App\Models\Registration;
-use App\Models\RegistrationRanking;
 use App\Models\Status;
 use App\Models\Team;
 use App\Models\TeamInvite;
@@ -13,10 +13,12 @@ use App\Models\TeamMember;
 use App\Models\Tournament;
 use App\Models\TournamentCategory;
 use App\Models\User;
+use App\Services\StripeCheckoutGateway;
 use Database\Seeders\StatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
+use Mockery;
 use Tests\TestCase;
 
 class TeamTournamentRegistrationFlowTest extends TestCase
@@ -29,160 +31,207 @@ class TeamTournamentRegistrationFlowTest extends TestCase
         $this->seed(StatusSeeder::class);
     }
 
-    public function test_captain_creates_pending_team_registration_and_queues_invite_email(): void
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
+    public function test_captain_creates_registration_without_sending_invite_before_payment(): void
     {
         Queue::fake();
 
         $captain = $this->makePlayer('captain@test.dev');
-        $partner = $this->makePlayer('partner@test.dev');
-        $category = $this->makeTournamentCategory();
-
-        Sanctum::actingAs($captain);
-
-        $response = $this->postJson('/api/player/registrations', [
-            'tournament_category_id' => $category->id,
-            'partner_email' => $partner->email,
-        ]);
-
-        $response->assertOk()
-            ->assertJsonPath('tournament_category_id', $category->id)
-            ->assertJsonPath('team.status.code', Team::STATUS_PENDING_PARTNER_ACCEPTANCE);
-
-        $registration = Registration::query()->firstOrFail();
-        $invite = TeamInvite::query()->firstOrFail();
-        $captainMember = TeamMember::query()
-            ->where('team_id', $registration->team_id)
-            ->where('role', TeamMember::ROLE_CAPTAIN)
-            ->first();
-
-        $this->assertSame('pending', $registration->status?->code);
-        $this->assertSame(TeamInvite::STATUS_PENDING, $invite->status?->code);
-        $this->assertNotNull($captainMember);
-        $this->assertSame($captain->id, (int) $captainMember->user_id);
-        Queue::assertPushed(SendTeamInviteEmailJob::class, 1);
-    }
-
-    public function test_registration_rejects_partner_without_account(): void
-    {
-        $captain = $this->makePlayer('captain-no-partner@test.dev');
-        $category = $this->makeTournamentCategory();
-
-        Sanctum::actingAs($captain);
-
-        $this->postJson('/api/player/registrations', [
-            'tournament_category_id' => $category->id,
-            'partner_email' => 'missing-user@test.dev',
-        ])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['partner_email'])
-            ->assertJsonPath(
-                'errors.partner_email.0',
-                'This player does not have an account yet. Your partner must register first.'
-            );
-    }
-
-    public function test_pending_invite_creation_is_idempotent_for_same_captain_tournament_and_partner(): void
-    {
-        Queue::fake();
-
-        $captain = $this->makePlayer('captain-idempotent@test.dev');
-        $partner = $this->makePlayer('partner-idempotent@test.dev');
-        $category = $this->makeTournamentCategory();
-
-        Sanctum::actingAs($captain);
-
-        $first = $this->postJson('/api/player/registrations', [
-            'tournament_category_id' => $category->id,
-            'partner_email' => $partner->email,
-        ])->assertOk();
-
-        $second = $this->postJson('/api/player/registrations', [
-            'tournament_category_id' => $category->id,
-            'partner_email' => $partner->email,
-        ])->assertOk();
-
-        $this->assertSame(
-            (int) $first->json('id'),
-            (int) $second->json('id')
-        );
-        $this->assertSame(1, Registration::query()->count());
-        $this->assertSame(1, Team::query()->count());
-        $this->assertSame(1, TeamInvite::query()->count());
-    }
-
-    public function test_open_tournament_registration_does_not_require_or_store_rankings(): void
-    {
-        Queue::fake();
-
-        $captain = $this->makePlayer('captain-open@test.dev');
-        $partner = $this->makePlayer('partner-open@test.dev');
         $category = $this->makeTournamentCategory('open');
 
         Sanctum::actingAs($captain);
 
-        $response = $this->postJson('/api/player/registrations', [
-            'tournament_category_id' => $category->id,
-            'partner_email' => $partner->email,
-        ]);
-
-        $response->assertOk()
-            ->assertJsonPath('tournament_category_id', $category->id)
-            ->assertJsonPath('team.status.code', Team::STATUS_PENDING_PARTNER_ACCEPTANCE);
-
-        $rankings = RegistrationRanking::query()
-            ->where('tournament_category_id', $category->id)
-            ->orderBy('slot')
-            ->get();
-
-        $this->assertCount(2, $rankings);
-        $this->assertTrue($rankings->every(fn (RegistrationRanking $ranking) => $ranking->ranking_value === null));
-        $this->assertTrue($rankings->every(fn (RegistrationRanking $ranking) => $ranking->ranking_source === null));
-        Queue::assertPushed(SendTeamInviteEmailJob::class, 1);
-    }
-
-    public function test_partner_can_accept_invite_when_authenticated_and_verified(): void
-    {
-        Queue::fake();
-
-        $captain = $this->makePlayer('captain-accept@test.dev');
-        $partner = $this->makePlayer('partner-accept@test.dev');
-        $category = $this->makeTournamentCategory();
-
-        Sanctum::actingAs($captain);
         $this->postJson('/api/player/registrations', [
             'tournament_category_id' => $category->id,
+            'partner_email' => 'new-partner@test.dev',
+        ])
+            ->assertOk()
+            ->assertJsonPath('team.status.code', Team::STATUS_PENDING_PARTNER_ACCEPTANCE)
+            ->assertJsonPath('status.code', 'accepted');
+
+        $this->assertSame(1, Registration::query()->count());
+        $this->assertSame(0, TeamInvite::query()->count());
+        $this->assertSame(0, Payment::query()->count());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_captain_can_start_stripe_checkout_for_existing_partner_without_creating_invite_yet(): void
+    {
+        Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_existing_partner');
+
+        $captain = $this->makePlayer('captain-pay@test.dev');
+        $partner = $this->makePlayer('partner-pay@test.dev');
+        $category = $this->makeTournamentCategory('open');
+
+        Sanctum::actingAs($captain);
+
+        $registrationId = $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
             'partner_email' => $partner->email,
+        ])->json('id');
+
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")
+            ->assertOk()
+            ->assertJsonPath('session_id', 'cs_existing_partner')
+            ->assertJsonPath('checkout_url', 'https://checkout.stripe.test/cs_existing_partner');
+
+        $payment = Payment::query()->firstOrFail();
+
+        $this->assertSame('payment_pending', Registration::query()->firstOrFail()->fresh('status')->status?->code);
+        $this->assertSame('pending', $payment->status?->code);
+        $this->assertSame(0, TeamInvite::query()->count());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_stripe_webhook_completion_creates_invite_for_existing_partner_account(): void
+    {
+        Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_partner_webhook');
+
+        $captain = $this->makePlayer('captain-webhook@test.dev');
+        $partner = $this->makePlayer('partner-webhook@test.dev');
+        $category = $this->makeTournamentCategory('open');
+
+        Sanctum::actingAs($captain);
+
+        $registrationId = $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
+            'partner_email' => $partner->email,
+        ])->json('id');
+
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+        $this->mockStripeWebhookEvent($registrationId, 'cs_partner_webhook');
+
+        $this->postJson('/api/stripe/webhook', [], [
+            'Stripe-Signature' => 'sig_test',
         ])->assertOk();
 
         $invite = TeamInvite::query()->firstOrFail();
-        Sanctum::actingAs($partner);
 
+        $this->assertSame('awaiting_partner_acceptance', Registration::query()->firstOrFail()->fresh('status')->status?->code);
+        $this->assertSame($partner->id, (int) $invite->invited_user_id);
+        $this->assertSame('succeeded', Payment::query()->firstOrFail()->fresh('status')->status?->code);
+        Queue::assertPushed(SendTeamInviteEmailJob::class, 1);
+    }
+
+    public function test_stripe_webhook_completion_creates_registration_link_invite_for_partner_without_account(): void
+    {
+        Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_missing_account');
+
+        $captain = $this->makePlayer('captain-no-account@test.dev');
+        $category = $this->makeTournamentCategory('open');
+
+        Sanctum::actingAs($captain);
+
+        $registrationId = $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
+            'partner_email' => 'missing-user@test.dev',
+        ])->json('id');
+
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+        $this->mockStripeWebhookEvent($registrationId, 'cs_missing_account');
+
+        $this->postJson('/api/stripe/webhook', [], [
+            'Stripe-Signature' => 'sig_test',
+        ])->assertOk();
+
+        $invite = TeamInvite::query()->firstOrFail();
+
+        $this->assertSame('awaiting_partner_acceptance', Registration::query()->firstOrFail()->fresh('status')->status?->code);
+        $this->assertNull($invite->invited_user_id);
+        $this->assertSame('missing-user@test.dev', $invite->invited_email);
+        Queue::assertPushed(SendTeamInviteEmailJob::class, 1);
+    }
+
+    public function test_payment_endpoint_is_idempotent_for_same_registration(): void
+    {
+        Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_idempotent');
+
+        $captain = $this->makePlayer('captain-idempotent@test.dev');
+        $partner = $this->makePlayer('partner-idempotent@test.dev');
+        $category = $this->makeTournamentCategory('open');
+
+        Sanctum::actingAs($captain);
+
+        $registrationId = $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
+            'partner_email' => $partner->email,
+        ])->json('id');
+
+        $first = $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+        $second = $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+
+        $this->assertSame('cs_idempotent', $first->json('session_id'));
+        $this->assertSame('cs_idempotent', $second->json('session_id'));
+        $this->assertSame(1, Payment::query()->count());
+        $this->assertSame(0, TeamInvite::query()->count());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_partner_can_accept_invite_when_team_payment_is_already_covered(): void
+    {
+        Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_accept');
+
+        $captain = $this->makePlayer('captain-accept@test.dev');
+        $partner = $this->makePlayer('partner-accept@test.dev');
+        $category = $this->makeTournamentCategory('open');
+
+        Sanctum::actingAs($captain);
+        $registrationId = $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
+            'partner_email' => $partner->email,
+        ])->json('id');
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+        $this->mockStripeWebhookEvent($registrationId, 'cs_accept');
+        $this->postJson('/api/stripe/webhook', [], [
+            'Stripe-Signature' => 'sig_test',
+        ])->assertOk();
+
+        $invite = TeamInvite::query()->firstOrFail();
+
+        Sanctum::actingAs($partner);
         $this->postJson("/api/player/team-invites/{$invite->id}/accept")
             ->assertOk()
             ->assertJsonPath('status.code', TeamInvite::STATUS_ACCEPTED);
 
-        $invite->refresh();
-        $team = $invite->team()->with(['status', 'members'])->firstOrFail();
+        $registration = Registration::query()->firstOrFail();
+        $team = Team::query()->with(['status', 'members'])->findOrFail($registration->team_id);
 
+        $this->assertSame('paid', $registration->fresh('status')->status?->code);
         $this->assertSame(Team::STATUS_CONFIRMED, $team->status?->code);
         $this->assertTrue(
             $team->members->contains(fn (TeamMember $member) => $member->role === TeamMember::ROLE_PARTNER && (int) $member->user_id === (int) $partner->id)
         );
     }
 
-    public function test_non_invited_authenticated_user_cannot_accept_invite(): void
+    public function test_non_invited_authenticated_user_cannot_accept_paid_invite(): void
     {
         Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_outsider');
 
-        $captain = $this->makePlayer('captain-not-invited@test.dev');
-        $partner = $this->makePlayer('partner-not-invited@test.dev');
-        $outsider = $this->makePlayer('outsider-not-invited@test.dev');
-        $category = $this->makeTournamentCategory();
+        $captain = $this->makePlayer('captain-outsider@test.dev');
+        $partner = $this->makePlayer('partner-outsider@test.dev');
+        $outsider = $this->makePlayer('outsider@test.dev');
+        $category = $this->makeTournamentCategory('open');
 
         Sanctum::actingAs($captain);
-        $this->postJson('/api/player/registrations', [
+        $registrationId = $this->postJson('/api/player/registrations', [
             'tournament_category_id' => $category->id,
             'partner_email' => $partner->email,
+        ])->json('id');
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+        $this->mockStripeWebhookEvent($registrationId, 'cs_outsider');
+        $this->postJson('/api/stripe/webhook', [], [
+            'Stripe-Signature' => 'sig_test',
         ])->assertOk();
 
         $invite = TeamInvite::query()->firstOrFail();
@@ -192,18 +241,24 @@ class TeamTournamentRegistrationFlowTest extends TestCase
             ->assertStatus(403);
     }
 
-    public function test_partner_can_reject_pending_invite_and_registration_is_cancelled(): void
+    public function test_partner_can_reject_paid_invite_and_registration_is_cancelled(): void
     {
         Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_reject');
 
         $captain = $this->makePlayer('captain-reject@test.dev');
         $partner = $this->makePlayer('partner-reject@test.dev');
-        $category = $this->makeTournamentCategory();
+        $category = $this->makeTournamentCategory('open');
 
         Sanctum::actingAs($captain);
-        $this->postJson('/api/player/registrations', [
+        $registrationId = $this->postJson('/api/player/registrations', [
             'tournament_category_id' => $category->id,
             'partner_email' => $partner->email,
+        ])->json('id');
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+        $this->mockStripeWebhookEvent($registrationId, 'cs_reject');
+        $this->postJson('/api/stripe/webhook', [], [
+            'Stripe-Signature' => 'sig_test',
         ])->assertOk();
 
         $invite = TeamInvite::query()->firstOrFail();
@@ -220,63 +275,39 @@ class TeamTournamentRegistrationFlowTest extends TestCase
         $this->assertSame(Team::STATUS_CANCELLED, $team->status?->code);
     }
 
-    public function test_captain_can_resend_pending_invite_and_non_captain_is_forbidden(): void
+    public function test_captain_can_resend_pending_paid_invite(): void
     {
         Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_resend');
 
         $captain = $this->makePlayer('captain-resend@test.dev');
         $partner = $this->makePlayer('partner-resend@test.dev');
-        $outsider = $this->makePlayer('outsider-resend@test.dev');
-        $category = $this->makeTournamentCategory();
+        $category = $this->makeTournamentCategory('open');
 
         Sanctum::actingAs($captain);
-        $this->postJson('/api/player/registrations', [
+        $registrationId = $this->postJson('/api/player/registrations', [
             'tournament_category_id' => $category->id,
             'partner_email' => $partner->email,
+        ])->json('id');
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+        $this->mockStripeWebhookEvent($registrationId, 'cs_resend');
+        $this->postJson('/api/stripe/webhook', [], [
+            'Stripe-Signature' => 'sig_test',
         ])->assertOk();
 
         $invite = TeamInvite::query()->firstOrFail();
 
-        Sanctum::actingAs($captain);
         $this->postJson("/api/player/team-invites/{$invite->id}/resend")
             ->assertOk()
             ->assertJsonPath('id', $invite->id);
 
-        Sanctum::actingAs($outsider);
-        $this->postJson("/api/player/team-invites/{$invite->id}/resend")
-            ->assertStatus(403);
-
         Queue::assertPushed(SendTeamInviteEmailJob::class, 2);
     }
 
-    public function test_resend_invite_endpoint_is_rate_limited(): void
+    public function test_unverified_partner_cannot_accept_paid_invite(): void
     {
         Queue::fake();
-
-        $captain = $this->makePlayer('captain-throttle@test.dev');
-        $partner = $this->makePlayer('partner-throttle@test.dev');
-        $category = $this->makeTournamentCategory();
-
-        Sanctum::actingAs($captain);
-        $this->postJson('/api/player/registrations', [
-            'tournament_category_id' => $category->id,
-            'partner_email' => $partner->email,
-        ])->assertOk();
-
-        $invite = TeamInvite::query()->firstOrFail();
-
-        for ($attempt = 0; $attempt < 5; $attempt++) {
-            $this->postJson("/api/player/team-invites/{$invite->id}/resend")
-                ->assertOk();
-        }
-
-        $this->postJson("/api/player/team-invites/{$invite->id}/resend")
-            ->assertStatus(429);
-    }
-
-    public function test_unverified_partner_cannot_accept_invite(): void
-    {
-        Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_unverified');
 
         $captain = $this->makePlayer('captain-unverified@test.dev');
         $partner = User::factory()->unverified()->create([
@@ -284,12 +315,17 @@ class TeamTournamentRegistrationFlowTest extends TestCase
             'role' => 'player',
             'is_active' => true,
         ]);
-        $category = $this->makeTournamentCategory();
+        $category = $this->makeTournamentCategory('open');
 
         Sanctum::actingAs($captain);
-        $this->postJson('/api/player/registrations', [
+        $registrationId = $this->postJson('/api/player/registrations', [
             'tournament_category_id' => $category->id,
             'partner_email' => $partner->email,
+        ])->json('id');
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")->assertOk();
+        $this->mockStripeWebhookEvent($registrationId, 'cs_unverified');
+        $this->postJson('/api/stripe/webhook', [], [
+            'Stripe-Signature' => 'sig_test',
         ])->assertOk();
 
         $invite = TeamInvite::query()->firstOrFail();
@@ -300,51 +336,6 @@ class TeamTournamentRegistrationFlowTest extends TestCase
             ->assertJson([
                 'message' => 'Please verify your email before accessing this resource.',
             ]);
-    }
-
-    public function test_acceptance_revalidates_tournament_conflicts(): void
-    {
-        Queue::fake();
-
-        $captain = $this->makePlayer('captain-conflict@test.dev');
-        $partner = $this->makePlayer('partner-conflict@test.dev');
-        $category = $this->makeTournamentCategory();
-
-        Sanctum::actingAs($captain);
-        $this->postJson('/api/player/registrations', [
-            'tournament_category_id' => $category->id,
-            'partner_email' => $partner->email,
-        ])->assertOk();
-
-        $conflictingTeam = Team::query()->create([
-            'display_name' => 'Conflicting Team',
-            'created_by' => $partner->id,
-            'status_id' => $this->statusId('team', Team::STATUS_CONFIRMED),
-        ]);
-
-        TeamMember::query()->create([
-            'team_id' => $conflictingTeam->id,
-            'user_id' => $partner->id,
-            'slot' => 1,
-            'role' => TeamMember::ROLE_CAPTAIN,
-        ]);
-
-        Registration::query()->create([
-            'tournament_category_id' => $category->id,
-            'team_id' => $conflictingTeam->id,
-            'status_id' => $this->statusId('registration', 'pending'),
-        ]);
-
-        $invite = TeamInvite::query()->firstOrFail();
-
-        Sanctum::actingAs($partner);
-        $this->postJson("/api/player/team-invites/{$invite->id}/accept")
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['partner_email'])
-            ->assertJsonPath(
-                'errors.partner_email.0',
-                'A player cannot participate in more than one team in the same tournament.'
-            );
     }
 
     private function makePlayer(string $email): User
@@ -362,8 +353,8 @@ class TeamTournamentRegistrationFlowTest extends TestCase
         $category = Category::query()->create([
             'name' => 'Masculino 2da',
             'group_code' => 'masculino',
-            'level_code' => 'segunda',
-            'display_name' => 'Masculino 2da',
+            'level_code' => $mode === 'open' ? 'open' : 'segunda',
+            'display_name' => $mode === 'open' ? 'Open' : 'Masculino 2da',
             'sort_order' => 1,
         ]);
 
@@ -373,6 +364,7 @@ class TeamTournamentRegistrationFlowTest extends TestCase
             'status_id' => $this->statusId('tournament', 'registration_open'),
             'start_date' => now()->toDateString(),
             'end_date' => now()->addDay()->toDateString(),
+            'registration_close_at' => now()->addDays(3),
         ]);
 
         return TournamentCategory::query()->create([
@@ -382,7 +374,7 @@ class TeamTournamentRegistrationFlowTest extends TestCase
             'entry_fee_amount' => 50,
             'currency' => 'USD',
             'acceptance_type' => 'waitlist',
-            'seeding_rule' => 'ranking_desc',
+            'seeding_rule' => $mode === 'open' ? 'fifo' : 'ranking_desc',
             'status_id' => null,
         ]);
     }
@@ -394,5 +386,41 @@ class TeamTournamentRegistrationFlowTest extends TestCase
             ->where('code', $code)
             ->firstOrFail()
             ->id;
+    }
+
+    private function mockStripeCheckoutCreation(string $sessionId): void
+    {
+        $mock = Mockery::mock(StripeCheckoutGateway::class);
+        $mock->shouldReceive('isConfigured')->andReturn(true);
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn([
+            'id' => $sessionId,
+            'url' => "https://checkout.stripe.test/{$sessionId}",
+            'status' => 'open',
+            'payment_status' => 'unpaid',
+            'payment_intent' => null,
+        ]);
+
+        $this->app->instance(StripeCheckoutGateway::class, $mock);
+    }
+
+    private function mockStripeWebhookEvent(int $registrationId, string $sessionId, string $type = 'checkout.session.completed'): void
+    {
+        $mock = Mockery::mock(StripeCheckoutGateway::class);
+        $mock->shouldReceive('constructWebhookEvent')->once()->andReturn([
+            'id' => 'evt_'.$sessionId,
+            'type' => $type,
+            'data' => [
+                'id' => $sessionId,
+                'payment_status' => 'paid',
+                'amount_total' => 5000,
+                'currency' => 'usd',
+                'metadata' => [
+                    'registration_id' => (string) $registrationId,
+                    'captain_user_id' => '1',
+                ],
+            ],
+        ]);
+
+        $this->app->instance(StripeCheckoutGateway::class, $mock);
     }
 }

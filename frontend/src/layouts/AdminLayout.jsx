@@ -1,15 +1,78 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import BrandLockup from '../components/shared/BrandLockup'
 
 const AUTH_WARNING_KEY = 'auth_login_warning'
 
+const ADMIN_NAV_ITEMS = [
+  {
+    to: '/admin',
+    label: 'Resumen',
+    meta: 'KPIs, alertas y operación diaria',
+    match: (pathname) => pathname === '/admin',
+    end: true,
+  },
+  {
+    to: '/admin/settings',
+    label: 'Torneos',
+    meta: 'Configuración, categorías y calendario',
+    match: (pathname) => pathname.startsWith('/admin/settings'),
+  },
+  {
+    to: '/admin/registrations',
+    label: 'Inscripciones',
+    meta: 'Flujo operativo, cola y validaciones',
+    match: (pathname) => pathname.startsWith('/admin/registrations'),
+  },
+  {
+    to: '/admin/wildcards',
+    label: 'Wildcards',
+    meta: 'Invitaciones y cupos especiales',
+    match: (pathname) => pathname.startsWith('/admin/wildcards'),
+  },
+  {
+    to: '/admin/players',
+    label: 'Jugadores',
+    meta: 'Base de jugadores y rankings',
+    match: (pathname) => pathname.startsWith('/admin/players'),
+  },
+  {
+    to: '/admin/payments',
+    label: 'Pagos',
+    meta: 'Cobros, estados y seguimiento',
+    match: (pathname) => pathname.startsWith('/admin/payments'),
+  },
+  {
+    to: '/admin/draws',
+    label: 'Cuadros',
+    meta: 'Sorteos, llaves y cruces',
+    match: (pathname) => pathname.startsWith('/admin/draws'),
+  },
+  {
+    to: '/admin/matches',
+    label: 'Partidos',
+    meta: 'Agenda, rondas y resultados',
+    match: (pathname) => pathname.startsWith('/admin/matches'),
+  },
+  {
+    to: '/admin/leads',
+    label: 'Leads',
+    meta: 'Captación y seguimiento comercial',
+    match: (pathname) => pathname.startsWith('/admin/leads'),
+  },
+]
+
 export default function AdminLayout() {
   const { user, logout } = useAuth()
   const [authWarning, setAuthWarning] = useState('')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const location = useLocation()
+
+  const currentSection = useMemo(() => (
+    ADMIN_NAV_ITEMS.find((item) => item.match(location.pathname))
+    || ADMIN_NAV_ITEMS[0]
+  ), [location.pathname])
 
   useEffect(() => {
     const message = sessionStorage.getItem(AUTH_WARNING_KEY)
@@ -53,44 +116,52 @@ export default function AdminLayout() {
               Cerrar
             </button>
           </div>
-          <NavLink to="/admin" end onClick={handleCloseSidebar}>Resumen</NavLink>
-          <NavLink to="/admin/settings" onClick={handleCloseSidebar}>Torneos</NavLink>
-          <NavLink to="/admin/registrations" onClick={handleCloseSidebar}>Inscripciones</NavLink>
-          <NavLink to="/admin/wildcards" onClick={handleCloseSidebar}>Wildcards</NavLink>
-          <NavLink to="/admin/players" onClick={handleCloseSidebar}>Jugadores</NavLink>
-          <NavLink to="/admin/payments" onClick={handleCloseSidebar}>Pagos</NavLink>
-          <NavLink to="/admin/draws" onClick={handleCloseSidebar}>Cuadros</NavLink>
-          <NavLink to="/admin/matches" onClick={handleCloseSidebar}>Partidos</NavLink>
-          <NavLink to="/admin/leads" onClick={handleCloseSidebar}>Leads</NavLink>
+          <div className="admin-sidebar-section">
+            <span className="admin-nav-section-label">Operación</span>
+            {ADMIN_NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={handleCloseSidebar}
+              >
+                <span className="admin-nav-item-title">{item.label}</span>
+                <span className="admin-nav-item-meta">{item.meta}</span>
+              </NavLink>
+            ))}
+          </div>
         </nav>
       </aside>
 
       <section className="admin-main">
         <header className="admin-header">
-          <div>
+          <div className="admin-header-copy">
+            <span className="admin-header-eyebrow">{currentSection.label}</span>
             <h2>Panel de administración</h2>
-            <p className="admin-subtitle">Crea torneos y controla inscripciones.</p>
+            <p className="admin-subtitle">{currentSection.meta}</p>
             {authWarning && <p className="auth-error">{authWarning}</p>}
           </div>
           <div className="admin-user">
-            <div>
+            <div className="admin-user-card">
               <span className="tag muted">Sesión activa</span>
               <strong>{user?.name || 'Admin'}</strong>
               <span className="admin-email">{user?.email}</span>
             </div>
-            <button className="secondary-button" type="button" onClick={logout}>
-              Cerrar sesión
-            </button>
-            <button
-              className="ghost-button admin-menu-toggle"
-              type="button"
-              aria-label="Abrir menú de navegación"
-              aria-expanded={isSidebarOpen}
-              aria-controls="admin-sidebar-nav"
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
-            >
-              Menú
-            </button>
+            <div className="admin-user-actions">
+              <button className="secondary-button" type="button" onClick={logout}>
+                Cerrar sesión
+              </button>
+              <button
+                className="ghost-button admin-menu-toggle"
+                type="button"
+                aria-label="Abrir menú de navegación"
+                aria-expanded={isSidebarOpen}
+                aria-controls="admin-sidebar-nav"
+                onClick={() => setIsSidebarOpen((prev) => !prev)}
+              >
+                Menú
+              </button>
+            </div>
           </div>
         </header>
 

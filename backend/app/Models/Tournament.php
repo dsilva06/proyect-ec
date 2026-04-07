@@ -24,6 +24,8 @@ class Tournament extends Model
         'timezone',
         'start_date',
         'end_date',
+        'entry_fee_amount',
+        'entry_fee_currency',
         'registration_open_at',
         'registration_close_at',
         'day_start_time',
@@ -38,6 +40,7 @@ class Tournament extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'entry_fee_amount' => 'integer',
         'registration_open_at' => 'datetime',
         'registration_close_at' => 'datetime',
         'day_start_time' => 'string',

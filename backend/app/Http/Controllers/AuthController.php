@@ -381,7 +381,11 @@ class AuthController extends Controller
             TeamInvite::query()
                 ->where('invited_email', $email)
                 ->whereNull('invited_user_id')
-                ->whereHas('status', fn ($query) => $query->whereIn('code', ['pending', 'sent']))
+                ->whereHas('status', fn ($query) => $query->where('code', TeamInvite::STATUS_PENDING))
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', now());
+                })
                 ->update([
                     'invited_user_id' => $user->id,
                 ]);

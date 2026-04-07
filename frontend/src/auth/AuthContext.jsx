@@ -1,18 +1,84 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { authApi } from '../features/auth/api'
 import { AuthContext } from './context'
-import { readAuthToken, readAuthUser, writeAuthToken, writeAuthUser } from './storage'
+import {
+  AUTH_TOKEN_STORAGE_KEY,
+  readAuthLastActivityAt,
+  readAuthToken,
+  readAuthUser,
+  writeAuthLastActivityAt,
+  writeAuthToken,
+  writeAuthUser,
+} from './storage'
+
+const IDLE_TIMEOUT_MINUTES = Math.max(
+  1,
+  Number.parseInt(import.meta.env.VITE_AUTH_IDLE_TIMEOUT_MINUTES || '30', 10) || 30,
+)
+const IDLE_TIMEOUT_MS = IDLE_TIMEOUT_MINUTES * 60 * 1000
+const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'touchstart']
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => (readAuthToken() ? readAuthUser() : null))
   const [status, setStatus] = useState(() => (readAuthToken() ? 'loading' : 'unauthenticated'))
   const [error, setError] = useState(null)
+  const idleTimerRef = useRef(null)
+
+  const clearIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) {
+      window.clearTimeout(idleTimerRef.current)
+      idleTimerRef.current = null
+    }
+  }, [])
 
   const clearAuth = useCallback(() => {
     writeAuthToken(null)
     writeAuthUser(null)
+    writeAuthLastActivityAt(null)
     setUser(null)
   }, [])
+
+  const finishIdleLogout = useCallback(async () => {
+    try {
+      await authApi.logout()
+    } catch {
+      // ignore API logout failure; local auth must still be cleared
+    } finally {
+      clearIdleTimer()
+      clearAuth()
+      setError('Tu sesión se cerró por inactividad. Inicia sesión nuevamente.')
+      setStatus('unauthenticated')
+    }
+  }, [clearAuth, clearIdleTimer])
+
+  const scheduleIdleLogout = useCallback(() => {
+    clearIdleTimer()
+
+    if (status !== 'authenticated') {
+      return
+    }
+
+    const lastActivityAt = readAuthLastActivityAt() ?? Date.now()
+    const remainingMs = IDLE_TIMEOUT_MS - (Date.now() - lastActivityAt)
+
+    if (remainingMs <= 0) {
+      void finishIdleLogout()
+      return
+    }
+
+    idleTimerRef.current = window.setTimeout(() => {
+      void finishIdleLogout()
+    }, remainingMs)
+  }, [clearIdleTimer, finishIdleLogout, status])
+
+  const registerActivity = useCallback(() => {
+    if (status !== 'authenticated') {
+      return
+    }
+
+    writeAuthLastActivityAt(Date.now())
+    scheduleIdleLogout()
+  }, [scheduleIdleLogout, status])
 
   const refresh = useCallback(async () => {
     const token = readAuthToken()
@@ -34,6 +100,7 @@ export function AuthProvider({ children }) {
       }
 
       writeAuthUser(data.user)
+      writeAuthLastActivityAt(Date.now())
       setUser(data.user)
       setStatus('authenticated')
       setError(null)
@@ -41,11 +108,12 @@ export function AuthProvider({ children }) {
       return data.user
     } catch (err) {
       clearAuth()
+      clearIdleTimer()
       setStatus('unauthenticated')
       setError(err?.message || 'No pudimos validar la sesión.')
       return null
     }
-  }, [clearAuth])
+  }, [clearAuth, clearIdleTimer])
 
   useEffect(() => {
     refresh()
@@ -53,6 +121,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const handleSessionInvalid = () => {
+      clearIdleTimer()
       clearAuth()
       setStatus('unauthenticated')
       setError('Tu sesión expiró. Inicia sesión nuevamente.')
@@ -63,7 +132,53 @@ export function AuthProvider({ children }) {
     return () => {
       window.removeEventListener('auth:session-invalid', handleSessionInvalid)
     }
-  }, [clearAuth])
+  }, [clearAuth, clearIdleTimer])
+
+  useEffect(() => {
+    if (status !== 'authenticated') {
+      clearIdleTimer()
+      return undefined
+    }
+
+    if (!readAuthLastActivityAt()) {
+      writeAuthLastActivityAt(Date.now())
+    }
+
+    scheduleIdleLogout()
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        registerActivity()
+      }
+    }
+
+    const handleStorage = (event) => {
+      if (event.key === AUTH_TOKEN_STORAGE_KEY && !event.newValue) {
+        clearIdleTimer()
+        clearAuth()
+        setError(null)
+        setStatus('unauthenticated')
+        return
+      }
+
+      scheduleIdleLogout()
+    }
+
+    ACTIVITY_EVENTS.forEach((eventName) => {
+      window.addEventListener(eventName, registerActivity, { passive: true })
+    })
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      ACTIVITY_EVENTS.forEach((eventName) => {
+        window.removeEventListener(eventName, registerActivity)
+      })
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('storage', handleStorage)
+      clearIdleTimer()
+    }
+  }, [clearAuth, clearIdleTimer, registerActivity, scheduleIdleLogout, status])
 
   const establishSession = useCallback((payload) => {
     if (!payload?.token || !payload?.user) {
@@ -72,6 +187,7 @@ export function AuthProvider({ children }) {
 
     writeAuthToken(payload.token)
     writeAuthUser(payload.user)
+    writeAuthLastActivityAt(Date.now())
     setUser(payload.user)
     setStatus('authenticated')
     setError(null)
@@ -124,12 +240,13 @@ export function AuthProvider({ children }) {
       } catch {
         // ignore API logout failure; local auth must still be cleared
       } finally {
+        clearIdleTimer()
         clearAuth()
         setError(null)
         setStatus('unauthenticated')
       }
     },
-    [clearAuth],
+    [clearAuth, clearIdleTimer],
   )
 
   const value = useMemo(

@@ -29,6 +29,8 @@ class UpdateTournamentRequest extends FormRequest
             'timezone' => ['nullable', 'string', 'max:100'],
             'start_date' => ['sometimes', 'date'],
             'end_date' => ['sometimes', 'date', 'after_or_equal:start_date'],
+            'entry_fee_amount' => ['nullable', 'integer', 'min:0'],
+            'entry_fee_currency' => ['nullable', 'string', 'max:10'],
             'registration_open_at' => ['nullable', 'date'],
             'registration_close_at' => ['nullable', 'date', 'after_or_equal:registration_open_at'],
             'day_start_time' => ['nullable', 'date_format:H:i'],

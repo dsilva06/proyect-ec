@@ -227,7 +227,7 @@ export default function Registrations() {
       if (!matchesSearch) return false
 
       const statusCode = getStatusCode(registration)
-      if (quickFilter === 'needs_payment') return statusCode === 'payment_pending'
+      if (quickFilter === 'needs_payment') return ['accepted', 'payment_pending'].includes(statusCode)
       if (quickFilter === 'missing_queue') return hasMissingQueue(registration)
       if (quickFilter === 'wildcards') return Boolean(registration.is_wildcard)
       if (quickFilter === 'paid') return shouldRefundRegistration(registration)
@@ -237,7 +237,7 @@ export default function Registrations() {
 
   const quickFilterCounts = useMemo(() => ({
     all: registrations.length,
-    needs_payment: registrations.filter((registration) => getStatusCode(registration) === 'payment_pending').length,
+    needs_payment: registrations.filter((registration) => ['accepted', 'payment_pending'].includes(getStatusCode(registration))).length,
     missing_queue: registrations.filter(hasMissingQueue).length,
     wildcards: registrations.filter((registration) => Boolean(registration.is_wildcard)).length,
     paid: registrations.filter((registration) => shouldRefundRegistration(registration)).length,
@@ -260,7 +260,7 @@ export default function Registrations() {
       const code = getStatusCode(registration)
       let columnKey = 'waitlist'
 
-      if (isAcceptedRegistration(registration)) {
+      if (isAcceptedRegistration(registration) || code === 'awaiting_partner_acceptance') {
         columnKey = 'accepted'
       } else if (shouldRefundRegistration(registration)) {
         columnKey = 'refund'

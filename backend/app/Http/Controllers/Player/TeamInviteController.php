@@ -26,6 +26,18 @@ class TeamInviteController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        $teamService = app(TeamService::class);
+        $invites = $invites->map(fn (TeamInvite $invite) => $teamService->refreshInviteState($invite->load([
+            'status',
+            'team.status',
+            'team.creator',
+            'team.users',
+            'team.registration.status',
+            'team.registration.payments.status',
+            'team.registration.tournamentCategory.tournament',
+            'team.registration.tournamentCategory.category',
+        ])));
+
         return TeamInviteResource::collection($invites);
     }
 
@@ -44,20 +56,47 @@ class TeamInviteController extends Controller
     {
         $invite = app(TeamService::class)->acceptInvite($request->user(), $teamInvite);
 
-        return new TeamInviteResource($invite);
+        return new TeamInviteResource($invite->load([
+            'status',
+            'team.status',
+            'team.creator',
+            'team.users',
+            'team.registration.status',
+            'team.registration.payments.status',
+            'team.registration.tournamentCategory.tournament',
+            'team.registration.tournamentCategory.category',
+        ]));
     }
 
     public function reject(Request $request, TeamInvite $teamInvite)
     {
         $invite = app(TeamService::class)->rejectInvite($request->user(), $teamInvite);
 
-        return new TeamInviteResource($invite);
+        return new TeamInviteResource($invite->load([
+            'status',
+            'team.status',
+            'team.creator',
+            'team.users',
+            'team.registration.status',
+            'team.registration.payments.status',
+            'team.registration.tournamentCategory.tournament',
+            'team.registration.tournamentCategory.category',
+        ]));
     }
 
     public function resend(Request $request, TeamInvite $teamInvite)
     {
         $invite = app(TeamService::class)->resendInvite($request->user(), $teamInvite);
 
-        return new TeamInviteResource($invite);
+        return new TeamInviteResource($invite->load([
+            'status',
+            'team.status',
+            'team.creator',
+            'team.users',
+            'team.registration.status',
+            'team.registration.payments.status',
+            'team.registration.tournamentCategory.tournament',
+            'team.registration.tournamentCategory.category',
+        ]));
     }
 }

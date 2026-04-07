@@ -18,6 +18,8 @@ class PaymentController extends Controller
             ->with([
                 'status',
                 'paidBy',
+                'registration.status',
+                'registration.team',
                 'registration.tournamentCategory.tournament',
                 'registration.tournamentCategory.category',
             ])

@@ -47,7 +47,10 @@ class AuthSecurityTest extends TestCase
         ])
             ->assertStatus(422)
             ->assertJson([
-                'message' => 'Invalid credentials',
+                'message' => 'Validation error',
+                'errors' => [
+                    'email' => ['Invalid credentials'],
+                ],
             ]);
     }
 
@@ -82,9 +85,12 @@ class AuthSecurityTest extends TestCase
             'email' => 'inactive@test.dev',
             'password' => 'Password123!',
         ])
-            ->assertStatus(403)
+            ->assertStatus(422)
             ->assertJson([
-                'message' => 'User is inactive',
+                'message' => 'Validation error',
+                'errors' => [
+                    'email' => ['Account is inactive'],
+                ],
             ]);
     }
 
@@ -150,7 +156,7 @@ class AuthSecurityTest extends TestCase
             ->postJson('/api/auth/logout')
             ->assertOk()
             ->assertJson([
-                'message' => 'Logged out',
+                'message' => 'Logged out successfully',
             ]);
 
         $this->assertNull(PersonalAccessToken::findToken($currentToken->plainTextToken));
@@ -174,6 +180,56 @@ class AuthSecurityTest extends TestCase
             ->assertJsonPath('user.role', 'player')
             ->assertJsonMissingPath('user.password_hash')
             ->assertJsonMissingPath('user.remember_token');
+    }
+
+    public function test_idle_token_is_rejected_after_configured_inactivity_window(): void
+    {
+        config(['sanctum.idle_timeout' => 30]);
+
+        $user = User::factory()->create([
+            'email' => 'idle-player@test.dev',
+            'role' => 'player',
+            'is_active' => true,
+        ]);
+
+        $token = $user->createToken('auth_token');
+        $storedToken = PersonalAccessToken::findToken($token->plainTextToken);
+
+        $storedToken->forceFill([
+            'last_used_at' => now()->subMinutes(31),
+        ])->save();
+
+        $this->withHeader('Authorization', 'Bearer '.$token->plainTextToken)
+            ->getJson('/api/auth/me')
+            ->assertStatus(401)
+            ->assertJson([
+                'message' => 'Unauthorized',
+            ]);
+
+        $this->assertNull(PersonalAccessToken::findToken($token->plainTextToken));
+    }
+
+    public function test_recent_token_activity_keeps_session_valid(): void
+    {
+        config(['sanctum.idle_timeout' => 30]);
+
+        $user = User::factory()->create([
+            'email' => 'active-player@test.dev',
+            'role' => 'player',
+            'is_active' => true,
+        ]);
+
+        $token = $user->createToken('auth_token');
+        $storedToken = PersonalAccessToken::findToken($token->plainTextToken);
+
+        $storedToken->forceFill([
+            'last_used_at' => now()->subMinutes(5),
+        ])->save();
+
+        $this->withHeader('Authorization', 'Bearer '.$token->plainTextToken)
+            ->getJson('/api/auth/me')
+            ->assertOk()
+            ->assertJsonPath('user.email', 'active-player@test.dev');
     }
 
     public function test_login_validation_error_returns_standard_api_shape(): void

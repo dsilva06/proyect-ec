@@ -163,10 +163,9 @@ export default function Register() {
                   {invite && (
                     <div className="auth-status">
                       <span className="tag">Invitación pendiente</span>
-                      <p>
-                        Equipo: <strong>{invite.team?.display_name || 'Equipo'}</strong>
-                      </p>
-                      <p>Usa este correo para reclamar tu invitación automáticamente.</p>
+                      <p><strong>{invite.captain_name || 'Tu pareja'}</strong> te invitó a jugar {invite.tournament_name || 'el torneo'}.</p>
+                      <p>Categoría: <strong>{invite.category_name || 'Por confirmar'}</strong>.</p>
+                      <p>Usa este correo para que la invitación quede asociada automáticamente a tu perfil cuando verifiques la cuenta.</p>
                     </div>
                   )}
 

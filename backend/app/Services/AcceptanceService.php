@@ -24,6 +24,7 @@ class AcceptanceService
         $windowHours = $category->acceptance_window_hours;
         $seedingRule = $category->seeding_rule ?: 'ranking_desc';
         $wildcardSlots = max(0, (int) $category->wildcard_slots);
+        $requiresRanking = strtolower((string) ($category->tournament?->mode ?? '')) !== 'open';
 
         $registrations = Registration::query()
             ->where('tournament_category_id', $category->id)
@@ -41,7 +42,7 @@ class AcceptanceService
                 $wildcards[] = $registration;
                 continue;
             }
-            if (in_array($statusCode, ['paid', 'payment_pending'], true)) {
+            if (in_array($statusCode, ['paid', 'payment_pending', 'awaiting_partner_acceptance'], true)) {
                 $locked[] = $registration;
                 continue;
             }
@@ -54,13 +55,17 @@ class AcceptanceService
             $rankingA = $rankings->get(0)?->ranking_value;
             $rankingB = $rankings->get(1)?->ranking_value;
 
-            if ($rankingA === null || $rankingB === null) {
+            if (($rankingA === null || $rankingB === null) && $requiresRanking) {
                 $pending[] = $registration;
                 continue;
             }
 
-            $avg = ($rankingA + $rankingB) / 2;
-            $best = min($rankingA, $rankingB);
+            $avg = ($rankingA !== null && $rankingB !== null)
+                ? ($rankingA + $rankingB) / 2
+                : PHP_INT_MAX;
+            $best = ($rankingA !== null && $rankingB !== null)
+                ? min($rankingA, $rankingB)
+                : PHP_INT_MAX;
 
             $eligible[] = [
                 'registration' => $registration,

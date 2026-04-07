@@ -27,6 +27,8 @@ class TournamentResource extends JsonResource
             'timezone' => $this->timezone,
             'start_date' => optional($this->start_date)->toDateString(),
             'end_date' => optional($this->end_date)->toDateString(),
+            'entry_fee_amount' => $this->entry_fee_amount,
+            'entry_fee_currency' => $this->entry_fee_currency,
             'registration_open_at' => optional($this->registration_open_at)->toIso8601String(),
             'registration_close_at' => optional($this->registration_close_at)->toIso8601String(),
             'day_start_time' => $this->day_start_time,

@@ -19,6 +19,7 @@ class StatusSeeder extends Seeder
                 ['code' => 'waitlisted', 'terminal' => false],
                 ['code' => 'accepted', 'terminal' => false],
                 ['code' => 'payment_pending', 'terminal' => false],
+                ['code' => 'awaiting_partner_acceptance', 'terminal' => false],
                 ['code' => 'paid', 'terminal' => true],
                 ['code' => 'expired', 'terminal' => true],
                 ['code' => 'rejected', 'terminal' => true],

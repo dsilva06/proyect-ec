@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,6 +28,12 @@ class RegistrationResource extends JsonResource
             'rankings' => RegistrationRankingResource::collection($this->whenLoaded('rankings')),
             'has_ranking' => $this->whenLoaded('rankings', function () {
                 return $this->rankings->contains(fn ($ranking) => $ranking->ranking_value !== null);
+            }, null),
+            'partner_acceptance_pending' => $this->whenLoaded('team', function () {
+                return $this->team?->status?->code === Team::STATUS_PENDING_PARTNER_ACCEPTANCE;
+            }, null),
+            'payment_is_covered' => $this->whenLoaded('payments', function () {
+                return $this->payments->contains(fn ($payment) => $payment->status?->code === 'succeeded');
             }, null),
             'accepted_at' => optional($this->accepted_at)->toIso8601String(),
             'payment_due_at' => optional($this->payment_due_at)->toIso8601String(),

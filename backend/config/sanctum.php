@@ -7,6 +7,8 @@ return [
 
     'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 10080),
 
+    'idle_timeout' => env('SANCTUM_IDLE_TIMEOUT', 30),
+
     'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
 
     'middleware' => [
