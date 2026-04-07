@@ -882,8 +882,12 @@ main,
 }
 
 .tournaments-trello-card {
-  cursor: pointer;
+  cursor: grab;
   gap: 10px;
+}
+
+.tournaments-trello-card.is-updating {
+  cursor: progress;
 }
 
 .tournaments-settings-modal {
@@ -2128,34 +2132,78 @@ main,
 }
 
 .players-page {
-  gap: 18px;
+  gap: 22px;
 }
 
 .players-layout {
-  grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(300px, 0.78fr) minmax(0, 1.22fr);
   align-items: start;
+  gap: 18px;
 }
 
 .players-rule-card,
 .players-list-card {
-  gap: 14px;
+  gap: 16px;
 }
 
 .players-rule-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 12px;
+  align-items: end;
 }
 
 .players-rule-summary {
   margin: 0;
+  line-height: 1.6;
 }
 
 .players-list {
-  gap: 10px;
+  gap: 14px;
 }
 
 .player-item {
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  align-items: start;
+  grid-template-columns: minmax(220px, 1.5fr) minmax(160px, 0.95fr) minmax(120px, 0.72fr) minmax(130px, 0.78fr) minmax(200px, 1fr);
+  align-items: end;
+  gap: 16px 18px;
+}
+
+.player-item-summary,
+.player-item-field,
+.player-item-stat,
+.player-item-money,
+.player-item-actions {
+  min-width: 0;
+}
+
+.player-item-summary {
+  gap: 6px;
+  align-self: start;
+}
+
+.player-item-summary strong {
+  font-size: 1rem;
+}
+
+.player-item-summary span,
+.player-item-field span,
+.player-item-stat span,
+.player-item-money span {
+  line-height: 1.45;
+}
+
+.player-item-field input {
+  width: 100%;
+}
+
+.player-item-actions {
+  justify-content: flex-end;
+  align-self: end;
+}
+
+.player-item-actions .secondary-button,
+.player-item-actions .ghost-button {
+  min-width: 148px;
+  justify-content: center;
 }
 
 .players-modal {
@@ -2190,6 +2238,16 @@ main,
   gap: 10px;
 }
 
+@media (max-width: 1480px) {
+  .players-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .player-item {
+    grid-template-columns: minmax(220px, 1.25fr) minmax(160px, 0.95fr) minmax(130px, 0.8fr) minmax(130px, 0.8fr) minmax(200px, 1fr);
+  }
+}
+
 @media (max-width: 1100px) {
   .players-layout {
     grid-template-columns: 1fr;
@@ -2198,9 +2256,28 @@ main,
   .players-rule-grid {
     grid-template-columns: 1fr;
   }
+
+  .player-item {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .player-item-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 760px) {
+  .player-item {
+    grid-template-columns: 1fr;
+  }
+
+  .player-item-actions .secondary-button,
+  .player-item-actions .ghost-button {
+    width: 100%;
+  }
+
   .players-payout-create,
   .players-payout-item {
     grid-template-columns: 1fr;
@@ -5390,6 +5467,22 @@ label,
   display: none;
 }
 
+@media (max-width: 1480px) {
+  .admin-shell-pro:not(.admin-shell-player) {
+    grid-template-columns: minmax(220px, 258px) minmax(0, 1fr);
+    padding: clamp(14px, 2vw, 22px);
+    gap: 16px;
+  }
+
+  .admin-main .admin-header {
+    padding: 16px 18px;
+  }
+
+  .admin-main .admin-content {
+    gap: 24px;
+  }
+}
+
 @media (max-width: 1100px) {
   .admin-shell-pro:not(.admin-shell-player) {
     grid-template-columns: 1fr;
@@ -6099,6 +6192,13 @@ label,
   gap: 18px;
 }
 
+.admin-page-header > div:first-child,
+.panel-header > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
 .admin-page-header h3 {
   margin: 0;
   font-size: clamp(1.4rem, 2vw, 1.9rem);
@@ -6112,6 +6212,12 @@ label,
 
 .admin-page-actions {
   align-items: center;
+  justify-content: flex-end;
+  row-gap: 10px;
+}
+
+.admin-page-actions > * {
+  min-width: 0;
 }
 
 .admin-page-actions .primary-button,
@@ -6127,6 +6233,7 @@ label,
   padding: 22px;
   border-radius: 22px;
   box-shadow: 0 20px 42px rgba(0, 0, 0, 0.24);
+  min-width: 0;
 }
 
 .panel-header {
@@ -6211,6 +6318,7 @@ label,
   background: rgba(255, 255, 255, 0.04);
   border-radius: 16px;
   gap: 18px;
+  min-width: 0;
 }
 
 .registration-item strong {

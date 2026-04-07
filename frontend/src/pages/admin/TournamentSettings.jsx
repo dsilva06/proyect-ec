@@ -42,6 +42,13 @@ const TOURNAMENT_BOARD_COLUMNS = [
   { key: 'closed', label: 'Cerrados' },
 ]
 
+const TOURNAMENT_COLUMN_STATUS_CODES = {
+  planning: ['draft'],
+  registration: ['registration_open', 'registration_closed'],
+  live: ['in_progress'],
+  closed: ['published', 'completed', 'cancelled'],
+}
+
 const resolveTournamentBoardColumn = (statusCode) => {
   const code = String(statusCode || '').toLowerCase()
 
@@ -103,6 +110,9 @@ export default function TournamentSettings() {
   const [categoryForms, setCategoryForms] = useState({})
   const [categoryEdits, setCategoryEdits] = useState({})
   const [tournamentEdits, setTournamentEdits] = useState({})
+  const [draggedTournamentId, setDraggedTournamentId] = useState(null)
+  const [dropTargetColumnKey, setDropTargetColumnKey] = useState('')
+  const [updatingTournamentId, setUpdatingTournamentId] = useState(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -110,6 +120,26 @@ export default function TournamentSettings() {
     () => statuses.filter((status) => status.module === 'tournament'),
     [statuses],
   )
+
+  const statusByCode = useMemo(() => {
+    const map = new Map()
+    statusOptions.forEach((status) => {
+      map.set(String(status.code || '').toLowerCase(), status)
+    })
+    return map
+  }, [statusOptions])
+
+  const boardColumns = useMemo(() => TOURNAMENT_BOARD_COLUMNS.map((column) => {
+    const targetStatus = TOURNAMENT_COLUMN_STATUS_CODES[column.key]
+      .map((code) => statusByCode.get(code))
+      .find(Boolean)
+
+    return {
+      ...column,
+      targetStatusId: targetStatus ? String(targetStatus.id) : '',
+      canDrop: Boolean(targetStatus),
+    }
+  }), [statusByCode])
 
   const selectedTournament = useMemo(
     () => tournaments.find((tournament) => String(tournament.id) === String(selectedTournamentId)) || null,
@@ -170,7 +200,7 @@ export default function TournamentSettings() {
 
   const tournamentsByColumn = useMemo(() => {
     const buckets = new Map()
-    TOURNAMENT_BOARD_COLUMNS.forEach((column) => buckets.set(column.key, []))
+    boardColumns.forEach((column) => buckets.set(column.key, []))
 
     filteredTournaments.forEach((tournament) => {
       const column = resolveTournamentBoardColumn(tournament.status?.code)
@@ -183,7 +213,7 @@ export default function TournamentSettings() {
     }
 
     return buckets
-  }, [filteredTournaments])
+  }, [boardColumns, filteredTournaments])
 
   const load = async () => {
     try {
@@ -296,11 +326,72 @@ export default function TournamentSettings() {
 
   const handleStatusChange = async (tournamentId, statusId) => {
     try {
+      setError('')
+      setMessage('')
+      setUpdatingTournamentId(String(tournamentId))
       await adminTournamentsApi.updateStatus(tournamentId, statusId)
       await load()
     } catch (err) {
       setError(err?.message || 'No pudimos actualizar el estado.')
+    } finally {
+      setUpdatingTournamentId(null)
     }
+  }
+
+  const clearDragState = () => {
+    setDraggedTournamentId(null)
+    setDropTargetColumnKey('')
+  }
+
+  const handleTournamentDragStart = (event, tournamentId) => {
+    const id = String(tournamentId)
+    event.dataTransfer.setData('text/plain', id)
+    event.dataTransfer.effectAllowed = 'move'
+    setDraggedTournamentId(id)
+  }
+
+  const handleTournamentDragEnd = () => {
+    clearDragState()
+  }
+
+  const handleColumnDragOver = (event, columnKey, canDrop) => {
+    if (!canDrop) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    setDropTargetColumnKey(String(columnKey))
+  }
+
+  const handleColumnDrop = async (event, column) => {
+    event.preventDefault()
+
+    if (!column.canDrop || !column.targetStatusId) {
+      clearDragState()
+      return
+    }
+
+    const droppedTournamentId = String(
+      event.dataTransfer.getData('text/plain') || draggedTournamentId || '',
+    )
+
+    if (!droppedTournamentId) {
+      clearDragState()
+      return
+    }
+
+    const tournament = tournaments.find((item) => String(item.id) === droppedTournamentId)
+    if (!tournament) {
+      clearDragState()
+      return
+    }
+
+    const currentColumnKey = resolveTournamentBoardColumn(tournament.status?.code)
+    if (currentColumnKey === column.key) {
+      clearDragState()
+      return
+    }
+
+    await handleStatusChange(droppedTournamentId, column.targetStatusId)
+    clearDragState()
   }
 
   const handleTournamentEdit = (tournamentId, field, value) => {
@@ -467,14 +558,18 @@ export default function TournamentSettings() {
 
   const renderTournamentPreviewCard = (tournament) => {
     const categoryCount = tournament.categories?.length || 0
+    const tournamentId = String(tournament.id)
 
     return (
       <article
         key={tournament.id}
-        className="registrations-kanban-card tournaments-trello-card"
+        className={`registrations-kanban-card tournaments-trello-card${draggedTournamentId === tournamentId ? ' is-dragging' : ''}${updatingTournamentId === tournamentId ? ' is-updating' : ''}`}
         role="button"
         tabIndex={0}
+        draggable
         onClick={() => openTournamentModal(tournament.id)}
+        onDragStart={(event) => handleTournamentDragStart(event, tournament.id)}
+        onDragEnd={handleTournamentDragEnd}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
@@ -1306,17 +1401,22 @@ export default function TournamentSettings() {
         <div className="empty-state">No hay torneos para mostrar con ese filtro.</div>
       ) : (
         <div className="registrations-kanban-board tournaments-trello-board">
-          {TOURNAMENT_BOARD_COLUMNS.map((column) => {
+          {boardColumns.map((column) => {
             const items = tournamentsByColumn.get(column.key) || []
             return (
-              <section key={column.key} className="registrations-kanban-column tournaments-trello-column">
+              <section
+                key={column.key}
+                className={`registrations-kanban-column tournaments-trello-column${!column.canDrop ? ' is-readonly' : ''}${dropTargetColumnKey === column.key ? ' is-drop-target' : ''}`}
+                onDragOver={(event) => handleColumnDragOver(event, column.key, column.canDrop)}
+                onDrop={(event) => handleColumnDrop(event, column)}
+              >
                 <div className="registrations-kanban-column-header">
                   <h5>{column.label}</h5>
                   <span className="tag muted">{items.length}</span>
                 </div>
                 <div className="registrations-kanban-column-body">
                   {items.length === 0
-                    ? <div className="registrations-kanban-empty">Sin torneos en esta etapa.</div>
+                    ? <div className="registrations-kanban-empty">{column.canDrop ? 'Suelta un torneo aquí.' : 'Sin torneos en esta etapa.'}</div>
                     : items.map((tournament) => renderTournamentPreviewCard(tournament))}
                 </div>
               </section>

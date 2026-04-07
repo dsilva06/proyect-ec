@@ -397,12 +397,12 @@ export default function Rankings() {
 
                 return (
                   <div key={player.id} className="registration-item player-item">
-                    <div>
+                    <div className="player-item-summary">
                       <strong>{player.name}</strong>
                       <span>{player.email}</span>
                       <span className="muted">Interno: {player.internal_rank ? `#${player.internal_rank}` : '—'} · {player.internal_points ?? '—'} pts</span>
                     </div>
-                    <div>
+                    <div className="player-item-field">
                       <span>Ranking FEP</span>
                       <input
                         type="number"
@@ -411,15 +411,15 @@ export default function Rankings() {
                         onChange={(event) => handleRankingEdit(player.id, event.target.value)}
                       />
                     </div>
-                    <div>
+                    <div className="player-item-stat">
                       <span>Palmarés</span>
                       <strong>{player.matches_won ?? 0} G / {player.matches_played ?? 0} PJ</strong>
                     </div>
-                    <div>
+                    <div className="player-item-money">
                       <span>Premios EUR</span>
                       <strong>{formatMoney(player.prize_total_eur_cents)}</strong>
                     </div>
-                    <div className="form-actions">
+                    <div className="form-actions player-item-actions">
                       <button className="secondary-button" type="button" onClick={() => handleSaveFep(player)}>
                         Guardar FEP
                       </button>
