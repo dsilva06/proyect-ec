@@ -86,6 +86,19 @@ export default function AdminLayout() {
     setIsSidebarOpen(false)
   }, [location.pathname])
 
+  useEffect(() => {
+    if (!isSidebarOpen) return undefined
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isSidebarOpen])
+
   const handleCloseSidebar = () => setIsSidebarOpen(false)
 
   return (
@@ -148,18 +161,18 @@ export default function AdminLayout() {
               <span className="admin-email">{user?.email}</span>
             </div>
             <div className="admin-user-actions">
-              <button className="secondary-button" type="button" onClick={logout}>
-                Cerrar sesión
-              </button>
               <button
                 className="ghost-button admin-menu-toggle"
                 type="button"
-                aria-label="Abrir menú de navegación"
+                aria-label={isSidebarOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
                 aria-expanded={isSidebarOpen}
                 aria-controls="admin-sidebar-nav"
                 onClick={() => setIsSidebarOpen((prev) => !prev)}
               >
-                Menú
+                {isSidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
+              </button>
+              <button className="secondary-button" type="button" onClick={logout}>
+                Cerrar sesión
               </button>
             </div>
           </div>

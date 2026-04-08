@@ -74,3 +74,9 @@ npm run build
 4. Cron del scheduler activo.
 5. Worker de queue activo.
 6. SPA deploy con fallback a `index.html` sin reescribir `/api/*`.
+
+## SPA refresh / deep links
+- El frontend usa `BrowserRouter`, asi que refrescar una ruta como `/admin/players` o `/player/profile` requiere fallback del host a `index.html`.
+- Netlify: `frontend/public/_redirects` ya incluye `/* /index.html 200`.
+- Vercel: `frontend/vercel.json` ya incluye rewrite SPA a `index.html`.
+- Nginx: usar el ejemplo en `docs/deploy/nginx.conf.example` y mantener `/api/*` y `/sanctum/*` fuera del fallback.

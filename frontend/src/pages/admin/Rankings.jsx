@@ -318,7 +318,7 @@ export default function Rankings() {
           <h3>Jugadores</h3>
           <p>Ranking interno por categoría, ranking FEP y palmarés completo del jugador.</p>
         </div>
-        <div className="admin-page-actions">
+        <div className="admin-page-actions players-filters">
           <select value={filters.category_id} onChange={handleFilterChange('category_id')}>
             <option value="">Todas las categorías</option>
             {categories.map((category) => (
@@ -382,9 +382,12 @@ export default function Rankings() {
         </div>
 
         <div className="panel-card players-list-card">
-          <div className="panel-header">
-            <h4>Listado de jugadores</h4>
-            <span className="tag muted">{players.length}</span>
+          <div className="panel-header players-list-header">
+            <div>
+              <h4>Listado de jugadores</h4>
+              <p>Consulta métricas clave, ajusta el ranking FEP y abre el detalle completo cuando haga falta.</p>
+            </div>
+            <span className="tag muted">{players.length} jugadores</span>
           </div>
 
           {players.length === 0 ? (
@@ -398,34 +401,47 @@ export default function Rankings() {
                 return (
                   <div key={player.id} className="registration-item player-item">
                     <div className="player-item-summary">
-                      <strong>{player.name}</strong>
-                      <span>{player.email}</span>
-                      <span className="muted">Interno: {player.internal_rank ? `#${player.internal_rank}` : '—'} · {player.internal_points ?? '—'} pts</span>
+                      <div className="player-item-topline">
+                        <strong>{player.name}</strong>
+                        <span>{player.email}</span>
+                      </div>
+                      <div className="player-item-badges">
+                        <span className="tag muted">
+                          Interno {player.internal_rank ? `#${player.internal_rank}` : 'Sin ranking'}
+                        </span>
+                        <span className="tag muted">
+                          {player.internal_points ?? 0} pts
+                        </span>
+                      </div>
                     </div>
-                    <div className="player-item-field">
-                      <span>Ranking FEP</span>
-                      <input
-                        type="number"
-                        min="1"
-                        value={fepValue}
-                        onChange={(event) => handleRankingEdit(player.id, event.target.value)}
-                      />
+                    <div className="player-item-metrics">
+                      <div className="player-item-stat">
+                        <span>Palmarés</span>
+                        <strong>{player.matches_won ?? 0} G / {player.matches_played ?? 0} PJ</strong>
+                      </div>
+                      <div className="player-item-money">
+                        <span>Premios EUR</span>
+                        <strong>{formatMoney(player.prize_total_eur_cents)}</strong>
+                      </div>
                     </div>
-                    <div className="player-item-stat">
-                      <span>Palmarés</span>
-                      <strong>{player.matches_won ?? 0} G / {player.matches_played ?? 0} PJ</strong>
-                    </div>
-                    <div className="player-item-money">
-                      <span>Premios EUR</span>
-                      <strong>{formatMoney(player.prize_total_eur_cents)}</strong>
-                    </div>
-                    <div className="form-actions player-item-actions">
-                      <button className="secondary-button" type="button" onClick={() => handleSaveFep(player)}>
-                        Guardar FEP
-                      </button>
-                      <button className="ghost-button" type="button" onClick={() => openPlayerModal(player)}>
-                        Ver jugador
-                      </button>
+                    <div className="player-item-editor">
+                      <label className="player-item-field">
+                        <span>Ranking FEP</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={fepValue}
+                          onChange={(event) => handleRankingEdit(player.id, event.target.value)}
+                        />
+                      </label>
+                      <div className="form-actions player-item-actions">
+                        <button className="secondary-button" type="button" onClick={() => handleSaveFep(player)}>
+                          Guardar FEP
+                        </button>
+                        <button className="ghost-button" type="button" onClick={() => openPlayerModal(player)}>
+                          Ver detalle
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -528,7 +544,7 @@ export default function Rankings() {
 
                         return (
                           <div key={item.id} className="registration-item players-payout-item">
-                            <div>
+                            <div className="players-payout-summary">
                               <strong>{item.tournament_name}</strong>
                               <span>{item.category_name}</span>
                               <span className="muted">{formatDate(item.created_at)}</span>
@@ -557,7 +573,7 @@ export default function Rankings() {
                               <span>EUR</span>
                               <strong>{formatMoney(edit.amount_eur_cents ?? item.amount_eur_cents)}</strong>
                             </div>
-                            <div className="field-span-2">
+                            <div className="field-span-2 players-payout-note">
                               <span>Nota</span>
                               <input
                                 type="text"
@@ -565,7 +581,7 @@ export default function Rankings() {
                                 onChange={(event) => handlePayoutEdit(item.id, 'notes', event.target.value)}
                               />
                             </div>
-                            <div className="form-actions field-span-2">
+                            <div className="form-actions field-span-2 players-payout-actions">
                               <button className="secondary-button" type="button" onClick={() => handleSavePayout(item)}>
                                 Guardar
                               </button>
