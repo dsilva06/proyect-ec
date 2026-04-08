@@ -363,7 +363,9 @@ main,
 .contact-form label {
   display: grid;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--form-label-size);
+  font-weight: var(--form-label-weight);
+  line-height: 1.35;
   color: var(--color-muted);
 }
 
@@ -436,7 +438,9 @@ main,
 .auth-card label {
   display: grid;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--form-label-size);
+  font-weight: var(--form-label-weight);
+  line-height: 1.35;
   color: var(--color-muted);
 }
 
@@ -1259,7 +1263,9 @@ main,
 .form-grid label {
   display: grid;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--form-label-size);
+  font-weight: var(--form-label-weight);
+  line-height: 1.35;
   color: var(--color-muted);
 }
 
@@ -1388,7 +1394,9 @@ main,
 .registration-form label {
   display: grid;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--form-label-size);
+  font-weight: var(--form-label-weight);
+  line-height: 1.35;
   color: var(--color-muted);
 }
 
@@ -1520,7 +1528,9 @@ main,
   align-items: center;
   gap: 8px;
   color: var(--color-muted);
-  font-size: 0.85rem;
+  font-size: var(--form-label-size);
+  font-weight: var(--form-label-weight);
+  line-height: 1.35;
 }
 
 .table-controls select {
@@ -2022,7 +2032,9 @@ main,
 .registration-edit-panel label {
   display: grid;
   gap: 8px;
-  font-size: 0.84rem;
+  font-size: var(--form-label-size);
+  font-weight: var(--form-label-weight);
+  line-height: 1.35;
   color: var(--color-muted);
 }
 
@@ -3687,7 +3699,10 @@ textarea:focus-visible {
 .contact-form label,
 .auth-card label,
 .form-grid label,
-.registration-form label {
+.registration-form label,
+.registration-edit-panel label,
+.table-controls label,
+.draws-toolbar label {
   font-family: var(--font-body);
   color: rgba(239, 231, 211, 0.8);
 }
@@ -3695,6 +3710,7 @@ textarea:focus-visible {
 .contact-form input,
 .contact-form textarea,
 .auth-card input,
+.auth-card select,
 .registration-form input,
 .registration-form select,
 .registration-form textarea,
@@ -3707,9 +3723,14 @@ textarea:focus-visible {
 .matches-search,
 .date-picker-input,
 .time-input,
+.table-controls select,
 .registration-item input,
 .registration-item select,
 .registration-item textarea,
+.registration-edit-panel input,
+.registration-edit-panel select,
+.registration-edit-panel textarea,
+.registration-ranking-row input,
 .registrations-row input,
 .registrations-row select {
   border: 1px solid rgba(239, 231, 211, 0.18);
@@ -4180,6 +4201,7 @@ label,
 .contact-form input,
 .contact-form textarea,
 .auth-card input,
+.auth-card select,
 .registration-form input,
 .registration-form select,
 .registration-form textarea,
@@ -4192,9 +4214,14 @@ label,
 .matches-search,
 .date-picker-input,
 .time-input,
+.table-controls select,
 .registration-item input,
 .registration-item select,
 .registration-item textarea,
+.registration-edit-panel input,
+.registration-edit-panel select,
+.registration-edit-panel textarea,
+.registration-ranking-row input,
 .registrations-row input,
 .registrations-row select {
   border-color: rgba(239, 231, 211, 0.3);
@@ -4433,6 +4460,7 @@ label,
 .contact-form input,
 .contact-form textarea,
 .auth-card input,
+.auth-card select,
 .registration-form input,
 .registration-form select,
 .registration-form textarea,
@@ -4445,9 +4473,14 @@ label,
 .matches-search,
 .date-picker-input,
 .time-input,
+.table-controls select,
 .registration-item input,
 .registration-item select,
 .registration-item textarea,
+.registration-edit-panel input,
+.registration-edit-panel select,
+.registration-edit-panel textarea,
+.registration-ranking-row input,
 .registrations-row input,
 .registrations-row select {
   border-color: rgba(239, 231, 211, 0.28);
@@ -4459,6 +4492,7 @@ label,
 .contact-form input:focus,
 .contact-form textarea:focus,
 .auth-card input:focus,
+.auth-card select:focus,
 .registration-form input:focus,
 .registration-form select:focus,
 .registration-form textarea:focus,
@@ -4469,9 +4503,14 @@ label,
 .matches-search:focus,
 .date-picker-input:focus,
 .time-input:focus,
+.table-controls select:focus,
 .registration-item input:focus,
 .registration-item select:focus,
 .registration-item textarea:focus,
+.registration-edit-panel input:focus,
+.registration-edit-panel select:focus,
+.registration-edit-panel textarea:focus,
+.registration-ranking-row input:focus,
 .registrations-row input:focus,
 .registrations-row select:focus {
   border-color: rgba(183, 207, 79, 0.76);
@@ -4818,13 +4857,14 @@ label,
 
   .auth-page .auth-card label {
     gap: 6px;
-    font-size: 0.92rem;
+    font-size: var(--form-label-size);
     color: rgba(239, 231, 211, 0.9);
   }
 
-  .auth-page .auth-card input {
-    min-height: 44px;
-    font-size: 0.95rem;
+  .auth-page .auth-card input,
+  .auth-page .auth-card select {
+    min-height: 48px;
+    font-size: var(--form-control-size);
   }
 
   .auth-page .auth-submit {
@@ -5878,8 +5918,34 @@ label,
 
 .auth-field-hint {
   color: rgba(239, 231, 211, 0.72);
-  font-size: 0.76rem;
+  font-size: var(--form-help-size);
+  font-weight: 600;
   line-height: 1.35;
+}
+
+label {
+  font-size: var(--form-label-size);
+  font-weight: var(--form-label-weight);
+}
+
+input,
+textarea,
+select {
+  font-size: var(--form-control-size);
+  font-weight: var(--form-control-weight);
+  line-height: 1.4;
+}
+
+input::placeholder,
+textarea::placeholder,
+select {
+  font-size: var(--form-control-size);
+}
+
+input:not([type='checkbox']):not([type='radio']),
+textarea,
+select {
+  min-height: 48px;
 }
 
 .auth-side-panel {

@@ -29,6 +29,11 @@
   --font-display: 'Rounded Elegance', 'Segoe UI', sans-serif;
   --font-display-light: 'Rounded Elegance', 'Segoe UI', sans-serif;
   --font-body: 'Rounded Elegance', 'Segoe UI', sans-serif;
+  --form-label-size: 0.98rem;
+  --form-label-weight: 700;
+  --form-control-size: 1rem;
+  --form-control-weight: 600;
+  --form-help-size: 0.88rem;
   --color-midnight: #080c38;
   --color-dark-blue: #1a0025;
   --color-portland-orange: #ff5e33;
@@ -93,7 +98,8 @@ button {
 }
 
 input,
-textarea {
+textarea,
+select {
   font-family: var(--font-body);
 }
 
