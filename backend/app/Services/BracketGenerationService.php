@@ -27,9 +27,9 @@ class BracketGenerationService
         }
 
         $maxTeams = (int) $category->max_teams;
-        if (! in_array($maxTeams, [32, 64, 128], true)) {
+        if (! in_array($maxTeams, [2, 4, 8, 16, 32, 64, 128], true)) {
             throw ValidationException::withMessages([
-                'draw_size' => 'El tamaño del cuadro debe ser 32, 64 o 128.',
+                'draw_size' => 'El tamaño del cuadro debe ser 2, 4, 8, 16, 32, 64 o 128.',
             ]);
         }
 
