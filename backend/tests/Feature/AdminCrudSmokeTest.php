@@ -51,7 +51,10 @@ class AdminCrudSmokeTest extends TestCase
             'name' => 'CRUD Tournament',
             'entry_fee_amount' => 25,
             'entry_fee_currency' => 'EUR',
+            'classification_method' => Tournament::CLASSIFICATION_SELF_SELECTED,
         ]);
+
+        $tournamentResponse->assertJsonPath('classification_method', Tournament::CLASSIFICATION_SELF_SELECTED);
 
         $categoryResponse = $this->postJson("/api/admin/tournaments/{$tournamentId}/categories", [
             'category_id' => $category->id,
@@ -77,6 +80,7 @@ class AdminCrudSmokeTest extends TestCase
         $updateTournament = $this->putJson("/api/admin/tournaments/{$tournamentId}", [
             'name' => 'CRUD Tournament Updated',
             'entry_fee_amount' => 30,
+            'classification_method' => Tournament::CLASSIFICATION_REFEREE_ASSIGNED,
         ]);
 
         $updateTournament->assertOk();
@@ -84,7 +88,10 @@ class AdminCrudSmokeTest extends TestCase
             'id' => $tournamentId,
             'name' => 'CRUD Tournament Updated',
             'entry_fee_amount' => 30,
+            'classification_method' => Tournament::CLASSIFICATION_REFEREE_ASSIGNED,
         ]);
+
+        $updateTournament->assertJsonPath('classification_method', Tournament::CLASSIFICATION_REFEREE_ASSIGNED);
 
         $updateCategory = $this->patchJson("/api/admin/tournament-categories/{$tournamentCategoryId}", [
             'wildcard_slots' => 2,
@@ -229,6 +236,7 @@ class AdminCrudSmokeTest extends TestCase
         $tournament = Tournament::query()->create([
             'name' => 'Tournament '.$levelCode,
             'mode' => 'amateur',
+            'classification_method' => Tournament::CLASSIFICATION_SELF_SELECTED,
             'status_id' => $this->statusId('tournament', 'registration_open'),
             'start_date' => now()->toDateString(),
             'end_date' => now()->addDays(2)->toDateString(),

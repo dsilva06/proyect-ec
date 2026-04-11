@@ -20,6 +20,7 @@ class StoreTournamentRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'mode' => ['required', 'in:pro,amateur,open'],
+            'classification_method' => ['nullable', 'in:self_selected,referee_assigned'],
             'status_id' => ['nullable', 'exists:statuses,id'],
             'venue_name' => ['nullable', 'string', 'max:255'],
             'venue_address' => ['nullable', 'string', 'max:255'],

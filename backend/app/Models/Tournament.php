@@ -10,11 +10,16 @@ class Tournament extends Model
     /** @use HasFactory<\Database\Factories\TournamentFactory> */
     use HasFactory;
 
+    public const CLASSIFICATION_SELF_SELECTED = 'self_selected';
+
+    public const CLASSIFICATION_REFEREE_ASSIGNED = 'referee_assigned';
+
     protected $fillable = [
         'circuit_id',
         'name',
         'description',
         'mode',
+        'classification_method',
         'status_id',
         'venue_name',
         'venue_address',
@@ -35,6 +40,10 @@ class Tournament extends Model
         'prize_money',
         'prize_currency',
         'created_by',
+    ];
+
+    protected $attributes = [
+        'classification_method' => self::CLASSIFICATION_SELF_SELECTED,
     ];
 
     protected $casts = [

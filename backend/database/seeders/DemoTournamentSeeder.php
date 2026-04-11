@@ -50,6 +50,7 @@ class DemoTournamentSeeder extends Seeder
             'name' => $tournamentName,
             'description' => 'Torneo demo con 32 parejas para probar el cuadro.',
             'mode' => 'pro',
+            'classification_method' => Tournament::CLASSIFICATION_SELF_SELECTED,
             'status_id' => $tournamentStatus,
             'venue_name' => 'Club Demo',
             'venue_address' => 'Calle Principal 123',

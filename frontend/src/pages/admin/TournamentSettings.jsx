@@ -13,6 +13,7 @@ import { cleanPayload } from '../../utils/cleanPayload'
 const initialTournamentForm = {
   name: '',
   mode: 'amateur',
+  classification_method: 'self_selected',
   description: '',
   start_date: '',
   end_date: '',
@@ -65,6 +66,12 @@ const getTournamentModeLabel = (mode) => {
   if (normalized === 'pro') return 'PRO'
   if (normalized === 'open') return 'OPEN'
   return 'Amateur'
+}
+
+const getClassificationMethodLabel = (classificationMethod) => {
+  const normalized = String(classificationMethod || '').toLowerCase()
+  if (normalized === 'referee_assigned') return 'Asignación por árbitro'
+  return 'Selección de categoría'
 }
 
 const tournamentUsesRanking = (mode) => String(mode || '').toLowerCase() !== 'open'
@@ -604,6 +611,7 @@ export default function TournamentSettings() {
         </div>
         <div className="registrations-trello-card-foot">
           <span className="registrations-trello-category">{getTournamentModeLabel(tournament.mode)}</span>
+          <span className="tag muted">{getClassificationMethodLabel(tournament.classification_method)}</span>
           <span className="tag muted">{categoryCount} categorías</span>
         </div>
       </article>
@@ -724,6 +732,18 @@ export default function TournamentSettings() {
                 <option value="amateur">Amateur</option>
                 <option value="pro">Pro</option>
                 <option value="open">OPEN</option>
+              </select>
+            </label>
+            <label>
+              Clasificación
+              <select
+                value={tournamentEdits[tournament.id]?.classification_method ?? tournament.classification_method ?? 'self_selected'}
+                onChange={(event) =>
+                  handleTournamentEdit(tournament.id, 'classification_method', event.target.value)
+                }
+              >
+                <option value="self_selected">Selección de categoría</option>
+                <option value="referee_assigned">Asignación por árbitro</option>
               </select>
             </label>
             <label>
@@ -1126,6 +1146,13 @@ export default function TournamentSettings() {
                   <option value="amateur">Amateur</option>
                   <option value="pro">Pro</option>
                   <option value="open">OPEN</option>
+                </select>
+              </label>
+              <label>
+                Clasificación
+                <select value={form.classification_method} onChange={handleTournamentChange('classification_method')}>
+                  <option value="self_selected">Selección de categoría</option>
+                  <option value="referee_assigned">Asignación por árbitro</option>
                 </select>
               </label>
               <label>

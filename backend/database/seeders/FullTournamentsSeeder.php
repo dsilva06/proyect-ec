@@ -88,6 +88,7 @@ class FullTournamentsSeeder extends Seeder
                     'name' => $definition['name'],
                     'description' => 'Torneo sembrado automaticamente con todas las categorias completas.',
                     'mode' => $definition['mode'],
+                    'classification_method' => Tournament::CLASSIFICATION_SELF_SELECTED,
                     'status_id' => $tournamentStatusId,
                     'venue_name' => $definition['venue_name'],
                     'venue_address' => $definition['venue_address'],

@@ -18,6 +18,7 @@ class TournamentResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'mode' => $this->mode,
+            'classification_method' => $this->classification_method,
             'status' => new StatusResource($this->whenLoaded('status')),
             'venue_name' => $this->venue_name,
             'venue_address' => $this->venue_address,

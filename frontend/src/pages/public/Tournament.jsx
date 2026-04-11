@@ -77,6 +77,12 @@ const isOpenTournament = (tournament) => String(tournament?.mode || '').toLowerC
 
 const isOpenCategory = (category) => String(category?.category?.level_code || '').toLowerCase() === 'open'
 
+const getClassificationMethodLabel = (classificationMethod) => {
+  const normalized = String(classificationMethod || '').toLowerCase()
+  if (normalized === 'referee_assigned') return 'Asignación por árbitro'
+  return 'Selección de categoría'
+}
+
 const getRegistrationMessage = (registrationStatusCode) => {
   const code = String(registrationStatusCode || '').toLowerCase()
 
@@ -299,6 +305,10 @@ export default function Tournament() {
                     <strong>{categories.length}</strong>
                   </div>
                   <div>
+                    <span>Clasificación</span>
+                    <strong>{getClassificationMethodLabel(tournament.classification_method)}</strong>
+                  </div>
+                  <div>
                     <span>Costo inscripción</span>
                     <strong>{formatTournamentFee(tournament)}</strong>
                   </div>
@@ -369,6 +379,10 @@ export default function Tournament() {
                       <div>
                         <span>Costo inscripción</span>
                         <strong>{formatTournamentFee(tournament)}</strong>
+                      </div>
+                      <div>
+                        <span>Clasificación</span>
+                        <strong>{getClassificationMethodLabel(tournament.classification_method)}</strong>
                       </div>
                       <div>
                         <span>Premio total</span>

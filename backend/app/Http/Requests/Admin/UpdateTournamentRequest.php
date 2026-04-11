@@ -20,6 +20,7 @@ class UpdateTournamentRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'mode' => ['sometimes', 'in:pro,amateur,open'],
+            'classification_method' => ['sometimes', 'in:self_selected,referee_assigned'],
             'status_id' => ['nullable', 'exists:statuses,id'],
             'venue_name' => ['nullable', 'string', 'max:255'],
             'venue_address' => ['nullable', 'string', 'max:255'],
