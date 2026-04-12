@@ -11,7 +11,7 @@ class TeamController extends Controller
 {
     public function store(StoreTeamRequest $request, TeamService $teamService)
     {
-        $team = $teamService->createTeamWithInvite($request->user(), $request->validated());
+        $team = $teamService->createTeam($request->user(), $request->validated());
 
         return new TeamResource($team->load('users'));
     }

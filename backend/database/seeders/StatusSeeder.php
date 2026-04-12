@@ -19,7 +19,6 @@ class StatusSeeder extends Seeder
                 ['code' => 'waitlisted', 'terminal' => false],
                 ['code' => 'accepted', 'terminal' => false],
                 ['code' => 'payment_pending', 'terminal' => false],
-                ['code' => 'awaiting_partner_acceptance', 'terminal' => false],
                 ['code' => 'paid', 'terminal' => true],
                 ['code' => 'expired', 'terminal' => true],
                 ['code' => 'rejected', 'terminal' => true],
@@ -69,15 +68,7 @@ class StatusSeeder extends Seeder
                 ['code' => 'failed', 'terminal' => true],
                 ['code' => 'cancelled', 'terminal' => true],
             ],
-            'team_invite' => [
-                ['code' => 'pending', 'terminal' => false],
-                ['code' => 'accepted', 'terminal' => true],
-                ['code' => 'rejected', 'terminal' => true],
-                ['code' => 'expired', 'terminal' => true],
-                ['code' => 'revoked', 'terminal' => true],
-            ],
             'team' => [
-                ['code' => 'pending_partner_acceptance', 'terminal' => false],
                 ['code' => 'confirmed', 'terminal' => false],
                 ['code' => 'cancelled', 'terminal' => true],
                 ['code' => 'expired', 'terminal' => true],

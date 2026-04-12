@@ -24,7 +24,8 @@ class AcceptanceService
         $windowHours = $category->acceptance_window_hours;
         $seedingRule = $category->seeding_rule ?: 'ranking_desc';
         $wildcardSlots = max(0, (int) $category->wildcard_slots);
-        $requiresRanking = strtolower((string) ($category->tournament?->mode ?? '')) !== 'open';
+        $isOpen = strtolower((string) ($category->tournament?->mode ?? '')) === 'open';
+        $requiresRanking = ! $isOpen;
 
         $registrations = Registration::query()
             ->where('tournament_category_id', $category->id)
@@ -42,8 +43,17 @@ class AcceptanceService
                 $wildcards[] = $registration;
                 continue;
             }
-            if (in_array($statusCode, ['paid', 'payment_pending', 'awaiting_partner_acceptance'], true)) {
+            if (in_array($statusCode, ['paid', 'payment_pending'], true)) {
                 $locked[] = $registration;
+                continue;
+            }
+
+            if ($isOpen) {
+                $eligible[] = [
+                    'registration' => $registration,
+                    'avg' => null,
+                    'best' => null,
+                ];
                 continue;
             }
 
@@ -74,9 +84,12 @@ class AcceptanceService
             ];
         }
 
-        usort($eligible, function ($a, $b) use ($seedingRule) {
-            if ($seedingRule === 'fifo') {
-                return $a['registration']->created_at <=> $b['registration']->created_at;
+        usort($eligible, function ($a, $b) use ($isOpen, $seedingRule) {
+            $createdAtComparison = $a['registration']->created_at <=> $b['registration']->created_at;
+            if ($isOpen || $seedingRule === 'fifo') {
+                return $createdAtComparison !== 0
+                    ? $createdAtComparison
+                    : ($a['registration']->id <=> $b['registration']->id);
             }
 
             if ($a['avg'] !== $b['avg']) {
@@ -85,7 +98,9 @@ class AcceptanceService
             if ($a['best'] !== $b['best']) {
                 return $a['best'] <=> $b['best'];
             }
-            return $a['registration']->created_at <=> $b['registration']->created_at;
+            return $createdAtComparison !== 0
+                ? $createdAtComparison
+                : ($a['registration']->id <=> $b['registration']->id);
         });
 
         $wildcardCount = min(count($wildcards), $wildcardSlots);
@@ -129,7 +144,7 @@ class AcceptanceService
             $this->statusService->transition($registration, 'registration', $nextStatus);
 
             $registration->queue_position = $acceptedOffset + $wildcardCount + $index + 1;
-            $registration->team_ranking_score = (int) round($item['avg']);
+            $registration->team_ranking_score = $isOpen ? null : (int) round($item['avg']);
             $registration->accepted_at = $registration->accepted_at ?? now();
             if ($windowHours && ! $registration->payment_due_at) {
                 $registration->payment_due_at = now()->addHours((int) $windowHours);
@@ -143,7 +158,7 @@ class AcceptanceService
             $this->statusService->transition($registration, 'registration', $waitlistStatusId);
 
             $registration->queue_position = $index + 1;
-            $registration->team_ranking_score = (int) round($item['avg']);
+            $registration->team_ranking_score = $isOpen ? null : (int) round($item['avg']);
             $registration->accepted_at = null;
             $registration->payment_due_at = null;
             $registration->save();

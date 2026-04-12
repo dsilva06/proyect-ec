@@ -2,17 +2,14 @@
 
 namespace App\Services;
 
-use App\Jobs\SendTeamInviteEmailJob;
 use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\RegistrationRanking;
 use App\Models\Team;
-use App\Models\TeamInvite;
 use App\Models\TeamMember;
 use App\Models\TournamentCategory;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -84,7 +81,7 @@ class TeamService
             $team = Team::query()->create([
                 'display_name' => $captain->name ?: 'Equipo',
                 'created_by' => $captain->id,
-                'status_id' => $this->statusService->resolveStatusId('team', Team::STATUS_PENDING_PARTNER_ACCEPTANCE),
+                'status_id' => $this->statusService->resolveStatusId('team', Team::STATUS_CONFIRMED),
             ]);
 
             TeamMember::query()->create([
@@ -115,7 +112,6 @@ class TeamService
                 'team.status',
                 'team.creator',
                 'team.users',
-                'team.invites.status',
                 'payments.status',
                 'tournamentCategory.tournament',
                 'tournamentCategory.category',
@@ -140,7 +136,6 @@ class TeamService
                     'rankings',
                     'team.status',
                     'team.creator',
-                    'team.invites.status',
                     'tournamentCategory.tournament',
                     'tournamentCategory.category',
                 ])
@@ -174,11 +169,11 @@ class TeamService
                 );
             }
 
-            return $this->ensureInviteAfterSuccessfulPayment($registration, $actor);
+            return $this->finalizeRegistrationAfterSuccessfulPayment($registration, $actor);
         });
     }
 
-    public function ensureInviteAfterSuccessfulPayment(Registration|int $registration, ?User $actor = null): Registration
+    public function finalizeRegistrationAfterSuccessfulPayment(Registration|int $registration, ?User $actor = null): Registration
     {
         $registrationId = $registration instanceof Registration ? (int) $registration->id : (int) $registration;
 
@@ -192,9 +187,9 @@ class TeamService
                     'payments.paidBy',
                     'rankings',
                     'team.status',
+                    'team.members',
                     'team.creator',
                     'team.users.playerProfile',
-                    'team.invites.status',
                     'tournamentCategory.tournament.status',
                     'tournamentCategory.category',
                     'rankings.user.playerProfile',
@@ -202,48 +197,41 @@ class TeamService
                 ])
                 ->firstOrFail();
 
-            $invite = $registration->team?->invites
-                ?->first(fn (TeamInvite $teamInvite) => strcasecmp((string) $teamInvite->invited_email, (string) $this->resolvePartnerEmail($registration)) === 0);
+            $team = $registration->team;
+            $partnerEmail = $this->resolvePartnerEmail($registration);
+            $partnerUser = $partnerEmail
+                ? User::query()->where('email', $partnerEmail)->first()
+                : null;
 
-            $didCreateInvite = false;
-
-            if (! $invite) {
-                $partnerEmail = $this->resolvePartnerEmail($registration);
-                $partnerUser = $partnerEmail
-                    ? User::query()->where('email', $partnerEmail)->first()
-                    : null;
-
-                $invite = TeamInvite::query()->create([
-                    'team_id' => (int) $registration->team_id,
-                    'invited_email' => $partnerEmail,
-                    'invited_user_id' => $partnerUser?->id,
-                    'token' => (string) Str::uuid(),
-                    'status_id' => $this->statusService->resolveStatusId('team_invite', TeamInvite::STATUS_PENDING),
-                    'expires_at' => $this->resolveInviteExpiry($registration->tournamentCategory),
-                ]);
-                $didCreateInvite = true;
+            if ($team && $partnerUser) {
+                $this->ensurePartnerMember($team, $partnerUser);
+                $this->linkRegistrationRanking($team, $partnerUser);
+                $this->updateTeamDisplayName($team->fresh('users'));
             }
 
-            $awaitingPartnerStatusId = $this->statusService->resolveStatusId('registration', 'awaiting_partner_acceptance');
-            if (
-                (int) $registration->status_id !== (int) $awaitingPartnerStatusId
-                && $registration->team?->status?->code === Team::STATUS_PENDING_PARTNER_ACCEPTANCE
-            ) {
+            if ($team && $team->status?->code !== Team::STATUS_CONFIRMED) {
                 $this->statusService->transition(
-                    $registration,
-                    'registration',
-                    $awaitingPartnerStatusId,
+                    $team,
+                    'team',
+                    $this->statusService->resolveStatusId('team', Team::STATUS_CONFIRMED),
                     $actor?->id,
-                    'payment_succeeded_waiting_partner'
+                    'payment_succeeded'
                 );
             }
 
+            $paidStatusId = $this->statusService->resolveStatusId('registration', 'paid');
             $registration->accepted_at = $registration->accepted_at ?? now();
             $registration->payment_due_at = null;
-            $registration->save();
-
-            if ($didCreateInvite) {
-                SendTeamInviteEmailJob::dispatch($invite->id)->afterCommit();
+            if ((int) $registration->status_id !== (int) $paidStatusId) {
+                $this->statusService->transition(
+                    $registration,
+                    'registration',
+                    $paidStatusId,
+                    $actor?->id,
+                    'payment_succeeded'
+                );
+            } else {
+                $registration->save();
             }
 
             $this->acceptanceService->recalculateForTournamentCategory((int) $registration->tournament_category_id);
@@ -255,7 +243,6 @@ class TeamService
                 'team.status',
                 'team.creator',
                 'team.users.playerProfile',
-                'team.invites.status',
                 'tournamentCategory.tournament.status',
                 'tournamentCategory.category',
                 'rankings.user.playerProfile',
@@ -264,81 +251,21 @@ class TeamService
         });
     }
 
-    public function refreshInviteState(TeamInvite $invite): TeamInvite
-    {
-        $invite->loadMissing(['status', 'team.status', 'team.registration.status']);
-
-        if (
-            $invite->status?->code === TeamInvite::STATUS_PENDING &&
-            $invite->expires_at &&
-            $invite->expires_at->isPast()
-        ) {
-            return DB::transaction(function () use ($invite): TeamInvite {
-                $lockedInvite = TeamInvite::query()
-                    ->whereKey($invite->id)
-                    ->lockForUpdate()
-                    ->with(['status', 'team.status', 'team.registration.status'])
-                    ->firstOrFail();
-
-                if ($lockedInvite->status?->code !== TeamInvite::STATUS_PENDING) {
-                    return $lockedInvite;
-                }
-
-                if (! $lockedInvite->expires_at || ! $lockedInvite->expires_at->isPast()) {
-                    return $lockedInvite;
-                }
-
-                $this->statusService->transition(
-                    $lockedInvite,
-                    'team_invite',
-                    $this->statusService->resolveStatusId('team_invite', TeamInvite::STATUS_EXPIRED),
-                    null,
-                    'invite_expired'
-                );
-
-                $team = $lockedInvite->team;
-                if ($team && ! in_array((string) $team->status?->code, [Team::STATUS_CONFIRMED, Team::STATUS_CANCELLED, Team::STATUS_EXPIRED], true)) {
-                    $this->statusService->transition(
-                        $team,
-                        'team',
-                        $this->statusService->resolveStatusId('team', Team::STATUS_EXPIRED),
-                        null,
-                        'invite_expired'
-                    );
-                }
-
-                $registration = $team?->registration;
-                if ($registration && ! in_array((string) $registration->status?->code, ['paid', 'cancelled', 'expired', 'rejected'], true)) {
-                    $this->statusService->transition(
-                        $registration,
-                        'registration',
-                        $this->statusService->resolveStatusId('registration', 'cancelled'),
-                        null,
-                        'invite_expired_after_payment'
-                    );
-                    $registration->cancelled_at = now();
-                    $registration->save();
-                }
-
-                return $lockedInvite->fresh(['status', 'team.status', 'team.registration.status']);
-            });
-        }
-
-        return $invite;
-    }
-
-    public function createTeamWithInvite(User $user, array $data): Team
+    public function createTeam(User $user, array $data): Team
     {
         $partnerEmail = Str::lower(trim((string) ($data['partner_email'] ?? '')));
+
+        if ($partnerEmail !== '' && strcasecmp($partnerEmail, (string) $user->email) === 0) {
+            throw ValidationException::withMessages([
+                'partner_email' => 'No puedes invitar tu propio correo como partner.',
+            ]);
+        }
 
         return DB::transaction(function () use ($user, $partnerEmail): Team {
             $team = Team::query()->create([
                 'display_name' => $user->name ?: 'Equipo',
                 'created_by' => $user->id,
-                'status_id' => $this->statusService->resolveStatusId(
-                    'team',
-                    $partnerEmail === '' ? Team::STATUS_CONFIRMED : Team::STATUS_PENDING_PARTNER_ACCEPTANCE
-                ),
+                'status_id' => $this->statusService->resolveStatusId('team', Team::STATUS_CONFIRMED),
             ]);
 
             TeamMember::query()->create([
@@ -349,288 +276,24 @@ class TeamService
             ]);
 
             if ($partnerEmail !== '') {
-                $invitedUser = User::query()
+                $partnerUser = User::query()
                     ->where('email', $partnerEmail)
                     ->first();
 
-                $invite = TeamInvite::query()->create([
-                    'team_id' => $team->id,
-                    'invited_email' => $partnerEmail,
-                    'invited_user_id' => $invitedUser?->id,
-                    'token' => (string) Str::uuid(),
-                    'status_id' => $this->statusService->resolveStatusId('team_invite', TeamInvite::STATUS_PENDING),
-                    'expires_at' => now()->addDays(7),
-                ]);
+                if ($partnerUser) {
+                    TeamMember::query()->create([
+                        'team_id' => $team->id,
+                        'user_id' => $partnerUser->id,
+                        'slot' => 2,
+                        'role' => TeamMember::ROLE_PARTNER,
+                    ]);
 
-                SendTeamInviteEmailJob::dispatch($invite->id)->afterCommit();
-            }
-
-            return $team->fresh(['users', 'invites']);
-        });
-    }
-
-    public function claimInvite(User $user, string $token): TeamInvite
-    {
-        $invite = TeamInvite::query()
-            ->where('token', $token)
-            ->with(['team', 'status'])
-            ->firstOrFail();
-
-        $this->ensureInviteIsClaimable($invite, $user);
-
-        if ($invite->invited_user_id && $invite->invited_user_id !== $user->id) {
-            throw ValidationException::withMessages([
-                'token' => 'Esta invitación ya está asociada a otro usuario.',
-            ]);
-        }
-
-        $invite->invited_user_id = $user->id;
-        $invite->save();
-
-        return $invite->fresh(['team.users', 'status']);
-    }
-
-    /**
-     * @throws AuthorizationException
-     * @throws ModelNotFoundException
-     */
-    public function acceptInvite(User $user, TeamInvite|int $teamInvite): TeamInvite
-    {
-        if (! $user->hasVerifiedEmail()) {
-            throw ValidationException::withMessages([
-                'email' => 'Please verify your email before accepting this invite.',
-            ]);
-        }
-
-        $inviteId = $teamInvite instanceof TeamInvite ? (int) $teamInvite->id : (int) $teamInvite;
-
-        return DB::transaction(function () use ($user, $inviteId): TeamInvite {
-            $invite = TeamInvite::query()
-                ->whereKey($inviteId)
-                ->lockForUpdate()
-                ->with(['status', 'team'])
-                ->firstOrFail();
-
-            $invite = $this->refreshInviteState($invite);
-
-            $this->ensureInviteIsClaimable($invite, $user);
-
-            $team = Team::query()
-                ->whereKey($invite->team_id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $registration = Registration::query()
-                ->where('team_id', $team->id)
-                ->lockForUpdate()
-                ->with(['status', 'tournamentCategory.tournament'])
-                ->first();
-
-            if (! $registration) {
-                throw ValidationException::withMessages([
-                    'invite' => 'La invitación no tiene una inscripción asociada.',
-                ]);
-            }
-
-            $tournamentId = (int) $registration->tournamentCategory?->tournament_id;
-            if ($tournamentId > 0) {
-                $this->assertUserCanParticipateInTournament($user, $tournamentId, (int) $registration->id);
-                if ($team->created_by) {
-                    $captain = User::query()->find($team->created_by);
-                    if ($captain) {
-                        $this->assertUserCanParticipateInTournament($captain, $tournamentId, (int) $registration->id);
-                    }
+                    $this->updateTeamDisplayName($team->fresh('users'));
                 }
             }
 
-            $existingPartner = TeamMember::query()
-                ->where('team_id', $team->id)
-                ->where('role', TeamMember::ROLE_PARTNER)
-                ->first();
-
-            if ($existingPartner && (int) $existingPartner->user_id !== (int) $user->id) {
-                throw ValidationException::withMessages([
-                    'invite' => 'Este equipo ya tiene un partner distinto.',
-                ]);
-            }
-
-            if (! $existingPartner) {
-                TeamMember::query()->create([
-                    'team_id' => $team->id,
-                    'user_id' => $user->id,
-                    'slot' => 2,
-                    'role' => TeamMember::ROLE_PARTNER,
-                ]);
-            }
-
-            $invite->invited_user_id = $user->id;
-            $invite->save();
-
-            $this->statusService->transition(
-                $invite,
-                'team_invite',
-                $this->statusService->resolveStatusId('team_invite', TeamInvite::STATUS_ACCEPTED),
-                $user->id,
-                'invite_accepted'
-            );
-
-            $this->statusService->transition(
-                $team,
-                'team',
-                $this->statusService->resolveStatusId('team', Team::STATUS_CONFIRMED),
-                $user->id,
-                'partner_accepted_invite'
-            );
-
-            $this->updateTeamDisplayName($team->fresh('users'));
-            $this->linkRegistrationRanking($team, $user);
-            $successfulPayment = $registration->payments()
-                ->whereHas('status', fn ($statusQuery) => $statusQuery->where('code', 'succeeded'))
-                ->exists();
-
-            if ($successfulPayment || $registration->status?->code === 'awaiting_partner_acceptance') {
-                $this->statusService->transition(
-                    $registration,
-                    'registration',
-                    $this->statusService->resolveStatusId('registration', 'paid'),
-                    $user->id,
-                    'partner_accepted_after_payment'
-                );
-                $registration->accepted_at = $registration->accepted_at ?? now();
-                $registration->payment_due_at = null;
-                $registration->save();
-            } else {
-                $this->acceptanceService->recalculateForTournamentCategory((int) $registration->tournament_category_id);
-            }
-
-            return $invite->fresh(['team.users', 'status']);
+            return $team->fresh(['users', 'status']);
         });
-    }
-
-    /**
-     * @throws AuthorizationException
-     * @throws ModelNotFoundException
-     */
-    public function rejectInvite(User $user, TeamInvite|int $teamInvite): TeamInvite
-    {
-        $inviteId = $teamInvite instanceof TeamInvite ? (int) $teamInvite->id : (int) $teamInvite;
-
-        return DB::transaction(function () use ($user, $inviteId): TeamInvite {
-            $invite = TeamInvite::query()
-                ->whereKey($inviteId)
-                ->lockForUpdate()
-                ->with(['status', 'team'])
-                ->firstOrFail();
-
-            $invite = $this->refreshInviteState($invite);
-
-            $this->ensureInviteIsClaimable($invite, $user);
-
-            $team = Team::query()
-                ->whereKey($invite->team_id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $registration = Registration::query()
-                ->where('team_id', $team->id)
-                ->lockForUpdate()
-                ->first();
-
-            $this->statusService->transition(
-                $invite,
-                'team_invite',
-                $this->statusService->resolveStatusId('team_invite', TeamInvite::STATUS_REJECTED),
-                $user->id,
-                'invite_rejected'
-            );
-
-            $this->statusService->transition(
-                $team,
-                'team',
-                $this->statusService->resolveStatusId('team', Team::STATUS_CANCELLED),
-                $user->id,
-                'partner_rejected_invite'
-            );
-
-            if ($registration && $registration->status?->code !== 'cancelled') {
-                $this->statusService->transition(
-                    $registration,
-                    'registration',
-                    $this->statusService->resolveStatusId('registration', 'cancelled'),
-                    $user->id,
-                    'partner_rejected_invite'
-                );
-                $registration->cancelled_at = now();
-                $registration->save();
-            }
-
-            return $invite->fresh(['team.users', 'status']);
-        });
-    }
-
-    /**
-     * @throws AuthorizationException
-     * @throws ModelNotFoundException
-     */
-    public function resendInvite(User $actor, TeamInvite|int $teamInvite): TeamInvite
-    {
-        $inviteId = $teamInvite instanceof TeamInvite ? (int) $teamInvite->id : (int) $teamInvite;
-
-        return DB::transaction(function () use ($actor, $inviteId): TeamInvite {
-            $invite = TeamInvite::query()
-                ->whereKey($inviteId)
-                ->lockForUpdate()
-                ->with(['status', 'team'])
-                ->firstOrFail();
-
-            $invite = $this->refreshInviteState($invite);
-
-            if ((int) ($invite->team?->created_by ?? 0) !== (int) $actor->id) {
-                throw new AuthorizationException('No autorizado para reenviar esta invitación.');
-            }
-
-            if ($invite->status?->code !== TeamInvite::STATUS_PENDING) {
-                throw ValidationException::withMessages([
-                    'invite' => 'Solo puedes reenviar invitaciones pendientes.',
-                ]);
-            }
-
-            if ($invite->expires_at && $invite->expires_at->isPast()) {
-                throw ValidationException::withMessages([
-                    'invite' => 'La invitación ya expiró.',
-                ]);
-            }
-
-            SendTeamInviteEmailJob::dispatch($invite->id)->afterCommit();
-
-            return $invite->fresh(['team.users', 'status']);
-        });
-    }
-
-    private function ensureInviteIsClaimable(TeamInvite $invite, User $user): void
-    {
-        $invite = $this->refreshInviteState($invite);
-        $invite->loadMissing('status');
-        $status = $invite->status;
-
-        if (! $status || $status->code !== TeamInvite::STATUS_PENDING) {
-            throw ValidationException::withMessages([
-                'invite' => 'Esta invitación ya no está disponible.',
-            ]);
-        }
-
-        if ($invite->expires_at && $invite->expires_at->isPast()) {
-            throw ValidationException::withMessages([
-                'invite' => 'Esta invitación ya expiró.',
-            ]);
-        }
-
-        if (
-            strcasecmp((string) ($invite->invited_email ?? ''), (string) $user->email) !== 0 &&
-            (! $invite->invited_user_id || (int) $invite->invited_user_id !== (int) $user->id)
-        ) {
-            throw new AuthorizationException('Esta invitación corresponde a otro correo.');
-        }
     }
 
     private function updateTeamDisplayName(Team $team): void
@@ -659,9 +322,7 @@ class TeamService
         $query = Registration::query()
             ->where('tournament_category_id', $tournamentCategoryId)
             ->whereHas('team', function ($teamQuery) use ($captainId) {
-                $teamQuery
-                    ->where('created_by', $captainId)
-                    ->whereHas('status', fn ($statusQuery) => $statusQuery->where('code', Team::STATUS_PENDING_PARTNER_ACCEPTANCE));
+                $teamQuery->where('created_by', $captainId);
             })
             ->whereHas('rankings', function ($rankingQuery) use ($partnerEmail) {
                 $rankingQuery
@@ -676,7 +337,6 @@ class TeamService
                 'team.status',
                 'team.creator',
                 'team.users',
-                'team.invites.status',
                 'payments.status',
                 'tournamentCategory.tournament',
                 'tournamentCategory.category',
@@ -729,18 +389,25 @@ class TeamService
         }
     }
 
-    private function resolveInviteExpiry(?TournamentCategory $category): \Illuminate\Support\Carbon
+    private function ensurePartnerMember(Team $team, User $user): void
     {
-        $tournament = $category?->tournament;
-        if ($tournament?->registration_close_at) {
-            return $tournament->registration_close_at->copy();
+        $team->loadMissing('members');
+
+        $existingPartner = $team->members->firstWhere('role', TeamMember::ROLE_PARTNER);
+        if ($existingPartner && (int) $existingPartner->user_id === (int) $user->id) {
+            return;
         }
 
-        if ($tournament?->end_date) {
-            return $tournament->end_date->copy()->endOfDay();
+        if ($existingPartner) {
+            return;
         }
 
-        return now()->addDays(7);
+        TeamMember::query()->create([
+            'team_id' => $team->id,
+            'user_id' => $user->id,
+            'slot' => 2,
+            'role' => TeamMember::ROLE_PARTNER,
+        ]);
     }
 
     private function createSuccessfulPayment(

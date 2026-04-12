@@ -12,6 +12,7 @@ class Payment extends Model
 
     protected $fillable = [
         'registration_id',
+        'open_entry_id',
         'provider',
         'provider_intent_id',
         'amount_cents',
@@ -33,6 +34,11 @@ class Payment extends Model
     public function registration()
     {
         return $this->belongsTo(Registration::class);
+    }
+
+    public function openEntry()
+    {
+        return $this->belongsTo(OpenEntry::class);
     }
 
     public function status()

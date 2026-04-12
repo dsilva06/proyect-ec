@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Player;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OpenEntryResource;
 use App\Http\Requests\Player\StoreRegistrationRequest;
 use App\Http\Resources\RegistrationResource;
+use App\Models\OpenEntry;
 use App\Models\Registration;
+use App\Services\OpenEntryService;
 use App\Services\RegistrationService;
 use App\Services\StripePaymentService;
 use App\Services\TeamService;
@@ -39,6 +42,12 @@ class RegistrationController extends Controller
     public function store(StoreRegistrationRequest $request)
     {
         $data = $request->validated();
+
+        if (! empty($data['tournament_id'])) {
+            $entry = app(OpenEntryService::class)->create($request->user(), $data);
+
+            return new OpenEntryResource($entry);
+        }
 
         if (! empty($data['team_id'])) {
             $registration = app(RegistrationService::class)
@@ -76,6 +85,13 @@ class RegistrationController extends Controller
     {
         return response()->json(
             app(StripePaymentService::class)->createCheckoutSession($request->user(), $registration)
+        );
+    }
+
+    public function payOpenEntry(Request $request, OpenEntry $openEntry)
+    {
+        return response()->json(
+            app(StripePaymentService::class)->createOpenEntryCheckoutSession($request->user(), $openEntry)
         );
     }
 }

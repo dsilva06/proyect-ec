@@ -64,7 +64,7 @@ class WildcardController extends Controller
             ]);
         }
 
-        $team = app(TeamService::class)->createTeamWithInvite($user, [
+        $team = app(TeamService::class)->createTeam($user, [
             'partner_email' => $partnerEmail,
         ]);
 

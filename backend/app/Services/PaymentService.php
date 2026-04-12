@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Payment;
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -20,12 +19,20 @@ class PaymentService
 
             if ($status->code === 'succeeded') {
                 $registration = $payment->registration;
+                $openEntry = $payment->openEntry;
                 $exists = $registration
                     ? $registration->payments()
                         ->where('payments.id', '!=', $payment->id)
                         ->whereHas('status', fn ($sub) => $sub->where('code', 'succeeded'))
                         ->exists()
                     : false;
+
+                if (! $exists && $openEntry) {
+                    $exists = $openEntry->payments()
+                        ->where('payments.id', '!=', $payment->id)
+                        ->whereHas('status', fn ($sub) => $sub->where('code', 'succeeded'))
+                        ->exists();
+                }
 
                 if ($exists) {
                     throw ValidationException::withMessages([
@@ -47,14 +54,11 @@ class PaymentService
             }
 
             if ($status->code === 'succeeded' && $registration) {
-                $registration->loadMissing('team.status');
                 if (! $registration->accepted_at) {
                     $registration->accepted_at = now();
                 }
-                $registrationStatusCode = $registration->team?->status?->code === Team::STATUS_PENDING_PARTNER_ACCEPTANCE
-                    ? 'awaiting_partner_acceptance'
-                    : 'paid';
-                $nextStatusId = $this->statusService->resolveStatusId('registration', $registrationStatusCode);
+                $registration->payment_due_at = null;
+                $nextStatusId = $this->statusService->resolveStatusId('registration', 'paid');
 
                 if ((int) $registration->status_id !== (int) $nextStatusId) {
                     $this->statusService->transition(
@@ -66,6 +70,13 @@ class PaymentService
                     );
                 } else {
                     $registration->save();
+                }
+            }
+
+            if ($status->code === 'succeeded' && $openEntry) {
+                if (! $openEntry->paid_at) {
+                    $openEntry->paid_at = $payment->paid_at ?: now();
+                    $openEntry->save();
                 }
             }
 

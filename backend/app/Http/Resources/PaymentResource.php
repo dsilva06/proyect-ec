@@ -16,6 +16,8 @@ class PaymentResource extends JsonResource
             'id' => $this->id,
             'registration_id' => $this->registration_id,
             'registration' => new RegistrationResource($this->whenLoaded('registration')),
+            'open_entry_id' => $this->open_entry_id,
+            'open_entry' => new OpenEntryResource($this->whenLoaded('openEntry')),
             'provider' => $this->provider,
             'provider_intent_id' => $this->provider_intent_id,
             'amount_cents' => $this->amount_cents,

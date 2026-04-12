@@ -14,7 +14,13 @@ class PaymentController extends Controller
         $user = $request->user();
 
         $payments = Payment::query()
-            ->whereHas('registration.team.users', fn ($query) => $query->where('users.id', $user->id))
+            ->where(function ($query) use ($user) {
+                $query->whereHas('registration.team.users', fn ($subQuery) => $subQuery->where('users.id', $user->id))
+                    ->orWhereHas('openEntry', function ($subQuery) use ($user) {
+                        $subQuery->where('submitted_by_user_id', $user->id)
+                            ->orWhereHas('team.users', fn ($teamUsersQuery) => $teamUsersQuery->where('users.id', $user->id));
+                    });
+            })
             ->with([
                 'status',
                 'paidBy',
@@ -22,6 +28,10 @@ class PaymentController extends Controller
                 'registration.team',
                 'registration.tournamentCategory.tournament',
                 'registration.tournamentCategory.category',
+                'openEntry.tournament.status',
+                'openEntry.team.status',
+                'openEntry.team.users.playerProfile',
+                'openEntry.submittedBy.playerProfile',
             ])
             ->orderByDesc('created_at')
             ->get();

@@ -62,6 +62,11 @@ class Registration extends Model
         return $this->hasMany(RegistrationRanking::class);
     }
 
+    public function openEntry()
+    {
+        return $this->hasOne(OpenEntry::class);
+    }
+
     public function wildcardInvitation()
     {
         return $this->belongsTo(Invitation::class, 'wildcard_invitation_id');

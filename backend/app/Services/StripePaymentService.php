@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Payment;
+use App\Models\OpenEntry;
 use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -38,7 +39,7 @@ class StripePaymentService
         }
 
         $statusCode = (string) ($registrationModel->status?->code ?? '');
-        if (in_array($statusCode, ['cancelled', 'expired', 'rejected', 'paid', 'awaiting_partner_acceptance'], true)) {
+        if (in_array($statusCode, ['cancelled', 'expired', 'rejected', 'paid'], true)) {
             throw ValidationException::withMessages([
                 'payment' => 'Esta inscripción no admite un nuevo cobro.',
             ]);
@@ -148,6 +149,120 @@ class StripePaymentService
         ];
     }
 
+    public function createOpenEntryCheckoutSession(User $actor, OpenEntry|int $openEntry): array
+    {
+        if (! $this->gateway->isConfigured()) {
+            throw ValidationException::withMessages([
+                'payment' => 'Stripe no está configurado todavía.',
+            ]);
+        }
+
+        $openEntryModel = $openEntry instanceof OpenEntry
+            ? $openEntry->loadMissing(['payments.status', 'team.status', 'team.creator', 'tournament.status'])
+            : OpenEntry::query()
+                ->with(['payments.status', 'team.status', 'team.creator', 'tournament.status'])
+                ->findOrFail((int) $openEntry);
+
+        if ((int) $openEntryModel->submitted_by_user_id !== (int) $actor->id) {
+            throw new AuthorizationException('No autorizado para pagar esta inscripción OPEN.');
+        }
+
+        if ($openEntryModel->registration_id) {
+            throw ValidationException::withMessages([
+                'payment' => 'Esta inscripción OPEN ya fue asignada a una categoría.',
+            ]);
+        }
+
+        if ($openEntryModel->paid_at) {
+            throw ValidationException::withMessages([
+                'payment' => 'El pago del equipo ya fue completado.',
+            ]);
+        }
+
+        $hasSuccessfulPayment = $openEntryModel->payments->contains(
+            fn (Payment $payment) => $payment->status?->code === 'succeeded'
+        );
+
+        if ($hasSuccessfulPayment) {
+            throw ValidationException::withMessages([
+                'payment' => 'El pago del equipo ya fue completado.',
+            ]);
+        }
+
+        $existingPendingPayment = $openEntryModel->payments
+            ->sortByDesc('created_at')
+            ->first(function (Payment $payment) {
+                return $payment->provider === 'stripe_checkout'
+                    && $payment->status?->code === 'pending'
+                    && filled($payment->raw_payload['checkout_url'] ?? null);
+            });
+
+        if ($existingPendingPayment) {
+            return [
+                'checkout_url' => (string) ($existingPendingPayment->raw_payload['checkout_url'] ?? ''),
+                'session_id' => (string) $existingPendingPayment->provider_intent_id,
+            ];
+        }
+
+        $amountCents = max(0, (int) ($openEntryModel->tournament?->entry_fee_amount ?? 0)) * 100;
+        $currency = strtolower((string) ($openEntryModel->tournament?->entry_fee_currency ?: 'usd'));
+        $tournamentName = (string) ($openEntryModel->tournament?->name ?: 'ESTARS PADEL TOUR');
+        $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
+
+        $session = $this->gateway->createCheckoutSession([
+            'mode' => 'payment',
+            'client_reference_id' => 'open-entry-'.$openEntryModel->id,
+            'customer_email' => $actor->email,
+            'success_url' => $frontendUrl.'/player/registrations?checkout=success&session_id={CHECKOUT_SESSION_ID}&open_entry_id='.$openEntryModel->id,
+            'cancel_url' => $frontendUrl.'/player/registrations?checkout=cancelled&open_entry_id='.$openEntryModel->id,
+            'line_items' => [[
+                'quantity' => 1,
+                'price_data' => [
+                    'currency' => $currency,
+                    'unit_amount' => $amountCents,
+                    'product_data' => [
+                        'name' => "{$tournamentName} · OPEN",
+                        'description' => 'Pago único por ingreso al torneo OPEN',
+                    ],
+                ],
+            ]],
+            'metadata' => [
+                'open_entry_id' => (string) $openEntryModel->id,
+                'captain_user_id' => (string) $actor->id,
+            ],
+            'payment_intent_data' => [
+                'metadata' => [
+                    'open_entry_id' => (string) $openEntryModel->id,
+                    'captain_user_id' => (string) $actor->id,
+                ],
+            ],
+        ]);
+
+        DB::transaction(function () use ($openEntryModel, $actor, $session, $amountCents, $currency): void {
+            Payment::query()->create([
+                'registration_id' => null,
+                'open_entry_id' => $openEntryModel->id,
+                'provider' => 'stripe_checkout',
+                'provider_intent_id' => (string) $session['id'],
+                'amount_cents' => $amountCents,
+                'currency' => strtoupper($currency),
+                'status_id' => $this->statusService->resolveStatusId('payment', 'pending'),
+                'paid_by_user_id' => $actor->id,
+                'raw_payload' => [
+                    'checkout_url' => $session['url'],
+                    'checkout_status' => $session['status'],
+                    'checkout_payment_status' => $session['payment_status'],
+                    'payment_intent' => $session['payment_intent'],
+                ],
+            ]);
+        });
+
+        return [
+            'checkout_url' => (string) $session['url'],
+            'session_id' => (string) $session['id'],
+        ];
+    }
+
     public function handleWebhook(array $event): void
     {
         $type = (string) ($event['type'] ?? '');
@@ -183,28 +298,47 @@ class StripePaymentService
     {
         $sessionId = (string) ($session['id'] ?? '');
         $registrationId = (int) ($session['metadata']['registration_id'] ?? 0);
+        $openEntryId = (int) ($session['metadata']['open_entry_id'] ?? 0);
 
-        DB::transaction(function () use ($sessionId, $registrationId, $session): void {
+        DB::transaction(function () use ($sessionId, $registrationId, $openEntryId, $session): void {
             $payment = Payment::query()
                 ->where('provider_intent_id', $sessionId)
-                ->with(['status', 'registration.team.status'])
+                ->with(['status', 'registration.team.status', 'openEntry.team.status'])
                 ->lockForUpdate()
                 ->first();
 
             if (! $payment) {
-                $registration = Registration::query()->findOrFail($registrationId);
-                $payment = Payment::query()->create([
-                    'registration_id' => $registration->id,
-                    'provider' => 'stripe_checkout',
-                    'provider_intent_id' => $sessionId,
-                    'amount_cents' => (int) ($session['amount_total'] ?? 0),
-                    'currency' => strtoupper((string) ($session['currency'] ?? 'USD')),
-                    'status_id' => $this->statusService->resolveStatusId('payment', 'pending'),
-                    'paid_by_user_id' => isset($session['metadata']['captain_user_id'])
-                        ? (int) $session['metadata']['captain_user_id']
-                        : null,
-                    'raw_payload' => $session,
-                ]);
+                if ($openEntryId > 0) {
+                    $openEntry = OpenEntry::query()->findOrFail($openEntryId);
+                    $payment = Payment::query()->create([
+                        'registration_id' => null,
+                        'open_entry_id' => $openEntry->id,
+                        'provider' => 'stripe_checkout',
+                        'provider_intent_id' => $sessionId,
+                        'amount_cents' => (int) ($session['amount_total'] ?? 0),
+                        'currency' => strtoupper((string) ($session['currency'] ?? 'USD')),
+                        'status_id' => $this->statusService->resolveStatusId('payment', 'pending'),
+                        'paid_by_user_id' => isset($session['metadata']['captain_user_id'])
+                            ? (int) $session['metadata']['captain_user_id']
+                            : null,
+                        'raw_payload' => $session,
+                    ]);
+                } else {
+                    $registration = Registration::query()->findOrFail($registrationId);
+                    $payment = Payment::query()->create([
+                        'registration_id' => $registration->id,
+                        'open_entry_id' => null,
+                        'provider' => 'stripe_checkout',
+                        'provider_intent_id' => $sessionId,
+                        'amount_cents' => (int) ($session['amount_total'] ?? 0),
+                        'currency' => strtoupper((string) ($session['currency'] ?? 'USD')),
+                        'status_id' => $this->statusService->resolveStatusId('payment', 'pending'),
+                        'paid_by_user_id' => isset($session['metadata']['captain_user_id'])
+                            ? (int) $session['metadata']['captain_user_id']
+                            : null,
+                        'raw_payload' => $session,
+                    ]);
+                }
             }
 
             if ($payment->status?->code !== 'succeeded') {
@@ -214,7 +348,9 @@ class StripePaymentService
                 ]);
             }
 
-            $this->teamService->ensureInviteAfterSuccessfulPayment((int) $payment->registration_id);
+            if ($payment->registration_id) {
+                $this->teamService->finalizeRegistrationAfterSuccessfulPayment((int) $payment->registration_id);
+            }
         });
     }
 

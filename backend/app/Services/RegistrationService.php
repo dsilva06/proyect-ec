@@ -40,7 +40,7 @@ class RegistrationService
         }
 
         $team = Team::query()
-            ->with(['users', 'invites', 'members'])
+            ->with(['users', 'members'])
             ->find($teamId);
 
         if (! $team) {
@@ -130,14 +130,9 @@ class RegistrationService
             ]);
 
             $partnerEmail = $rankingData['partner_email'] ?? null;
-            $invite = $team->invites->sortByDesc('created_at')->first();
-            if (! $partnerEmail && $invite?->invited_email) {
-                $partnerEmail = $invite->invited_email;
-            }
-
             $partnerUserId = $team->members->firstWhere('slot', 2)?->user_id;
-            if (! $partnerUserId && $invite?->invited_user_id) {
-                $partnerUserId = $invite->invited_user_id;
+            if (! $partnerEmail && $partnerUserId) {
+                $partnerEmail = User::query()->whereKey($partnerUserId)->value('email');
             }
             if (! $partnerUserId && $partnerEmail) {
                 $partnerUserId = User::query()->where('email', $partnerEmail)->value('id');

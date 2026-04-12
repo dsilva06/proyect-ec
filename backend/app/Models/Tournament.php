@@ -79,6 +79,11 @@ class Tournament extends Model
         return $this->hasMany(TournamentCategory::class);
     }
 
+    public function openEntries()
+    {
+        return $this->hasMany(OpenEntry::class);
+    }
+
     public function calendarEvents()
     {
         return $this->hasMany(CalendarEvent::class);

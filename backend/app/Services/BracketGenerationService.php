@@ -18,7 +18,7 @@ class BracketGenerationService
 
     public function generate(Bracket $bracket, bool $randomize = false): Bracket
     {
-        $bracket->loadMissing(['tournamentCategory']);
+        $bracket->loadMissing(['tournamentCategory.tournament']);
         $category = $bracket->tournamentCategory;
         if (! $category) {
             throw ValidationException::withMessages([
@@ -26,10 +26,12 @@ class BracketGenerationService
             ]);
         }
 
+        $isOpen = strtolower((string) ($category->tournament?->mode ?? '')) === 'open';
+
         $maxTeams = (int) $category->max_teams;
-        if (! in_array($maxTeams, [32, 64, 128], true)) {
+        if (! in_array($maxTeams, [2, 4, 8, 16, 32, 64, 128], true)) {
             throw ValidationException::withMessages([
-                'draw_size' => 'El tamaño del cuadro debe ser 32, 64 o 128.',
+                'draw_size' => 'El tamaño del cuadro debe ser 2, 4, 8, 16, 32, 64 o 128.',
             ]);
         }
 
@@ -54,33 +56,45 @@ class BracketGenerationService
         }
 
         $drawSize = min($maxTeams, max(8, $this->nextPowerOfTwo(max(2, $totalEligible))));
-        $seedCount = $this->seedCountForSize($drawSize);
-        $seedPositions = array_slice($this->seedPositions($drawSize), 0, $seedCount);
+        $seedCount = $isOpen ? 0 : $this->seedCountForSize($drawSize);
+        $seedPositions = $seedCount > 0
+            ? array_slice($this->seedPositions($drawSize), 0, $seedCount)
+            : [];
 
-        $registrations = $registrations->sort(function ($a, $b) {
-            $rankA = $a->team_ranking_score ?? PHP_INT_MAX;
-            $rankB = $b->team_ranking_score ?? PHP_INT_MAX;
-            if ($rankA !== $rankB) {
-                return $rankA <=> $rankB;
-            }
-            return $a->created_at <=> $b->created_at;
-        })->values();
+        $registrations = $isOpen
+            ? $registrations->sort(function ($a, $b) {
+                $createdAtComparison = $a->created_at <=> $b->created_at;
+
+                return $createdAtComparison !== 0
+                    ? $createdAtComparison
+                    : ($a->id <=> $b->id);
+            })->values()
+            : $registrations->sort(function ($a, $b) {
+                $rankA = $a->team_ranking_score ?? PHP_INT_MAX;
+                $rankB = $b->team_ranking_score ?? PHP_INT_MAX;
+                if ($rankA !== $rankB) {
+                    return $rankA <=> $rankB;
+                }
+                return $a->created_at <=> $b->created_at;
+            })->values();
 
         if ($registrations->count() > $drawSize) {
             $registrations = $registrations->take($drawSize);
         }
 
-        $seeded = $registrations
-            ->filter(fn ($registration) => ! $registration->is_wildcard && $registration->team_ranking_score !== null)
-            ->take($seedCount)
-            ->values();
+        $seeded = $isOpen
+            ? collect()
+            : $registrations
+                ->filter(fn ($registration) => ! $registration->is_wildcard && $registration->team_ranking_score !== null)
+                ->take($seedCount)
+                ->values();
 
         $remaining = $registrations
             ->reject(fn ($registration) => $seeded->contains('id', $registration->id))
             ->values()
             ->all();
 
-        if ($randomize) {
+        if ($randomize || $isOpen) {
             shuffle($remaining);
         }
 

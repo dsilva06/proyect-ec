@@ -10,8 +10,6 @@ class Team extends Model
     /** @use HasFactory<\Database\Factories\TeamFactory> */
     use HasFactory;
 
-    public const STATUS_PENDING_PARTNER_ACCEPTANCE = 'pending_partner_acceptance';
-
     public const STATUS_CONFIRMED = 'confirmed';
 
     public const STATUS_CANCELLED = 'cancelled';
@@ -51,9 +49,9 @@ class Team extends Model
         return $this->hasOne(Registration::class);
     }
 
-    public function invites()
+    public function openEntries()
     {
-        return $this->hasMany(TeamInvite::class);
+        return $this->hasMany(OpenEntry::class);
     }
 
     public function status()

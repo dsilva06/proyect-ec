@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WildcardInvitationResource;
 use App\Models\Invitation;
-use App\Models\Team;
-use App\Models\TeamInvite;
-use App\Models\TeamMember;
 use App\Models\User;
 use App\Services\RegistrationService;
 use App\Services\StatusService;
+use App\Services\TeamService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -97,7 +95,9 @@ class WildcardController extends Controller
 
         $invite = DB::transaction(function () use ($data) {
             $user = $this->findOrCreateUser($data['email'], $data['player_name'] ?? null);
-            $team = $this->createTeam($user, $data['partner_email'] ?? null);
+            $team = app(TeamService::class)->createTeam($user, [
+                'partner_email' => $data['partner_email'] ?? null,
+            ]);
 
             $invite = Invitation::create([
                 'tournament_category_id' => $data['tournament_category_id'],
@@ -238,48 +238,5 @@ class WildcardController extends Controller
             'role' => 'player',
             'is_active' => true,
         ]);
-    }
-
-    private function createTeam(User $user, ?string $partnerEmail): Team
-    {
-        $team = Team::create([
-            'display_name' => $user->name ?: 'Equipo',
-            'created_by' => $user->id,
-            'status_id' => app(StatusService::class)->resolveStatusId('team', Team::STATUS_CONFIRMED),
-        ]);
-
-        TeamMember::create([
-            'team_id' => $team->id,
-            'user_id' => $user->id,
-            'slot' => 1,
-            'role' => TeamMember::ROLE_CAPTAIN,
-        ]);
-
-        if ($partnerEmail) {
-            $partnerUser = User::query()->where('email', $partnerEmail)->first();
-            if ($partnerUser) {
-                TeamMember::create([
-                    'team_id' => $team->id,
-                    'user_id' => $partnerUser->id,
-                    'slot' => 2,
-                    'role' => TeamMember::ROLE_PARTNER,
-                ]);
-                $team->display_name = trim(($user->name ?: 'Jugador').' / '.($partnerUser->name ?: 'Jugador'));
-                $team->save();
-            } else {
-                $team->status_id = app(StatusService::class)->resolveStatusId('team', Team::STATUS_PENDING_PARTNER_ACCEPTANCE);
-                $team->save();
-
-                TeamInvite::create([
-                    'team_id' => $team->id,
-                    'invited_email' => $partnerEmail,
-                    'token' => Str::uuid()->toString(),
-                    'status_id' => app(StatusService::class)->resolveStatusId('team_invite', TeamInvite::STATUS_PENDING),
-                    'expires_at' => now()->addDays(7),
-                ]);
-            }
-        }
-
-        return $team->fresh(['users', 'invites']);
     }
 }

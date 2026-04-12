@@ -5,7 +5,6 @@ use App\Http\Controllers\Player\PaymentController as PlayerPaymentController;
 use App\Http\Controllers\Player\BracketController as PlayerBracketController;
 use App\Http\Controllers\Player\RankingController as PlayerRankingController;
 use App\Http\Controllers\Player\RegistrationController as PlayerRegistrationController;
-use App\Http\Controllers\Player\TeamInviteController as PlayerTeamInviteController;
 use App\Http\Controllers\Player\TeamController;
 use App\Http\Controllers\Player\TournamentController as PlayerTournamentController;
 use App\Http\Controllers\Player\WildcardController as PlayerWildcardController;
@@ -21,14 +20,9 @@ Route::middleware(['auth:sanctum', 'active_user', 'verified', 'role:player'])->p
     Route::get('/wildcards/{token}', [PlayerWildcardController::class, 'show']);
     Route::post('/wildcards/{token}/claim', [PlayerWildcardController::class, 'claim']);
     Route::post('/teams', [TeamController::class, 'store']);
-    Route::get('/team-invites', [PlayerTeamInviteController::class, 'index']);
-    Route::post('/team-invites/claim', [PlayerTeamInviteController::class, 'claim']);
-    Route::post('/team-invites/{teamInvite}/accept', [PlayerTeamInviteController::class, 'accept']);
-    Route::post('/team-invites/{teamInvite}/reject', [PlayerTeamInviteController::class, 'reject']);
-    Route::post('/team-invites/{teamInvite}/resend', [PlayerTeamInviteController::class, 'resend'])
-        ->middleware('throttle:team-invite-resend');
     Route::post('/registrations', [PlayerRegistrationController::class, 'store']);
     Route::get('/registrations', [PlayerRegistrationController::class, 'index']);
     Route::post('/registrations/{registration}/pay', [PlayerRegistrationController::class, 'pay']);
+    Route::post('/open-entries/{openEntry}/pay', [PlayerRegistrationController::class, 'payOpenEntry']);
     Route::get('/payments', [PlayerPaymentController::class, 'index']);
 });

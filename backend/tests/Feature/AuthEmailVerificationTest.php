@@ -8,7 +8,6 @@ use App\Models\PlayerProfile;
 use App\Models\Registration;
 use App\Models\Status;
 use App\Models\Team;
-use App\Models\TeamInvite;
 use App\Models\Tournament;
 use App\Models\TournamentCategory;
 use App\Models\User;
@@ -104,100 +103,6 @@ class AuthEmailVerificationTest extends TestCase
         $this->assertDatabaseMissing('users', [
             'email' => 'pending-register@test.dev',
         ]);
-    }
-
-    public function test_team_invite_is_attached_to_new_user_when_email_is_verified(): void
-    {
-        Mail::fake();
-
-        $captain = User::factory()->create([
-            'email' => 'captain-invite-verify@test.dev',
-            'role' => 'player',
-            'email_verified_at' => now(),
-        ]);
-
-        $category = Category::query()->create([
-            'name' => 'Open',
-            'group_code' => 'masculino',
-            'level_code' => 'open',
-            'display_name' => 'Open',
-            'sort_order' => 1,
-        ]);
-
-        $tournament = Tournament::query()->create([
-            'name' => 'Invite Verification Tournament',
-            'mode' => 'open',
-            'status_id' => $this->statusId('tournament', 'registration_open'),
-            'start_date' => now()->toDateString(),
-            'end_date' => now()->addDay()->toDateString(),
-            'registration_close_at' => now()->addDays(2),
-        ]);
-
-        $tournamentCategory = TournamentCategory::query()->create([
-            'tournament_id' => $tournament->id,
-            'category_id' => $category->id,
-            'max_teams' => 32,
-            'entry_fee_amount' => 20,
-            'currency' => 'USD',
-            'acceptance_type' => 'waitlist',
-            'seeding_rule' => 'fifo',
-        ]);
-
-        $team = Team::query()->create([
-            'display_name' => 'Captain Team',
-            'created_by' => $captain->id,
-            'status_id' => $this->statusId('team', Team::STATUS_PENDING_PARTNER_ACCEPTANCE),
-        ]);
-
-        $registration = Registration::query()->create([
-            'tournament_category_id' => $tournamentCategory->id,
-            'team_id' => $team->id,
-            'status_id' => $this->statusId('registration', 'awaiting_partner_acceptance'),
-            'accepted_at' => now(),
-        ]);
-
-        $invite = TeamInvite::query()->create([
-            'team_id' => $team->id,
-            'invited_email' => 'verify-invite@test.dev',
-            'token' => 'verify-invite-token',
-            'status_id' => $this->statusId('team_invite', TeamInvite::STATUS_PENDING),
-            'expires_at' => now()->addDay(),
-        ]);
-
-        $this->postJson('/api/auth/register', [
-            'first_name' => 'Invite',
-            'last_name' => 'Verified',
-            'dni' => 'V-10000999',
-            'email' => 'verify-invite@test.dev',
-            'password' => 'Password123!',
-            'password_confirmation' => 'Password123!',
-        ])->assertCreated();
-
-        $verificationEntryUrl = null;
-
-        Mail::assertSent(PendingRegistrationVerificationMail::class, function (PendingRegistrationVerificationMail $mail) use (&$verificationEntryUrl): bool {
-            if (! $mail->hasTo('verify-invite@test.dev')) {
-                return false;
-            }
-
-            $verificationEntryUrl = $mail->verificationEntryUrl;
-
-            return true;
-        });
-
-        parse_str((string) parse_url((string) $verificationEntryUrl, PHP_URL_QUERY), $entryQuery);
-        $verificationApiUrl = (string) ($entryQuery['verify_url'] ?? '');
-        $parsedVerificationApiUrl = parse_url($verificationApiUrl);
-        $relativeVerificationUrl = (string) ($parsedVerificationApiUrl['path'] ?? '');
-        if (! empty($parsedVerificationApiUrl['query'])) {
-            $relativeVerificationUrl .= '?'.$parsedVerificationApiUrl['query'];
-        }
-
-        $this->getJson($relativeVerificationUrl)->assertOk();
-
-        $newUser = User::query()->where('email', 'verify-invite@test.dev')->firstOrFail();
-
-        $this->assertSame($newUser->id, (int) $invite->fresh()->invited_user_id);
     }
 
     public function test_register_purges_legacy_unverified_user_records_before_sending_new_verification(): void

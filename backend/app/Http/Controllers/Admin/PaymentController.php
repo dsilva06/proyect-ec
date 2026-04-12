@@ -20,6 +20,10 @@ class PaymentController extends Controller
                 'registration.team.users',
                 'registration.tournamentCategory.tournament',
                 'registration.tournamentCategory.category',
+                'openEntry.tournament.status',
+                'openEntry.team.status',
+                'openEntry.team.users',
+                'openEntry.submittedBy',
             ])
             ->orderByDesc('created_at');
 
@@ -29,8 +33,12 @@ class PaymentController extends Controller
 
         if ($request->filled('tournament_id')) {
             $tournamentId = $request->query('tournament_id');
-            $query->whereHas('registration.tournamentCategory.tournament', function ($builder) use ($tournamentId) {
-                $builder->where('tournaments.id', $tournamentId);
+            $query->where(function ($builder) use ($tournamentId) {
+                $builder->whereHas('registration.tournamentCategory.tournament', function ($registrationTournamentQuery) use ($tournamentId) {
+                    $registrationTournamentQuery->where('tournaments.id', $tournamentId);
+                })->orWhereHas('openEntry.tournament', function ($openTournamentQuery) use ($tournamentId) {
+                    $openTournamentQuery->where('tournaments.id', $tournamentId);
+                });
             });
         }
 
@@ -50,6 +58,10 @@ class PaymentController extends Controller
             'registration.team.users',
             'registration.tournamentCategory.tournament',
             'registration.tournamentCategory.category',
+            'openEntry.tournament.status',
+            'openEntry.team.status',
+            'openEntry.team.users',
+            'openEntry.submittedBy',
         ]);
 
         return new PaymentResource($payment);

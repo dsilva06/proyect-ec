@@ -11,7 +11,6 @@ use App\Http\Resources\UserResource;
 use App\Mail\PendingRegistrationVerificationMail;
 use App\Mail\WelcomePlayer;
 use App\Models\PlayerProfile;
-use App\Models\TeamInvite;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -377,18 +376,6 @@ class AuthController extends Controller
                     'ranking_updated_at' => null,
                 ],
             );
-
-            TeamInvite::query()
-                ->where('invited_email', $email)
-                ->whereNull('invited_user_id')
-                ->whereHas('status', fn ($query) => $query->where('code', TeamInvite::STATUS_PENDING))
-                ->where(function ($query) {
-                    $query->whereNull('expires_at')
-                        ->orWhere('expires_at', '>', now());
-                })
-                ->update([
-                    'invited_user_id' => $user->id,
-                ]);
 
             if (! $user->hasVerifiedEmail()) {
                 $user->markEmailAsVerified();
