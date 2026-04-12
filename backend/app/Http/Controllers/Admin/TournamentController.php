@@ -58,7 +58,7 @@ class TournamentController extends Controller
         $data = $request->validated();
 
         if (! isset($data['status_id'])) {
-            $data['status_id'] = StatusResolver::getId('tournament', 'draft');
+            $data['status_id'] = app(StatusService::class)->resolveStatusId('tournament', 'draft');
         } else {
             app(StatusService::class)->validateStatusForModule((int) $data['status_id'], 'tournament');
         }

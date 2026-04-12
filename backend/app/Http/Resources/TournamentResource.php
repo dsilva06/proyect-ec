@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\MissingValue;
 
 class TournamentResource extends JsonResource
 {
@@ -12,6 +13,11 @@ class TournamentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $status = $this->whenLoaded('status');
+        if ($status instanceof MissingValue) {
+            $status = $this->status;
+        }
+
         return [
             'id' => $this->id,
             'circuit_id' => $this->circuit_id,
@@ -19,7 +25,7 @@ class TournamentResource extends JsonResource
             'description' => $this->description,
             'mode' => $this->mode,
             'classification_method' => $this->classification_method,
-            'status' => new StatusResource($this->whenLoaded('status')),
+            'status' => $status ? new StatusResource($status) : null,
             'venue_name' => $this->venue_name,
             'venue_address' => $this->venue_address,
             'city' => $this->city,

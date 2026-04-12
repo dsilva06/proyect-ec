@@ -114,6 +114,63 @@ class AdminCrudSmokeTest extends TestCase
         $this->assertDatabaseMissing('tournaments', ['id' => $tournamentId]);
     }
 
+    public function test_admin_tournament_endpoints_tolerate_tournaments_without_status(): void
+    {
+        $this->seed(StatusSeeder::class);
+
+        $admin = $this->createVerifiedAdmin();
+
+        $tournament = Tournament::query()->create([
+            'name' => 'Statusless Tournament',
+            'description' => 'Legacy data safety check',
+            'mode' => 'amateur',
+            'status_id' => null,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDay()->toDateString(),
+            'created_by' => $admin->id,
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/admin/tournaments')
+            ->assertOk()
+            ->assertJsonPath('0.id', $tournament->id)
+            ->assertJsonPath('0.status', null);
+
+        $this->getJson("/api/admin/tournaments/{$tournament->id}")
+            ->assertOk()
+            ->assertJsonPath('id', $tournament->id)
+            ->assertJsonPath('status', null);
+    }
+
+    public function test_admin_tournament_creation_returns_validation_error_when_default_draft_status_is_missing(): void
+    {
+        $this->seed(StatusSeeder::class);
+
+        $admin = $this->createVerifiedAdmin();
+
+        Status::query()
+            ->where('module', 'tournament')
+            ->where('code', 'draft')
+            ->delete();
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->postJson('/api/admin/tournaments', [
+            'name' => 'Missing Draft Tournament',
+            'mode' => 'amateur',
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDays(2)->toDateString(),
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['status_id']);
+
+        $this->assertDatabaseMissing('tournaments', [
+            'name' => 'Missing Draft Tournament',
+        ]);
+    }
+
     public function test_verified_admin_can_crud_link_wildcards_without_registration_side_effects(): void
     {
         $this->seed(StatusSeeder::class);
