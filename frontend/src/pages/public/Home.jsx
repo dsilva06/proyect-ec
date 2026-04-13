@@ -366,11 +366,11 @@ export default function Home() {
         <section className="home-hero reveal">
           <div className="home-hero-main hero-copy">
             <div className="pill">Temporada activa</div>
-            <h1>Un torneo de pádel con visión de circuito, construido para competir con seriedad.</h1>
+            <h1>Pádel de circuito. Sin atajos.</h1>
             <p>
-              ESTARS PADEL TOUR organiza inscripciones, validación, pagos, categorías, cuadros y actualizaciones
-              de jornada en una sola experiencia. Queremos crecer hasta convertirnos en una referencia regional
-              del pádel competitivo, con una identidad y unos estándares cada vez más altos.
+              ESTARS PADEL TOUR es la plataforma que gestiona torneos de pádel de principio a fin: inscripciones,
+              cuadros, categorías y resultados en tiempo real. Un circuito serio, con estándares claros y la
+              ambición de convertirse en referencia competitiva de la región.
             </p>
             <div className="hero-actions">
               <Link className="primary-button" to="/register">Crear cuenta</Link>
@@ -397,18 +397,18 @@ export default function Home() {
         <section className="home-signal-grid reveal">
           <article className="home-signal-card">
             <span className="tag muted">01</span>
-            <h3>Estructura de torneo</h3>
-            <p className="card-detail">Inscripciones, categorías y cuadros alineados con una operación ordenada.</p>
+            <h3>Operación sin fricciones</h3>
+            <p className="card-detail">Inscripciones, validación y pagos gestionados en un flujo claro y sin pasos innecesarios.</p>
           </article>
           <article className="home-signal-card">
             <span className="tag muted">02</span>
-            <h3>Criterio competitivo</h3>
-            <p className="card-detail">Ranking, aceptación y cupos con reglas claras para cada categoría.</p>
+            <h3>Criterio competitivo real</h3>
+            <p className="card-detail">Ranking, cupos y aceptación con reglas definidas. Sin ambigüedad, sin favoritismos.</p>
           </article>
           <article className="home-signal-card">
             <span className="tag muted">03</span>
-            <h3>Competencia en tiempo real</h3>
-            <p className="card-detail">Los cuadros, horarios y resultados se reflejan al ritmo del torneo.</p>
+            <h3>El torneo, en vivo</h3>
+            <p className="card-detail">Cuadros, horarios y resultados actualizados al ritmo de cada jornada de competencia.</p>
           </article>
         </section>
 
@@ -484,8 +484,8 @@ export default function Home() {
         <section className="section flow section-block section-tone-solid reveal">
           <div className="section-title home-section-title">
             <span className="section-kicker">Cómo funciona</span>
-            <h2>Flujo del jugador</h2>
-            <p>Un recorrido claro desde el registro hasta la competencia.</p>
+            <h2>Tu camino al torneo</h2>
+            <p>Cuatro pasos. Sin burocracia. Todo lo que necesitas para competir.</p>
           </div>
           <div className="steps">
             {steps.map((step, index) => (
@@ -521,15 +521,15 @@ export default function Home() {
           <div className="section-title home-section-title">
             <span className="section-kicker">Competencia</span>
             <h2>Cronograma de partidos</h2>
-            <p>Se publica cuando el cuadro está cerrado y se actualiza durante cada jornada de competencia.</p>
+            <p>La programación oficial se publica tras el cierre del cuadro y se actualiza en tiempo real durante cada jornada.</p>
           </div>
           <div className="schedule">
             <div className="schedule-item">
               <span className="tag">Cronograma</span>
               <div>
-                <h3>Programación oficial</h3>
-                <p>Los horarios y canchas se anuncian después del cierre y armado del cuadro.</p>
-                <p className="muted">Las actualizaciones se publican a medida que avanza el torneo.</p>
+                <h3>Agenda oficial del torneo</h3>
+                <p>Horarios, canchas y rondas se confirman una vez armado el cuadro definitivo.</p>
+                <p className="muted">Cada jornada se actualiza en tiempo real. Consulta aquí antes de ir a jugar.</p>
               </div>
             </div>
           </div>
@@ -539,8 +539,8 @@ export default function Home() {
         <section id="contact" className="section contact section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
             <span className="section-kicker">Alianzas</span>
-            <h2>Contacto y alianzas</h2>
-            <p>Cuéntanos sobre patrocinios, sedes o colaboraciones para seguir elevando el torneo.</p>
+            <h2>Trabaja con nosotros</h2>
+            <p>Si tienes una cancha, una marca o una idea para hacer crecer el torneo, queremos escucharte.</p>
           </div>
           <div className="contact-grid">
             <form className="contact-form" onSubmit={handleContactSubmit}>
@@ -592,10 +592,10 @@ export default function Home() {
               {contactStatus && <p className="form-message">{contactStatus}</p>}
             </form>
             <div className="contact-panel">
-              <h3>¿Quieres formar parte del crecimiento del torneo?</h3>
+              <h3>¿Quieres impulsar el circuito?</h3>
               <p>
-                Respondemos dentro de 24 horas. También trabajamos con clubes, marcas y aliados
-                que quieren impulsar una experiencia competitiva cada vez más sólida.
+                Respondemos en menos de 24 horas. Trabajamos con clubes, marcas y aliados que
+                comparten la visión de un pádel competitivo más serio y mejor organizado.
               </p>
               <div className="contact-details">
                 <div>
@@ -615,7 +615,7 @@ export default function Home() {
       <footer className="footer home-footer">
         <div>
           <strong>ESTARS PADEL TOUR</strong>
-          <span>Un torneo con ambición de circuito y estándares cada vez más altos.</span>
+          <span>Construyendo el circuito de pádel que la región merece.</span>
         </div>
         <div className="footer-links">
           <a href="#">Privacidad</a>
