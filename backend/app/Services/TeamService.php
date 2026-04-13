@@ -420,7 +420,7 @@ class TeamService
             'provider' => 'manual_checkout',
             'provider_intent_id' => (string) Str::uuid(),
             'amount_cents' => max(0, (int) ($category?->tournament?->entry_fee_amount ?? $category?->entry_fee_amount ?? 0)) * 100,
-            'currency' => strtoupper((string) ($category?->tournament?->entry_fee_currency ?: $category?->currency ?: 'USD')),
+            'currency' => strtoupper((string) ($category?->tournament?->entry_fee_currency ?: $category?->currency ?: 'EUR')),
             'status_id' => $this->statusService->resolveStatusId('payment', 'succeeded'),
             'paid_by_user_id' => $actor->id,
             'paid_at' => now(),

@@ -77,7 +77,7 @@ class StripePaymentService
         }
 
         $amountCents = max(0, (int) ($registrationModel->tournamentCategory?->tournament?->entry_fee_amount ?? $registrationModel->tournamentCategory?->entry_fee_amount ?? 0)) * 100;
-        $currency = strtolower((string) ($registrationModel->tournamentCategory?->tournament?->entry_fee_currency ?: $registrationModel->tournamentCategory?->currency ?: 'usd'));
+        $currency = strtolower((string) ($registrationModel->tournamentCategory?->tournament?->entry_fee_currency ?: $registrationModel->tournamentCategory?->currency ?: 'eur'));
         $tournamentName = (string) ($registrationModel->tournamentCategory?->tournament?->name ?: 'ESTARS PADEL TOUR');
         $categoryName = (string) (
             $registrationModel->tournamentCategory?->category?->display_name
@@ -205,7 +205,7 @@ class StripePaymentService
         }
 
         $amountCents = max(0, (int) ($openEntryModel->tournament?->entry_fee_amount ?? 0)) * 100;
-        $currency = strtolower((string) ($openEntryModel->tournament?->entry_fee_currency ?: 'usd'));
+        $currency = strtolower((string) ($openEntryModel->tournament?->entry_fee_currency ?: 'eur'));
         $tournamentName = (string) ($openEntryModel->tournament?->name ?: 'ESTARS PADEL TOUR');
         $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
 

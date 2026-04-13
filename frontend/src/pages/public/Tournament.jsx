@@ -57,7 +57,7 @@ const formatMoney = (value) => {
   if (!Number.isFinite(amount)) return 'Por confirmar'
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'EUR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount)
@@ -117,7 +117,7 @@ const formatTournamentFee = (tournament) => {
   const amount = Number(tournament?.entry_fee_amount || 0)
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
-    currency: tournament?.entry_fee_currency || 'USD',
+    currency: tournament?.entry_fee_currency || 'EUR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount)
