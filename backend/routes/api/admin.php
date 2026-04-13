@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BracketSlotController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\LeadController as AdminLeadController;
 use App\Http\Controllers\Admin\MatchController;
+use App\Http\Controllers\Admin\OpenEntryController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PlayerRankingController as AdminPlayerRankingController;
 use App\Http\Controllers\Admin\RegistrationController;
@@ -35,6 +36,10 @@ Route::middleware(['auth:sanctum', 'active_user', 'verified', 'role:admin'])->pr
 
     Route::get('/payments', [PaymentController::class, 'index']);
     Route::patch('/payments/{payment}', [PaymentController::class, 'update']);
+
+    Route::get('/open-entries', [OpenEntryController::class, 'index']);
+    Route::get('/open-entries/{openEntry}', [OpenEntryController::class, 'show']);
+    Route::post('/open-entries/{openEntry}/assign-category', [OpenEntryController::class, 'assignCategory']);
 
     Route::get('/brackets', [BracketController::class, 'index']);
     Route::post('/brackets', [BracketController::class, 'store']);

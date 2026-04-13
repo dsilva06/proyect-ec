@@ -30,6 +30,7 @@ class RegistrationController extends Controller
                 'team.users.playerProfile',
                 'rankings.user.playerProfile',
                 'rankings.verifier',
+                'openEntry',
                 'tournamentCategory.tournament.status',
                 'tournamentCategory.category',
             ])
@@ -37,6 +38,56 @@ class RegistrationController extends Controller
             ->get();
 
         return RegistrationResource::collection($registrations);
+    }
+
+    public function indexOpenEntries(Request $request)
+    {
+        $entries = OpenEntry::query()
+            ->where('submitted_by_user_id', $request->user()->id)
+            ->with([
+                'tournament.status',
+                'team.status',
+                'team.creator',
+                'team.users.playerProfile',
+                'payments.status',
+                'payments.paidBy',
+                'submittedBy.playerProfile',
+                'assignedTournamentCategory.category',
+                'assignedTournamentCategory.tournament.status',
+                'registration.status',
+                'registration.openEntry',
+                'registration.team.users.playerProfile',
+                'registration.rankings.user.playerProfile',
+                'assignedBy.playerProfile',
+            ])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return OpenEntryResource::collection($entries);
+    }
+
+    public function showOpenEntry(Request $request, OpenEntry $openEntry)
+    {
+        abort_unless((int) $openEntry->submitted_by_user_id === (int) $request->user()->id, 404);
+
+        $openEntry->load([
+            'tournament.status',
+            'team.status',
+            'team.creator',
+            'team.users.playerProfile',
+            'payments.status',
+            'payments.paidBy',
+            'submittedBy.playerProfile',
+            'assignedTournamentCategory.category',
+            'assignedTournamentCategory.tournament.status',
+            'registration.status',
+            'registration.openEntry',
+            'registration.team.users.playerProfile',
+            'registration.rankings.user.playerProfile',
+            'assignedBy.playerProfile',
+        ]);
+
+        return new OpenEntryResource($openEntry);
     }
 
     public function store(StoreRegistrationRequest $request)

@@ -20,6 +20,7 @@ class RegistrationController extends Controller
                 'team.users.playerProfile',
                 'rankings.user.playerProfile',
                 'rankings.verifier',
+                'openEntry',
                 'tournamentCategory.tournament.status',
                 'tournamentCategory.category',
             ])
@@ -57,6 +58,7 @@ class RegistrationController extends Controller
             'team.users.playerProfile',
             'rankings.user.playerProfile',
             'rankings.verifier',
+            'openEntry',
             'tournamentCategory.tournament.status',
             'tournamentCategory.category',
         ]);

@@ -23,6 +23,8 @@ Route::middleware(['auth:sanctum', 'active_user', 'verified', 'role:player'])->p
     Route::post('/registrations', [PlayerRegistrationController::class, 'store']);
     Route::get('/registrations', [PlayerRegistrationController::class, 'index']);
     Route::post('/registrations/{registration}/pay', [PlayerRegistrationController::class, 'pay']);
+    Route::get('/open-entries', [PlayerRegistrationController::class, 'indexOpenEntries']);
+    Route::get('/open-entries/{openEntry}', [PlayerRegistrationController::class, 'showOpenEntry']);
     Route::post('/open-entries/{openEntry}/pay', [PlayerRegistrationController::class, 'payOpenEntry']);
     Route::get('/payments', [PlayerPaymentController::class, 'index']);
 });
