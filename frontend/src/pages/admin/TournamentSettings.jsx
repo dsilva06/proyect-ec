@@ -18,13 +18,13 @@ const initialTournamentForm = {
   start_date: '',
   end_date: '',
   entry_fee_amount: '',
-  entry_fee_currency: 'USD',
+  entry_fee_currency: 'EUR',
   registration_open_at: '',
   registration_close_at: '',
   match_duration_minutes: '',
   courts_count: '',
   prize_money: '',
-  prize_currency: 'USD',
+  prize_currency: 'EUR',
   city: '',
   venue_name: '',
   venue_address: '',
@@ -776,10 +776,9 @@ export default function TournamentSettings() {
             <label>
               Moneda inscripción
               <select
-                value={tournamentEdits[tournament.id]?.entry_fee_currency ?? tournament.entry_fee_currency ?? 'USD'}
+                value={tournamentEdits[tournament.id]?.entry_fee_currency ?? tournament.entry_fee_currency ?? 'EUR'}
                 onChange={(event) => handleTournamentEdit(tournament.id, 'entry_fee_currency', event.target.value)}
               >
-                <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
               </select>
             </label>
@@ -829,10 +828,9 @@ export default function TournamentSettings() {
             <label>
               Moneda premio
               <select
-                value={tournamentEdits[tournament.id]?.prize_currency ?? tournament.prize_currency ?? 'USD'}
+                value={tournamentEdits[tournament.id]?.prize_currency ?? tournament.prize_currency ?? 'EUR'}
                 onChange={(event) => handleTournamentEdit(tournament.id, 'prize_currency', event.target.value)}
               >
-                <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
               </select>
             </label>
@@ -1200,7 +1198,6 @@ export default function TournamentSettings() {
                   value={form.entry_fee_currency}
                   onChange={handleTournamentChange('entry_fee_currency')}
                 >
-                  <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
                 </select>
               </label>
@@ -1253,7 +1250,6 @@ export default function TournamentSettings() {
                   value={form.prize_currency}
                   onChange={handleTournamentChange('prize_currency')}
                 >
-                  <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
                 </select>
               </label>

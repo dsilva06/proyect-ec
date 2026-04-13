@@ -31,7 +31,7 @@ class StoreTournamentRequest extends FormRequest
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'entry_fee_amount' => ['nullable', 'integer', 'min:0'],
-            'entry_fee_currency' => ['nullable', 'string', 'max:10'],
+            'entry_fee_currency' => ['nullable', 'in:EUR'],
             'registration_open_at' => ['nullable', 'date'],
             'registration_close_at' => ['nullable', 'date', 'after_or_equal:registration_open_at'],
             'day_start_time' => ['nullable', 'date_format:H:i'],
@@ -39,7 +39,7 @@ class StoreTournamentRequest extends FormRequest
             'match_duration_minutes' => ['nullable', 'integer', 'min:20'],
             'courts_count' => ['nullable', 'integer', 'min:1', 'max:64'],
             'prize_money' => ['nullable', 'numeric', 'min:0'],
-            'prize_currency' => ['nullable', 'in:USD,EUR'],
+            'prize_currency' => ['nullable', 'in:EUR'],
         ];
     }
 

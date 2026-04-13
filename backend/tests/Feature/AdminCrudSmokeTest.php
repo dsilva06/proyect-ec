@@ -171,6 +171,27 @@ class AdminCrudSmokeTest extends TestCase
         ]);
     }
 
+    public function test_admin_tournament_creation_rejects_non_eur_currencies(): void
+    {
+        $this->seed(StatusSeeder::class);
+
+        $admin = $this->createVerifiedAdmin();
+
+        Sanctum::actingAs($admin);
+
+        $response = $this->postJson('/api/admin/tournaments', [
+            'name' => 'USD Tournament',
+            'mode' => 'amateur',
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDays(2)->toDateString(),
+            'entry_fee_amount' => 25,
+            'entry_fee_currency' => 'USD',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['entry_fee_currency']);
+    }
+
     public function test_verified_admin_can_crud_link_wildcards_without_registration_side_effects(): void
     {
         $this->seed(StatusSeeder::class);

@@ -110,7 +110,7 @@ class OpenEntryPaymentFlowTest extends TestCase
             'classification_method' => Tournament::CLASSIFICATION_REFEREE_ASSIGNED,
             'status_id' => $this->statusId('tournament', 'registration_open'),
             'entry_fee_amount' => 50,
-            'entry_fee_currency' => 'USD',
+            'entry_fee_currency' => 'EUR',
             'start_date' => now()->toDateString(),
             'end_date' => now()->addDay()->toDateString(),
             'registration_close_at' => now()->addDays(2),

@@ -14,6 +14,7 @@ Backend (`backend/.env`):
 - `DB_*`
 - `QUEUE_CONNECTION`
 - `MAIL_*`
+- `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
 - `LEADS_INBOX_EMAIL` (correo receptor de contactos web)
 - `SANCTUM_TOKEN_EXPIRATION` is minutes; tokens expire; logout revokes token.
 
@@ -37,6 +38,37 @@ cd frontend
 npm install
 cp .env.example .env
 npm run dev
+```
+
+## Stripe Checkout
+La pasarela de pago ya usa Stripe Checkout alojado por Stripe.
+
+Flujo actual:
+- `POST /api/player/registrations/{registration}/pay` crea una Checkout Session para inscripciones regulares.
+- `POST /api/player/open-entries/{openEntry}/pay` crea una Checkout Session para OPEN.
+- `POST /api/stripe/webhook` confirma el pago y actualiza el estado final.
+
+Configuracion minima en `backend/.env`:
+```bash
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+FRONTEND_URL=http://localhost:5173
+```
+
+Prueba local recomendada con Stripe CLI:
+```bash
+stripe login
+stripe listen --forward-to http://127.0.0.1:8001/api/stripe/webhook
+```
+
+Usa el `whsec_...` que imprime Stripe CLI como valor de `STRIPE_WEBHOOK_SECRET`.
+
+Validacion automatizada del flujo:
+```bash
+cd backend
+php artisan test tests/Feature/TeamTournamentRegistrationFlowTest.php
+php artisan test tests/Feature/OpenEntryPaymentFlowTest.php
 ```
 
 ## Scheduler + Queue (produccion)
