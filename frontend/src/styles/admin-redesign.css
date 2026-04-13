@@ -817,3 +817,235 @@
     gap: 14px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PLAYERS PAGE (/admin/players)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 56. Players two-column layout */
+.players-layout {
+  gap: 22px;
+}
+
+/* 57. Players list — tighter row gap */
+.players-list {
+  gap: 10px;
+}
+
+/* 58. Rule card inputs — already inside .form-grid, so form-grid
+       rules apply. Just fix the three-column layout gap. */
+.players-rule-grid {
+  gap: 14px 14px;
+}
+
+/* 59. Rule summary — faint separator + muted caption */
+.players-rule-summary {
+  font-size: 0.82rem;
+  color: rgba(239, 231, 211, 0.48);
+  padding-top: 14px;
+  border-top: 1px solid rgba(239, 231, 211, 0.07);
+  line-height: 1.6;
+}
+
+/* 60. Player item — vertically center columns, consistent gap */
+.player-item {
+  align-items: center;
+  gap: 14px 16px;
+  padding: 14px 18px;
+}
+
+/* 61. Player item column cells — label-above-value stack */
+.player-item-field,
+.player-item-stat,
+.player-item-money {
+  display: grid;
+  gap: 5px;
+}
+
+/* 62. Column label — same uppercase treatment as match-detail-grid */
+.player-item-field > span,
+.player-item-stat > span,
+.player-item-money > span {
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.5);
+}
+
+/* 63. Player name — slightly larger, full weight */
+.player-item-summary strong {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* 64. Player stat / money values */
+.player-item-stat strong,
+.player-item-money strong {
+  font-size: 0.93rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--color-white-chocolate);
+}
+
+/* 65. FEP ranking input — styled to match form inputs */
+.player-item-field input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 231, 211, 0.11);
+  background: rgba(5, 7, 18, 0.82);
+  color: var(--color-white-chocolate);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  transition: border-color 0.16s ease;
+}
+
+.player-item-field input:focus {
+  outline: none;
+  border-color: rgba(183, 207, 79, 0.38);
+}
+
+/* 66. Player actions row — tighter buttons */
+.player-item-actions {
+  gap: 8px;
+  align-self: center;
+}
+
+.player-item-actions .secondary-button,
+.player-item-actions .ghost-button {
+  min-width: 128px;
+}
+
+/* 67. Players modal — extra-wide, with h4 header support */
+.players-modal {
+  width: min(1180px, 100%);
+}
+
+.players-modal .modal-header h4 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0;
+  color: var(--color-white-chocolate);
+}
+
+.players-modal .modal-header p {
+  font-size: 0.82rem;
+  color: rgba(239, 231, 211, 0.58);
+  margin-top: 3px;
+}
+
+/* 68. Modal body — proper gap */
+.players-modal-body {
+  gap: 22px;
+}
+
+/* 69. Palmares KPI strip — consistent gap */
+.players-palmares-grid {
+  gap: 10px;
+}
+
+/* 70. Nested payouts panel card — inset within modal body */
+.players-payouts-card {
+  padding: 20px;
+  gap: 16px;
+  background: rgba(4, 5, 14, 0.65);
+}
+
+.players-payouts-card .panel-header h5 {
+  font-size: 0.88rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.72);
+  margin: 0;
+}
+
+/* 71. Payout create form — inputs styled directly (not inside form-grid) */
+.players-payout-create {
+  gap: 14px;
+}
+
+/* 72. Payout list — tight rows */
+.players-payout-list {
+  gap: 8px;
+}
+
+/* 73. Payout row item — 4-column edit grid */
+.players-payout-item {
+  padding: 13px 16px;
+  gap: 10px 12px;
+  align-items: end;
+}
+
+/* 74. Payout item cells — label-above-field stack */
+.players-payout-item > div {
+  display: grid;
+  gap: 5px;
+}
+
+.players-payout-item > div > span {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.5);
+}
+
+.players-payout-item > div > strong {
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-white-chocolate);
+}
+
+/* 75. Payout item inputs/selects */
+.players-payout-item input,
+.players-payout-item select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 231, 211, 0.11);
+  background: rgba(5, 7, 18, 0.82);
+  color: var(--color-white-chocolate);
+  font-size: 0.88rem;
+  font-family: var(--font-body);
+  transition: border-color 0.16s ease;
+}
+
+.players-payout-item input:focus,
+.players-payout-item select:focus {
+  outline: none;
+  border-color: rgba(183, 207, 79, 0.38);
+}
+
+/* 76. Players page responsive — stack columns earlier */
+@media (max-width: 980px) {
+  .player-item {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .player-item-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .players-payout-item {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .player-item {
+    grid-template-columns: 1fr;
+  }
+
+  .player-item-actions .secondary-button,
+  .player-item-actions .ghost-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .players-payout-create,
+  .players-payout-item {
+    grid-template-columns: 1fr;
+  }
+}
