@@ -45,6 +45,11 @@ export default function Leads() {
           <h3>Leads</h3>
           <p>Contactos de interés desde la landing.</p>
         </div>
+        <div className="admin-page-actions">
+          <button className="secondary-button" type="button" onClick={load}>
+            Actualizar
+          </button>
+        </div>
       </div>
 
       {error && <div className="empty-state">{error}</div>}

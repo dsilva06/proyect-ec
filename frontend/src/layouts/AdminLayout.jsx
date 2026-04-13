@@ -136,8 +136,8 @@ export default function AdminLayout() {
       <section className="admin-main">
         <header className="admin-header">
           <div className="admin-header-copy">
-            <span className="admin-header-eyebrow">{currentSection.label}</span>
-            <h2>Panel de administración</h2>
+            <span className="admin-header-eyebrow">Panel administrativo</span>
+            <h2>{currentSection.label}</h2>
             <p className="admin-subtitle">{currentSection.meta}</p>
             {authWarning && <p className="auth-error">{authWarning}</p>}
           </div>

@@ -1,0 +1,819 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ADMIN VISUAL REDESIGN — Presentation layer polish
+   Scope: layout, spacing, typography hierarchy, card quality
+   No logic, routes, permissions, or API contracts changed.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 1. Shell layout — slightly wider sidebar, better gap */
+.admin-shell-pro {
+  width: min(1820px, 100%);
+  grid-template-columns: minmax(264px, 304px) minmax(0, 1fr);
+  gap: clamp(16px, 2vw, 26px);
+}
+
+/* 2. Sidebar frame — more refined surface */
+.admin-sidebar-frame {
+  padding: 20px;
+  gap: 20px;
+  border-radius: 22px;
+  border-color: rgba(239, 231, 211, 0.13);
+  background:
+    linear-gradient(158deg, rgba(8, 12, 58, 0.97), rgba(26, 4, 40, 0.95)),
+    radial-gradient(circle at 0% 0%, rgba(183, 207, 79, 0.13), transparent 52%);
+  box-shadow: 0 20px 36px rgba(2, 5, 20, 0.48);
+}
+
+/* 3. Sidebar top area — more breathing room */
+.admin-sidebar-top {
+  padding: 2px 4px 16px;
+  gap: 10px;
+  align-items: center;
+}
+
+/* 4. Nav section label — softer, more spacious */
+.admin-nav-section-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.42);
+  padding: 0 4px;
+  margin-bottom: 2px;
+}
+
+/* 5. Sidebar section — tighter gap between items */
+.admin-sidebar-section {
+  gap: 6px;
+}
+
+/* 6. Nav links — more breathing room, subtler base */
+.admin-shell-pro .admin-nav a {
+  min-height: 60px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  border-color: rgba(239, 231, 211, 0.07);
+  background: rgba(255, 255, 255, 0.01);
+  gap: 4px;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.admin-shell-pro .admin-nav a:hover:not(.active) {
+  border-color: rgba(239, 231, 211, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* 7. Active nav — keep lime-green, add subtle glow */
+.admin-shell-pro .admin-nav a.active {
+  background: linear-gradient(120deg, rgba(183, 207, 79, 0.96), #d9ec82);
+  border-color: rgba(183, 207, 79, 0.65);
+  box-shadow: 0 4px 16px rgba(183, 207, 79, 0.2);
+}
+
+/* 8. Nav item text hierarchy */
+.admin-nav-item-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.admin-nav-item-meta {
+  font-size: 0.67rem;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: rgba(239, 231, 211, 0.58);
+}
+
+.admin-shell-pro .admin-nav a.active .admin-nav-item-meta {
+  color: rgba(24, 10, 24, 0.68);
+}
+
+/* 9. Admin main gap */
+.admin-main {
+  gap: 16px;
+}
+
+/* 10. Admin header — cleaner, less heavy */
+.admin-main .admin-header {
+  top: 16px;
+  padding: 16px 22px;
+  gap: 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(239, 231, 211, 0.13);
+  background:
+    linear-gradient(158deg, rgba(8, 12, 58, 0.92), rgba(28, 6, 44, 0.88)),
+    radial-gradient(circle at 100% 0%, rgba(255, 154, 61, 0.07), transparent 42%);
+  box-shadow: 0 10px 28px rgba(2, 5, 20, 0.3);
+}
+
+/* 11. Header copy — tighter stack */
+.admin-header-copy {
+  gap: 5px;
+}
+
+/* 12. Header eyebrow — smaller indicator pill */
+.admin-header-eyebrow {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  padding: 4px 10px;
+  border-color: rgba(239, 231, 211, 0.11);
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(239, 231, 211, 0.58);
+}
+
+/* 13. Header h2 — section title, clearly readable */
+.admin-header h2 {
+  font-size: clamp(1.55rem, 2.2vw, 2.1rem);
+  letter-spacing: 0.01em;
+  line-height: 1.08;
+}
+
+/* 14. Admin subtitle */
+.admin-subtitle {
+  color: rgba(239, 231, 211, 0.65);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* 15. User card — cleaner, well-contained */
+.admin-user-card {
+  min-width: min(100%, 240px);
+  padding: 12px 16px;
+  border-radius: 14px;
+  border-color: rgba(239, 231, 211, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+  display: grid;
+  gap: 3px;
+}
+
+/* 16. Admin content area */
+.admin-content {
+  gap: 26px;
+  padding: 4px 2px 22px;
+}
+
+/* 17. Admin page — more air between sections */
+.admin-page {
+  gap: 26px;
+}
+
+/* 18. Page header — clear visual anchor with divider */
+.admin-page-header {
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.09);
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.admin-main .admin-page-header h3 {
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+}
+
+.admin-page-header p {
+  color: rgba(239, 231, 211, 0.65);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin-top: 3px;
+}
+
+/* 19. Page actions — consistent spacing */
+.admin-page-actions {
+  gap: 10px;
+  row-gap: 10px;
+}
+
+/* 20. Panel card — stronger base with subtle top-inset */
+.panel-card {
+  gap: 20px;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(239, 231, 211, 0.11);
+  background: rgba(7, 9, 22, 0.72);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+/* 21. Panel header — separator line */
+.panel-header {
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.08);
+  align-items: center;
+}
+
+.panel-header h4 {
+  font-size: 1.02rem;
+  letter-spacing: 0.03em;
+  color: var(--color-white-chocolate);
+}
+
+.panel-header p {
+  color: rgba(239, 231, 211, 0.65);
+  font-size: 0.86rem;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* 22. KPI grid */
+.kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(154px, 1fr));
+  gap: 12px;
+}
+
+/* 23. KPI card — better contrast and hierarchy */
+.kpi-card {
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 231, 211, 0.08);
+  background: rgba(255, 255, 255, 0.022);
+  gap: 8px;
+  transition: border-color 0.16s ease;
+}
+
+.kpi-card:hover {
+  border-color: rgba(239, 231, 211, 0.18);
+}
+
+/* 24. KPI / stat label — small uppercase */
+.kpi-card span,
+.dashboard-stat span {
+  font-size: 0.76rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.58);
+}
+
+/* 25. KPI / stat value — strong numeric */
+.kpi-card strong,
+.dashboard-stat strong {
+  font-size: clamp(1.5rem, 2.4vw, 1.95rem);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-white-chocolate);
+}
+
+/* 26. Dashboard grid */
+.dashboard-grid {
+  gap: 22px;
+}
+
+.dashboard-main,
+.dashboard-side {
+  gap: 22px;
+}
+
+/* 27. Dashboard hero grid */
+.dashboard-hero-grid {
+  gap: 12px;
+}
+
+/* 28. Dashboard stat card */
+.dashboard-stat {
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 231, 211, 0.08);
+  background: rgba(255, 255, 255, 0.022);
+  gap: 8px;
+  transition: border-color 0.16s ease;
+}
+
+/* Hero stats get slightly more prominent values */
+.dashboard-hero .dashboard-stat strong {
+  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+}
+
+.dashboard-stat p {
+  color: rgba(239, 231, 211, 0.55);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* 29. Dashboard category grid */
+.dashboard-category-grid {
+  gap: 12px;
+}
+
+.dashboard-category-card {
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 231, 211, 0.08);
+  background: rgba(255, 255, 255, 0.022);
+  gap: 12px;
+  transition: border-color 0.16s ease;
+}
+
+.dashboard-category-card:hover {
+  border-color: rgba(239, 231, 211, 0.18);
+}
+
+/* 30. Category meta text */
+.category-meta {
+  font-size: 0.79rem;
+  color: rgba(239, 231, 211, 0.6);
+}
+
+/* 31. Progress bar — branded fill color */
+.progress-bar {
+  height: 5px;
+  background: rgba(239, 231, 211, 0.07);
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, var(--color-portland-orange), rgba(255, 120, 70, 0.8));
+}
+
+/* 32. Alert grid — single column, stacked cleanly */
+.alert-grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+/* 33. Alert cards — tonal borders */
+.alert-card {
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(239, 231, 211, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  gap: 6px;
+  transition: border-color 0.16s ease;
+}
+
+.alert-card span {
+  font-size: 0.74rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.58);
+}
+
+.alert-card strong {
+  font-size: 1.25rem;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.alert-card em {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: rgba(239, 231, 211, 0.58);
+}
+
+.alert-card.warning {
+  border-color: rgba(255, 200, 87, 0.38);
+  background: rgba(255, 200, 87, 0.035);
+}
+
+.alert-card.danger {
+  border-color: rgba(255, 107, 107, 0.42);
+  background: rgba(255, 107, 107, 0.035);
+}
+
+.alert-card.success {
+  border-color: rgba(120, 224, 168, 0.38);
+  background: rgba(120, 224, 168, 0.03);
+}
+
+/* 34. Alert items — nested info list */
+.alert-items {
+  margin-top: 6px;
+  gap: 6px;
+}
+
+.alert-item {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(5, 7, 14, 0.6);
+  border: 1px solid rgba(239, 231, 211, 0.06);
+  gap: 3px;
+}
+
+.alert-item strong {
+  font-size: 0.88rem;
+}
+
+.alert-item span {
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(239, 231, 211, 0.56);
+}
+
+/* 35. Stat list — dividers between rows */
+.stat-list {
+  gap: 0;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 11px 4px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.07);
+  font-size: 0.89rem;
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.stat-row:first-child {
+  padding-top: 2px;
+}
+
+.stat-row span {
+  color: rgba(239, 231, 211, 0.62);
+}
+
+.stat-row strong {
+  font-size: 0.94rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* 36. Trend grid */
+.trend-grid {
+  gap: 12px;
+}
+
+.trend-card {
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 231, 211, 0.08);
+  background: rgba(255, 255, 255, 0.022);
+  gap: 14px;
+}
+
+/* 37. Trend card title — subtle label */
+.trend-card h5 {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.62);
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.07);
+}
+
+/* 38. Trend items — row dividers */
+.trend-list {
+  gap: 0;
+}
+
+.trend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.06);
+  font-size: 0.85rem;
+}
+
+.trend-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.trend-item:first-child {
+  padding-top: 0;
+}
+
+.trend-item span {
+  color: rgba(239, 231, 211, 0.58);
+}
+
+.trend-item strong {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 39. Empty state — clearer placeholder */
+.empty-state {
+  padding: 30px 24px;
+  border-radius: 16px;
+  border: 1px dashed rgba(239, 231, 211, 0.12);
+  background: rgba(255, 255, 255, 0.012);
+  text-align: center;
+  color: rgba(239, 231, 211, 0.48);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+/* 40. Registration list — tighter gap */
+.registration-list {
+  gap: 10px;
+}
+
+/* 41. Registration item — cleaner row */
+.registration-item {
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 231, 211, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  gap: 20px;
+  transition: border-color 0.16s ease;
+}
+
+.registration-item:hover {
+  border-color: rgba(239, 231, 211, 0.16);
+}
+
+.registration-item span {
+  font-size: 0.8rem;
+  color: rgba(239, 231, 211, 0.6);
+}
+
+.registration-item strong {
+  line-height: 1.35;
+  font-size: 0.95rem;
+}
+
+/* 42. Payment row label/value pairs */
+.payment-row > div > span:first-child {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.55);
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* 43. Matches round groups — styled as distinct section cards */
+.matches-round-list {
+  gap: 16px;
+}
+
+.matches-round-group {
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(239, 231, 211, 0.09);
+  background: rgba(6, 8, 20, 0.55);
+  gap: 14px;
+  display: grid;
+}
+
+.matches-round-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.08);
+  margin-bottom: 0;
+}
+
+.matches-round-header h5 {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.72);
+  margin: 0;
+}
+
+/* 44. Match items — hover accent */
+.match-item.is-clickable:hover {
+  border-color: rgba(255, 94, 51, 0.3);
+}
+
+/* 45. Match detail grid — card-per-field */
+.match-detail-grid {
+  gap: 12px;
+}
+
+.match-detail-grid > div {
+  display: grid;
+  gap: 5px;
+  padding: 13px 16px;
+  border-radius: 13px;
+  border: 1px solid rgba(239, 231, 211, 0.08);
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.match-detail-grid span {
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.52);
+}
+
+.match-detail-grid strong {
+  font-size: 0.93rem;
+  display: block;
+  margin-top: 0;
+  color: var(--color-white-chocolate);
+}
+
+/* 46. Match detail sections */
+.match-detail-body {
+  gap: 18px;
+}
+
+.match-detail-section h4 {
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.6);
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.07);
+}
+
+/* 47. Modal card — more refined surface */
+.modal-card {
+  border-radius: 22px;
+  border: 1px solid rgba(239, 231, 211, 0.14);
+  background: linear-gradient(162deg, rgba(9, 11, 30, 0.99), rgba(16, 6, 28, 0.99));
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.56), 0 0 0 1px rgba(239, 231, 211, 0.04);
+  padding: 0;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.09);
+}
+
+.modal-header h3 {
+  font-size: 1.2rem;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 22px 24px;
+}
+
+/* 48. Form grid refinements */
+.form-grid {
+  gap: 18px;
+}
+
+.form-grid label {
+  gap: 7px;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: rgba(239, 231, 211, 0.66);
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 231, 211, 0.11);
+  background: rgba(5, 7, 18, 0.78);
+  color: var(--color-white-chocolate);
+  font-size: 0.93rem;
+  transition: border-color 0.16s ease;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+  outline: none;
+  border-color: rgba(183, 207, 79, 0.38);
+}
+
+/* 49. Form message — tonal feedback */
+.form-message {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 231, 211, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.form-message.success {
+  border-color: rgba(120, 224, 168, 0.28);
+  background: rgba(120, 224, 168, 0.04);
+  color: #8ef3b0;
+}
+
+.form-message.error {
+  border-color: rgba(255, 107, 107, 0.28);
+  background: rgba(255, 107, 107, 0.04);
+  color: #ff9b9b;
+}
+
+/* 50. Tag variants — border-inclusive */
+.tag {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 231, 211, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tag.muted {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: rgba(239, 231, 211, 0.09);
+  color: rgba(239, 231, 211, 0.62);
+}
+
+/* 51. Payments page — wider KPI columns */
+.payments-page .kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+}
+
+.payments-list {
+  gap: 10px;
+}
+
+/* 52. Score box */
+.match-score-box {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(5, 7, 18, 0.85);
+  border: 1px solid rgba(239, 231, 211, 0.09);
+  font-size: 0.84rem;
+  color: rgba(239, 231, 211, 0.85);
+  line-height: 1.6;
+}
+
+/* 53. Admin sidebar top tag */
+.admin-shell-pro .admin-sidebar-top .tag {
+  font-size: 0.62rem;
+  padding: 3px 8px;
+  letter-spacing: 0.12em;
+  border-color: rgba(183, 207, 79, 0.28);
+  background: rgba(183, 207, 79, 0.07);
+  color: rgba(183, 207, 79, 0.9);
+  flex-shrink: 0;
+}
+
+/* 54. Draws page */
+.draws-page {
+  gap: 22px;
+}
+
+.draws-toolbar-card {
+  padding: 18px 22px;
+}
+
+/* 55. Responsive — tablet adjustments */
+@media (max-width: 1180px) {
+  .admin-shell-pro {
+    grid-template-columns: minmax(248px, 280px) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 980px) {
+  .admin-page-header {
+    padding-bottom: 18px;
+  }
+
+  .panel-card {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .kpi-card,
+  .dashboard-stat,
+  .dashboard-category-card,
+  .trend-card,
+  .alert-card {
+    padding: 16px 18px;
+  }
+
+  .matches-round-group {
+    padding: 16px 18px;
+  }
+
+  .modal-header {
+    padding: 18px 20px 16px;
+  }
+
+  .modal-body {
+    padding: 18px 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-page {
+    gap: 20px;
+  }
+
+  .admin-content {
+    padding: 4px 2px 18px;
+    gap: 20px;
+  }
+
+  .panel-card {
+    gap: 16px;
+  }
+
+  .admin-page-header {
+    padding-bottom: 16px;
+    gap: 14px;
+  }
+}
