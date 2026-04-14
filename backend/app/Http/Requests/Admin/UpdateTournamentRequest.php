@@ -43,6 +43,17 @@ class UpdateTournamentRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation(): void
+    {
+        $incomingMode = $this->input('mode');
+        $tournament = $this->route('tournament');
+        $effectiveMode = $incomingMode ?? $tournament?->mode;
+
+        if (strtolower((string) $effectiveMode) === 'open') {
+            $this->merge(['classification_method' => 'referee_assigned']);
+        }
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {

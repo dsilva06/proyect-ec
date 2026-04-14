@@ -43,6 +43,13 @@ class StoreTournamentRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation(): void
+    {
+        if (strtolower((string) $this->input('mode', '')) === 'open') {
+            $this->merge(['classification_method' => 'referee_assigned']);
+        }
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
