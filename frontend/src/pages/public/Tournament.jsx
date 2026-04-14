@@ -448,54 +448,60 @@ export default function Tournament() {
                         <>
                           <h4>Entrada OPEN</h4>
                           <p className="muted">
-                            Inscribe tu pareja en el torneo. El árbitro asignará la categoría después del pago.
+                            Inscribe tu pareja. El árbitro asignará la categoría después del pago — no necesitas elegirla.
                           </p>
                           {!user && <p className="muted">Inicia sesión para inscribirte.</p>}
                           {user && !participating ? (
                             <form onSubmit={(event) => handleOpenRegister(event, tournament)}>
                               <label>
-                                Segmento
+                                Segmento de juego
                                 <select
                                   value={openForm.segment}
                                   onChange={(e) => setOpenForm((prev) => ({ ...prev, segment: e.target.value }))}
                                 >
-                                  <option value="">Selecciona</option>
+                                  <option value="">— Selecciona —</option>
                                   {OPEN_SEGMENT_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                   ))}
                                 </select>
                               </label>
                               <label>
-                                Email de tu pareja (obligatorio)
+                                Email de tu pareja
                                 <input
                                   type="email"
+                                  placeholder="nombre@ejemplo.com"
                                   value={openForm.partnerEmail}
                                   onChange={(e) => setOpenForm((prev) => ({ ...prev, partnerEmail: e.target.value }))}
                                 />
+                                <small className="player-field-help">Tu pareja no necesita cuenta en la plataforma.</small>
                               </label>
                               <label>
-                                Nombre de tu pareja (obligatorio)
+                                Nombre de tu pareja
                                 <input
                                   type="text"
+                                  placeholder="Nombre"
                                   value={openForm.partnerFirstName}
                                   onChange={(e) => setOpenForm((prev) => ({ ...prev, partnerFirstName: e.target.value }))}
                                 />
                               </label>
                               <label>
-                                Apellido de tu pareja (obligatorio)
+                                Apellido de tu pareja
                                 <input
                                   type="text"
+                                  placeholder="Apellido"
                                   value={openForm.partnerLastName}
                                   onChange={(e) => setOpenForm((prev) => ({ ...prev, partnerLastName: e.target.value }))}
                                 />
                               </label>
                               <label>
-                                DNI de tu pareja (obligatorio)
+                                DNI / Pasaporte de tu pareja
                                 <input
                                   type="text"
+                                  placeholder="12345678A"
                                   value={openForm.partnerDni}
                                   onChange={(e) => setOpenForm((prev) => ({ ...prev, partnerDni: e.target.value }))}
                                 />
+                                <small className="player-field-help">Necesario para la acreditación oficial en el torneo.</small>
                               </label>
                               <div className="form-actions">
                                 <button className="primary-button" type="submit">
@@ -507,7 +513,7 @@ export default function Tournament() {
                             </form>
                           ) : null}
                           {user && participating ? (
-                            <p className="muted">Ya tienes una entrada enviada para este torneo.</p>
+                            <p className="muted">Ya tienes una entrada registrada para este torneo.</p>
                           ) : null}
                         </>
                       ) : (
@@ -552,9 +558,10 @@ export default function Tournament() {
                                 </select>
                               </label>
                               <label>
-                                Email del partner (obligatorio)
+                                Email del partner
                                 <input
                                   type="email"
+                                  placeholder="nombre@ejemplo.com"
                                   value={standardForm.partnerEmail}
                                   onChange={(e) => setStandardForm((prev) => ({ ...prev, partnerEmail: e.target.value }))}
                                 />
@@ -568,16 +575,17 @@ export default function Tournament() {
                                 return (
                                   <>
                                     <label>
-                                      Tu ranking {rankingSourceLabel} (obligatorio)
+                                      Tu ranking {rankingSourceLabel}
                                       <input
                                         type="number"
                                         min="1"
+                                        placeholder="Ej: 350"
                                         value={standardForm.selfRanking}
                                         onChange={(e) => setStandardForm((prev) => ({ ...prev, selfRanking: e.target.value }))}
                                       />
                                     </label>
                                     <label>
-                                      Fuente ranking (tú)
+                                      Fuente de ranking (tú)
                                       <select
                                         value={standardForm.selfRankingSource}
                                         onChange={(e) => setStandardForm((prev) => ({ ...prev, selfRankingSource: e.target.value }))}
@@ -588,16 +596,17 @@ export default function Tournament() {
                                       </select>
                                     </label>
                                     <label>
-                                      Ranking del partner {rankingSourceLabel} (obligatorio)
+                                      Ranking del partner {rankingSourceLabel}
                                       <input
                                         type="number"
                                         min="1"
+                                        placeholder="Ej: 420"
                                         value={standardForm.partnerRanking}
                                         onChange={(e) => setStandardForm((prev) => ({ ...prev, partnerRanking: e.target.value }))}
                                       />
                                     </label>
                                     <label>
-                                      Fuente ranking (partner)
+                                      Fuente de ranking (partner)
                                       <select
                                         value={standardForm.partnerRankingSource}
                                         onChange={(e) => setStandardForm((prev) => ({ ...prev, partnerRankingSource: e.target.value }))}
@@ -617,7 +626,7 @@ export default function Tournament() {
                               {error && <p className="form-message error">{error}</p>}
                             </form>
                           ) : null}
-                          {user && participating ? <p className="muted">Ya estás inscrito.</p> : null}
+                          {user && participating ? <p className="muted">Ya estás inscrito en este torneo.</p> : null}
                         </>
                       )}
                     </div>

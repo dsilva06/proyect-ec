@@ -1388,8 +1388,9 @@ main,
 .registration-form label {
   display: grid;
   gap: 8px;
-  font-size: 0.85rem;
-  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(239, 231, 211, 0.88);
 }
 
 .registration-form input,
@@ -5168,10 +5169,11 @@ label,
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: rgba(239, 231, 211, 0.72);
+  color: rgba(239, 231, 211, 0.8);
 }
 
 .player-quick-strip {
@@ -5288,10 +5290,10 @@ label,
 }
 
 .player-stat-card span {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(239, 231, 211, 0.66);
+  letter-spacing: 0.1em;
+  color: rgba(239, 231, 211, 0.74);
 }
 
 .player-stat-card strong {
@@ -5323,6 +5325,24 @@ label,
   gap: 12px;
 }
 
+.player-section-heading {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.1);
+}
+
+.player-section-heading h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-white-chocolate);
+}
+
+.player-section-heading p {
+  font-size: 0.84rem;
+  color: rgba(239, 231, 211, 0.68);
+  margin-top: 4px;
+}
+
 .player-info-card {
   display: grid;
   gap: 12px;
@@ -5349,7 +5369,8 @@ label,
 }
 
 .player-info-card h5 {
-  font-size: 1.06rem;
+  font-size: 1.12rem;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -5375,10 +5396,10 @@ label,
 }
 
 .player-metadata-grid span {
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(239, 231, 211, 0.62);
+  letter-spacing: 0.09em;
+  color: rgba(239, 231, 211, 0.72);
 }
 
 .player-soft-note {
@@ -5429,9 +5450,11 @@ label,
 }
 
 .player-field-help {
-  color: rgba(239, 231, 211, 0.72);
-  font-size: 0.92rem;
-  line-height: 1.55;
+  color: rgba(239, 231, 211, 0.6);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.5;
+  margin-top: -2px;
 }
 
 .player-ranking-summary {

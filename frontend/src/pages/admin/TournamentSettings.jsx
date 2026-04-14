@@ -249,7 +249,14 @@ export default function TournamentSettings() {
   }, [])
 
   const handleTournamentChange = (field) => (event) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }))
+    const value = event.target.value
+    setForm((prev) => {
+      const next = { ...prev, [field]: value }
+      if (field === 'mode') {
+        next.classification_method = resolveClassificationMethod(value)
+      }
+      return next
+    })
   }
 
   const handleValueChange = (field) => (value) => {
@@ -401,14 +408,20 @@ export default function TournamentSettings() {
     clearDragState()
   }
 
+  const resolveClassificationMethod = (mode) =>
+    String(mode || '').toLowerCase() === 'open' ? 'referee_assigned' : 'self_selected'
+
   const handleTournamentEdit = (tournamentId, field, value) => {
-    setTournamentEdits((prev) => ({
-      ...prev,
-      [tournamentId]: {
+    setTournamentEdits((prev) => {
+      const next = {
         ...(prev[tournamentId] || {}),
         [field]: value,
-      },
-    }))
+      }
+      if (field === 'mode') {
+        next.classification_method = resolveClassificationMethod(value)
+      }
+      return { ...prev, [tournamentId]: next }
+    })
   }
 
   const handleUpdateTournament = async (tournamentId) => {
@@ -465,11 +478,12 @@ export default function TournamentSettings() {
     try {
       const tournament = tournaments.find((item) => String(item.id) === String(tournamentId))
       const rankingRangePayload = buildRankingRangePayload(payload, tournamentUsesRanking(tournament?.mode))
+      const isOpenTournament = String(tournament?.mode || '').toLowerCase() === 'open'
       await adminTournamentsApi.addCategory(tournamentId, cleanPayload({
         ...payload,
         max_teams: Number(payload.max_teams || 0),
         wildcard_slots: Number(payload.wildcard_slots || 0),
-        acceptance_type: payload.acceptance_type || 'waitlist',
+        acceptance_type: isOpenTournament ? 'immediate' : (payload.acceptance_type || 'waitlist'),
         ...rankingRangePayload,
       }))
       setCategoryForms((prev) => ({ ...prev, [tournamentId]: null }))
@@ -621,6 +635,7 @@ export default function TournamentSettings() {
   const renderTournamentCard = (tournament) => {
     const categoryForm = categoryForms[tournament.id] || {}
     const currentMode = tournamentEdits[tournament.id]?.mode ?? tournament.mode
+    const isOpenMode = String(currentMode || '').toLowerCase() === 'open'
     const usesRanking = tournamentUsesRanking(currentMode)
     return (
       <article key={tournament.id} className="tournament-card settings-tournament-card">
@@ -729,38 +744,23 @@ export default function TournamentSettings() {
                   handleTournamentEdit(tournament.id, 'mode', event.target.value)
                 }
               >
-                <option value="amateur">Amateur</option>
-                <option value="pro">Pro</option>
-                <option value="open">OPEN</option>
+                <option value="amateur">Amateur — inscripción libre por ranking</option>
+                <option value="pro">PRO — inscripción libre por ranking</option>
+                <option value="open">OPEN — árbitro asigna la categoría</option>
               </select>
             </label>
-            {(() => {
-              const editMode = tournamentEdits[tournament.id]?.mode ?? tournament.mode
-              const isOpenMode = String(editMode || '').toLowerCase() === 'open'
-              return (
-                <label>
-                  Clasificación
-                  {isOpenMode ? (
-                    <input
-                      type="text"
-                      value="Asignación por árbitro (OPEN)"
-                      readOnly
-                      disabled
-                    />
-                  ) : (
-                    <select
-                      value={tournamentEdits[tournament.id]?.classification_method ?? tournament.classification_method ?? 'self_selected'}
-                      onChange={(event) =>
-                        handleTournamentEdit(tournament.id, 'classification_method', event.target.value)
-                      }
-                    >
-                      <option value="self_selected">Selección de categoría</option>
-                      <option value="referee_assigned">Asignación por árbitro</option>
-                    </select>
-                  )}
-                </label>
-              )
-            })()}
+            <label>
+              Método de clasificación
+              <input
+                type="text"
+                value={String(tournamentEdits[tournament.id]?.mode ?? tournament.mode ?? 'amateur').toLowerCase() === 'open'
+                  ? 'Asignación por árbitro (OPEN)'
+                  : 'Jugadores eligen su categoría (PRO / Amateur)'}
+                readOnly
+                disabled
+              />
+              <small className="field-hint">Definido automáticamente según la modalidad. No editable.</small>
+            </label>
             <label>
               Fecha inicio
               <DatePicker
@@ -904,21 +904,25 @@ export default function TournamentSettings() {
                       />
                     </div>
                     <div>
-                      <span>Aceptación</span>
-                      <select
-                        value={edits.acceptance_type ?? category.acceptance_type ?? 'waitlist'}
-                        onChange={(event) =>
-                          handleCategoryEdit(category.id, 'acceptance_type', event.target.value)
-                        }
-                      >
-                        <option value="waitlist">Waitlist</option>
-                        <option value="immediate">Inmediata</option>
-                      </select>
+                      <span>Tipo de aceptación</span>
+                      {isOpenMode ? (
+                        <input type="text" value="Inmediata — asignación OPEN" readOnly disabled />
+                      ) : (
+                        <select
+                          value={edits.acceptance_type ?? category.acceptance_type ?? 'waitlist'}
+                          onChange={(event) =>
+                            handleCategoryEdit(category.id, 'acceptance_type', event.target.value)
+                          }
+                        >
+                          <option value="waitlist">Lista de espera (waitlist)</option>
+                          <option value="immediate">Inmediata (sin cola)</option>
+                        </select>
+                      )}
                     </div>
                     {usesRanking ? (
                       <>
                         <div>
-                          <span>FIP min</span>
+                          <span>Ranking FIP mín.</span>
                           <input
                             type="number"
                             value={edits.min_fip_rank ?? category.min_fip_rank ?? ''}
@@ -928,7 +932,7 @@ export default function TournamentSettings() {
                           />
                         </div>
                         <div>
-                          <span>FIP max</span>
+                          <span>Ranking FIP máx.</span>
                           <input
                             type="number"
                             value={edits.max_fip_rank ?? category.max_fip_rank ?? ''}
@@ -938,7 +942,7 @@ export default function TournamentSettings() {
                           />
                         </div>
                         <div>
-                          <span>FEP min</span>
+                          <span>Ranking FEP mín.</span>
                           <input
                             type="number"
                             value={edits.min_fep_rank ?? category.min_fep_rank ?? ''}
@@ -948,7 +952,7 @@ export default function TournamentSettings() {
                           />
                         </div>
                         <div>
-                          <span>FEP max</span>
+                          <span>Ranking FEP máx.</span>
                           <input
                             type="number"
                             value={edits.max_fep_rank ?? category.max_fep_rank ?? ''}
@@ -1038,20 +1042,24 @@ export default function TournamentSettings() {
             </label>
             <label>
               Tipo de aceptación
-              <select
-                value={categoryForm.acceptance_type || 'waitlist'}
-                onChange={(event) =>
-                  handleCategoryFormChange(tournament.id, 'acceptance_type', event.target.value)
-                }
-              >
-                <option value="waitlist">Waitlist</option>
-                <option value="immediate">Inmediata</option>
-              </select>
+              {isOpenMode ? (
+                <input type="text" value="Inmediata — asignación OPEN" readOnly disabled />
+              ) : (
+                <select
+                  value={categoryForm.acceptance_type || 'waitlist'}
+                  onChange={(event) =>
+                    handleCategoryFormChange(tournament.id, 'acceptance_type', event.target.value)
+                  }
+                >
+                  <option value="waitlist">Lista de espera (waitlist)</option>
+                  <option value="immediate">Inmediata (sin cola)</option>
+                </select>
+              )}
             </label>
             {usesRanking ? (
               <>
                 <label>
-                  FIP min
+                  Ranking FIP mín.
                   <input
                     type="number"
                     value={categoryForm.min_fip_rank || ''}
@@ -1061,7 +1069,7 @@ export default function TournamentSettings() {
                   />
                 </label>
                 <label>
-                  FIP max
+                  Ranking FIP máx.
                   <input
                     type="number"
                     value={categoryForm.max_fip_rank || ''}
@@ -1071,7 +1079,7 @@ export default function TournamentSettings() {
                   />
                 </label>
                 <label>
-                  FEP min
+                  Ranking FEP mín.
                   <input
                     type="number"
                     value={categoryForm.min_fep_rank || ''}
@@ -1081,7 +1089,7 @@ export default function TournamentSettings() {
                   />
                 </label>
                 <label>
-                  FEP max
+                  Ranking FEP máx.
                   <input
                     type="number"
                     value={categoryForm.max_fep_rank || ''}
@@ -1156,26 +1164,22 @@ export default function TournamentSettings() {
               <label>
                 Modalidad
                 <select value={form.mode} onChange={handleTournamentChange('mode')}>
-                  <option value="amateur">Amateur</option>
-                  <option value="pro">Pro</option>
-                  <option value="open">OPEN</option>
+                  <option value="amateur">Amateur — inscripción libre por ranking</option>
+                  <option value="pro">PRO — inscripción libre por ranking</option>
+                  <option value="open">OPEN — árbitro asigna la categoría</option>
                 </select>
               </label>
               <label>
-                Clasificación
-                {String(form.mode || '').toLowerCase() === 'open' ? (
-                  <input
-                    type="text"
-                    value="Asignación por árbitro (OPEN)"
-                    readOnly
-                    disabled
-                  />
-                ) : (
-                  <select value={form.classification_method} onChange={handleTournamentChange('classification_method')}>
-                    <option value="self_selected">Selección de categoría</option>
-                    <option value="referee_assigned">Asignación por árbitro</option>
-                  </select>
-                )}
+                Método de clasificación
+                <input
+                  type="text"
+                  value={String(form.mode || '').toLowerCase() === 'open'
+                    ? 'Asignación por árbitro (OPEN)'
+                    : 'Jugadores eligen su categoría (PRO / Amateur)'}
+                  readOnly
+                  disabled
+                />
+                <small className="field-hint">Definido automáticamente según la modalidad. No editable.</small>
               </label>
               <label>
                 Ciudad
@@ -1302,18 +1306,22 @@ export default function TournamentSettings() {
                   </label>
                   <label>
                     Tipo de aceptación
-                    <select
-                      value={categoryDefaults.acceptance_type}
-                      onChange={handleCategoryDefaultsChange('acceptance_type')}
-                    >
-                      <option value="waitlist">Waitlist</option>
-                      <option value="immediate">Inmediata</option>
-                    </select>
+                    {String(form.mode || '').toLowerCase() === 'open' ? (
+                      <input type="text" value="Inmediata — asignación OPEN" readOnly disabled />
+                    ) : (
+                      <select
+                        value={categoryDefaults.acceptance_type}
+                        onChange={handleCategoryDefaultsChange('acceptance_type')}
+                      >
+                        <option value="waitlist">Lista de espera (waitlist)</option>
+                        <option value="immediate">Inmediata (sin cola)</option>
+                      </select>
+                    )}
                   </label>
                   {tournamentUsesRanking(form.mode) ? (
                     <>
                       <label>
-                        FIP min (default)
+                        Ranking FIP mín. (default)
                         <input
                           type="number"
                           value={categoryDefaults.min_fip_rank}
@@ -1321,7 +1329,7 @@ export default function TournamentSettings() {
                         />
                       </label>
                       <label>
-                        FIP max (default)
+                        Ranking FIP máx. (default)
                         <input
                           type="number"
                           value={categoryDefaults.max_fip_rank}
@@ -1329,7 +1337,7 @@ export default function TournamentSettings() {
                         />
                       </label>
                       <label>
-                        FEP min (default)
+                        Ranking FEP mín. (default)
                         <input
                           type="number"
                           value={categoryDefaults.min_fep_rank}
@@ -1337,7 +1345,7 @@ export default function TournamentSettings() {
                         />
                       </label>
                       <label>
-                        FEP max (default)
+                        Ranking FEP máx. (default)
                         <input
                           type="number"
                           value={categoryDefaults.max_fep_rank}
