@@ -199,17 +199,17 @@ export default function Tournament() {
   }, [user])
 
   const registeredTournamentIds = useMemo(
-    () => new Set(registrations.map((registration) => registration.tournament_category?.tournament?.id)),
+    () =>
+      new Set(
+        registrations.map((registration) => registration.tournament_category?.tournament?.id),
+      ),
     [registrations],
   )
 
   const openEntryByTournamentId = useMemo(
     () =>
       new Map(
-        openEntries.map((entry) => [
-          String(entry.tournament_id || entry.tournament?.id),
-          entry,
-        ]),
+        openEntries.map((entry) => [String(entry.tournament_id || entry.tournament?.id), entry]),
       ),
     [openEntries],
   )
@@ -454,7 +454,7 @@ export default function Tournament() {
                     <strong>{isOpen ? 'Asignacion por arbitro' : categories.length}</strong>
                   </div>
                   <div>
-                    <span>Costo inscripcion</span>
+                    <span>Costo por equipo</span>
                     <strong>{formatTournamentFee(tournament)}</strong>
                   </div>
                   <div>
@@ -541,7 +541,7 @@ export default function Tournament() {
                         </strong>
                       </div>
                       <div>
-                        <span>Costo inscripcion</span>
+                        <span>Costo por equipo</span>
                         <strong>{formatTournamentFee(tournament)}</strong>
                       </div>
                       <div>
@@ -558,6 +558,19 @@ export default function Tournament() {
                             Inscribe tu pareja. El arbitro asignara la categoria despues del pago y
                             aqui no debes escogerla.
                           </p>
+                          <div className="entry-fee-banner">
+                            <div>
+                              <div className="entry-fee-banner-label">Costo total del equipo</div>
+                              <div className="entry-fee-banner-amount">
+                                {formatTournamentFee(tournament)}
+                              </div>
+                            </div>
+                            <div className="entry-fee-banner-note">
+                              Un solo pago cubre a los dos jugadores.
+                              <br />
+                              Pagas tu, tu pareja queda inscrita automaticamente.
+                            </div>
+                          </div>
                           {!user ? <p className="muted">Inicia sesion para inscribirte.</p> : null}
                           {user && existingOpenEntry ? (
                             <div className="player-card-stack">
@@ -583,7 +596,10 @@ export default function Tournament() {
                                   </span>
                                 </div>
                                 <h5>
-                                  {[existingOpenEntry.partner_first_name, existingOpenEntry.partner_last_name]
+                                  {[
+                                    existingOpenEntry.partner_first_name,
+                                    existingOpenEntry.partner_last_name,
+                                  ]
                                     .filter(Boolean)
                                     .join(' ') || 'Partner OPEN'}
                                 </h5>
@@ -717,12 +733,27 @@ export default function Tournament() {
                             </form>
                           ) : null}
                           {user && participating && !existingOpenEntry ? (
-                            <p className="muted">Ya tienes una entrada registrada para este torneo.</p>
+                            <p className="muted">
+                              Ya tienes una entrada registrada para este torneo.
+                            </p>
                           ) : null}
                         </>
                       ) : (
                         <>
                           <h4>Inscribir equipo</h4>
+                          <div className="entry-fee-banner">
+                            <div>
+                              <div className="entry-fee-banner-label">Costo total del equipo</div>
+                              <div className="entry-fee-banner-amount">
+                                {formatTournamentFee(tournament)}
+                              </div>
+                            </div>
+                            <div className="entry-fee-banner-note">
+                              Un solo pago cubre a los dos jugadores.
+                              <br />
+                              Se cobra al confirmar la inscripcion del equipo.
+                            </div>
+                          </div>
                           {!user ? <p className="muted">Inicia sesion para registrarte.</p> : null}
                           {user && !isRegistered ? (
                             <form onSubmit={(event) => handleStandardRegister(event, tournament)}>
