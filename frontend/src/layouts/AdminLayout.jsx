@@ -26,6 +26,12 @@ const ADMIN_NAV_ITEMS = [
     match: (pathname) => pathname.startsWith('/admin/registrations'),
   },
   {
+    to: '/admin/open-entries',
+    label: 'Entradas OPEN',
+    meta: 'Intake OPEN, asignación de categorías',
+    match: (pathname) => pathname.startsWith('/admin/open-entries'),
+  },
+  {
     to: '/admin/wildcards',
     label: 'Wildcards',
     meta: 'Invitaciones y cupos especiales',

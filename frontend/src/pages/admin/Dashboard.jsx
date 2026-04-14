@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { adminOpenEntriesApi } from '../../features/openEntries/api'
 import { adminLeadsApi } from '../../features/leads/api'
 import { adminMatchesApi } from '../../features/matches/api'
 import { adminPaymentsApi } from '../../features/payments/api'
@@ -104,6 +105,7 @@ export default function Dashboard() {
   const [summary, setSummary] = useState({
     tournaments: { total: 0, active: 0, draft: 0, completed: 0, categories: 0 },
     registrations: { total: 0, pending: 0, accepted: 0, waitlisted: 0, paid: 0 },
+    openEntries: { total: 0, paid: 0, awaitingAssignment: 0, assigned: 0 },
     payments: { total: 0, pending: 0, succeeded: 0, failed: 0 },
     matches: { today: 0, upcoming: 0, completed: 0 },
     leads: { total: 0, new: 0, contacted: 0, qualified: 0 },
@@ -120,9 +122,10 @@ export default function Dashboard() {
     setLoading(true)
     setError('')
     try {
-      const [tournaments, registrations, payments, matches, leads] = await Promise.all([
+      const [tournaments, registrations, openEntries, payments, matches, leads] = await Promise.all([
         adminTournamentsApi.list(),
         adminRegistrationsApi.list(),
+        adminOpenEntriesApi.list(),
         adminPaymentsApi.list(),
         adminMatchesApi.list(),
         adminLeadsApi.list(),
@@ -171,6 +174,13 @@ export default function Dashboard() {
         return sum + count
       }, 0)
 
+      const openEntriesArr = openEntries || []
+      const openEntriesPaid = openEntriesArr.filter((e) => e.paid_at || e.payment_is_covered).length
+      const openEntriesAwaitingAssignment = openEntriesArr.filter(
+        (e) => (e.paid_at || e.payment_is_covered) && e.assignment_status !== 'assigned',
+      ).length
+      const openEntriesAssigned = openEntriesArr.filter((e) => e.assignment_status === 'assigned').length
+
       setSummary({
         tournaments: {
           total: tournaments?.length || 0,
@@ -185,6 +195,12 @@ export default function Dashboard() {
           accepted: (registrationStatus?.accepted || 0) + (registrationStatus?.awaiting_partner_acceptance || 0),
           waitlisted: registrationStatus?.waitlisted || 0,
           paid: registrationStatus?.paid || 0,
+        },
+        openEntries: {
+          total: openEntriesArr.length,
+          paid: openEntriesPaid,
+          awaitingAssignment: openEntriesAwaitingAssignment,
+          assigned: openEntriesAssigned,
         },
         payments: {
           total: payments?.length || 0,
@@ -299,6 +315,17 @@ export default function Dashboard() {
             value: `${tournamentsWithoutCategories.length} torneos`,
             tone: 'warning',
             items: tournamentsList,
+          })
+        }
+        const openAwaitingAssignment = (openEntriesArr).filter(
+          (e) => (e.paid_at || e.payment_is_covered) && e.assignment_status !== 'assigned',
+        )
+        if (openAwaitingAssignment.length > 0) {
+          nextAlerts.push({
+            title: 'Parejas OPEN sin categoría',
+            subtitle: 'Pendientes de asignación por árbitro',
+            value: `${openAwaitingAssignment.length} parejas`,
+            tone: 'warning',
           })
         }
         if (nextAlerts.length === 0) {
@@ -444,6 +471,33 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {summary.openEntries.total > 0 && (
+              <div className="panel-card">
+                <div className="panel-header">
+                  <h4>Embudo OPEN</h4>
+                  <span className="tag accent">OPEN</span>
+                </div>
+                <div className="kpi-grid">
+                  <div className="kpi-card">
+                    <span>Entradas enviadas</span>
+                    <strong>{summary.openEntries.total}</strong>
+                  </div>
+                  <div className="kpi-card">
+                    <span>Entradas pagadas</span>
+                    <strong>{summary.openEntries.paid}</strong>
+                  </div>
+                  <div className="kpi-card">
+                    <span>Pendientes de asignación</span>
+                    <strong>{summary.openEntries.awaitingAssignment}</strong>
+                  </div>
+                  <div className="kpi-card">
+                    <span>Asignadas a categoría</span>
+                    <strong>{summary.openEntries.assigned}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="panel-card">
               <div className="panel-header">

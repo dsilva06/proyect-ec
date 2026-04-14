@@ -734,18 +734,33 @@ export default function TournamentSettings() {
                 <option value="open">OPEN</option>
               </select>
             </label>
-            <label>
-              Clasificación
-              <select
-                value={tournamentEdits[tournament.id]?.classification_method ?? tournament.classification_method ?? 'self_selected'}
-                onChange={(event) =>
-                  handleTournamentEdit(tournament.id, 'classification_method', event.target.value)
-                }
-              >
-                <option value="self_selected">Selección de categoría</option>
-                <option value="referee_assigned">Asignación por árbitro</option>
-              </select>
-            </label>
+            {(() => {
+              const editMode = tournamentEdits[tournament.id]?.mode ?? tournament.mode
+              const isOpenMode = String(editMode || '').toLowerCase() === 'open'
+              return (
+                <label>
+                  Clasificación
+                  {isOpenMode ? (
+                    <input
+                      type="text"
+                      value="Asignación por árbitro (OPEN)"
+                      readOnly
+                      disabled
+                    />
+                  ) : (
+                    <select
+                      value={tournamentEdits[tournament.id]?.classification_method ?? tournament.classification_method ?? 'self_selected'}
+                      onChange={(event) =>
+                        handleTournamentEdit(tournament.id, 'classification_method', event.target.value)
+                      }
+                    >
+                      <option value="self_selected">Selección de categoría</option>
+                      <option value="referee_assigned">Asignación por árbitro</option>
+                    </select>
+                  )}
+                </label>
+              )
+            })()}
             <label>
               Fecha inicio
               <DatePicker
@@ -1148,10 +1163,19 @@ export default function TournamentSettings() {
               </label>
               <label>
                 Clasificación
-                <select value={form.classification_method} onChange={handleTournamentChange('classification_method')}>
-                  <option value="self_selected">Selección de categoría</option>
-                  <option value="referee_assigned">Asignación por árbitro</option>
-                </select>
+                {String(form.mode || '').toLowerCase() === 'open' ? (
+                  <input
+                    type="text"
+                    value="Asignación por árbitro (OPEN)"
+                    readOnly
+                    disabled
+                  />
+                ) : (
+                  <select value={form.classification_method} onChange={handleTournamentChange('classification_method')}>
+                    <option value="self_selected">Selección de categoría</option>
+                    <option value="referee_assigned">Asignación por árbitro</option>
+                  </select>
+                )}
               </label>
               <label>
                 Ciudad
