@@ -738,6 +738,13 @@
   color: rgba(239, 231, 211, 0.62);
 }
 
+.tag.accent {
+  background: rgba(183, 207, 79, 0.15);
+  border-color: rgba(183, 207, 79, 0.4);
+  color: #d4ea78;
+  font-weight: 700;
+}
+
 /* 51. Payments page — wider KPI columns */
 .payments-page .kpi-grid {
   grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
