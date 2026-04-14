@@ -249,7 +249,14 @@ export default function TournamentSettings() {
   }, [])
 
   const handleTournamentChange = (field) => (event) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }))
+    const value = event.target.value
+    setForm((prev) => {
+      const next = { ...prev, [field]: value }
+      if (field === 'mode') {
+        next.classification_method = resolveClassificationMethod(value)
+      }
+      return next
+    })
   }
 
   const handleValueChange = (field) => (value) => {
@@ -401,14 +408,20 @@ export default function TournamentSettings() {
     clearDragState()
   }
 
+  const resolveClassificationMethod = (mode) =>
+    String(mode || '').toLowerCase() === 'open' ? 'referee_assigned' : 'self_selected'
+
   const handleTournamentEdit = (tournamentId, field, value) => {
-    setTournamentEdits((prev) => ({
-      ...prev,
-      [tournamentId]: {
+    setTournamentEdits((prev) => {
+      const next = {
         ...(prev[tournamentId] || {}),
         [field]: value,
-      },
-    }))
+      }
+      if (field === 'mode') {
+        next.classification_method = resolveClassificationMethod(value)
+      }
+      return { ...prev, [tournamentId]: next }
+    })
   }
 
   const handleUpdateTournament = async (tournamentId) => {
@@ -465,11 +478,12 @@ export default function TournamentSettings() {
     try {
       const tournament = tournaments.find((item) => String(item.id) === String(tournamentId))
       const rankingRangePayload = buildRankingRangePayload(payload, tournamentUsesRanking(tournament?.mode))
+      const isOpenTournament = String(tournament?.mode || '').toLowerCase() === 'open'
       await adminTournamentsApi.addCategory(tournamentId, cleanPayload({
         ...payload,
         max_teams: Number(payload.max_teams || 0),
         wildcard_slots: Number(payload.wildcard_slots || 0),
-        acceptance_type: payload.acceptance_type || 'waitlist',
+        acceptance_type: isOpenTournament ? 'immediate' : (payload.acceptance_type || 'waitlist'),
         ...rankingRangePayload,
       }))
       setCategoryForms((prev) => ({ ...prev, [tournamentId]: null }))
@@ -621,6 +635,7 @@ export default function TournamentSettings() {
   const renderTournamentCard = (tournament) => {
     const categoryForm = categoryForms[tournament.id] || {}
     const currentMode = tournamentEdits[tournament.id]?.mode ?? tournament.mode
+    const isOpenMode = String(currentMode || '').toLowerCase() === 'open'
     const usesRanking = tournamentUsesRanking(currentMode)
     return (
       <article key={tournament.id} className="tournament-card settings-tournament-card">
@@ -734,33 +749,17 @@ export default function TournamentSettings() {
                 <option value="open">OPEN</option>
               </select>
             </label>
-            {(() => {
-              const editMode = tournamentEdits[tournament.id]?.mode ?? tournament.mode
-              const isOpenMode = String(editMode || '').toLowerCase() === 'open'
-              return (
-                <label>
-                  Clasificación
-                  {isOpenMode ? (
-                    <input
-                      type="text"
-                      value="Asignación por árbitro (OPEN)"
-                      readOnly
-                      disabled
-                    />
-                  ) : (
-                    <select
-                      value={tournamentEdits[tournament.id]?.classification_method ?? tournament.classification_method ?? 'self_selected'}
-                      onChange={(event) =>
-                        handleTournamentEdit(tournament.id, 'classification_method', event.target.value)
-                      }
-                    >
-                      <option value="self_selected">Selección de categoría</option>
-                      <option value="referee_assigned">Asignación por árbitro</option>
-                    </select>
-                  )}
-                </label>
-              )
-            })()}
+            <label>
+              Clasificación
+              <input
+                type="text"
+                value={String(tournamentEdits[tournament.id]?.mode ?? tournament.mode ?? 'amateur').toLowerCase() === 'open'
+                  ? 'Asignación por árbitro'
+                  : 'Selección de categoría'}
+                readOnly
+                disabled
+              />
+            </label>
             <label>
               Fecha inicio
               <DatePicker
@@ -905,15 +904,19 @@ export default function TournamentSettings() {
                     </div>
                     <div>
                       <span>Aceptación</span>
-                      <select
-                        value={edits.acceptance_type ?? category.acceptance_type ?? 'waitlist'}
-                        onChange={(event) =>
-                          handleCategoryEdit(category.id, 'acceptance_type', event.target.value)
-                        }
-                      >
-                        <option value="waitlist">Waitlist</option>
-                        <option value="immediate">Inmediata</option>
-                      </select>
+                      {isOpenMode ? (
+                        <input type="text" value="Inmediata (OPEN)" readOnly disabled />
+                      ) : (
+                        <select
+                          value={edits.acceptance_type ?? category.acceptance_type ?? 'waitlist'}
+                          onChange={(event) =>
+                            handleCategoryEdit(category.id, 'acceptance_type', event.target.value)
+                          }
+                        >
+                          <option value="waitlist">Waitlist</option>
+                          <option value="immediate">Inmediata</option>
+                        </select>
+                      )}
                     </div>
                     {usesRanking ? (
                       <>
@@ -1038,15 +1041,19 @@ export default function TournamentSettings() {
             </label>
             <label>
               Tipo de aceptación
-              <select
-                value={categoryForm.acceptance_type || 'waitlist'}
-                onChange={(event) =>
-                  handleCategoryFormChange(tournament.id, 'acceptance_type', event.target.value)
-                }
-              >
-                <option value="waitlist">Waitlist</option>
-                <option value="immediate">Inmediata</option>
-              </select>
+              {isOpenMode ? (
+                <input type="text" value="Inmediata (OPEN)" readOnly disabled />
+              ) : (
+                <select
+                  value={categoryForm.acceptance_type || 'waitlist'}
+                  onChange={(event) =>
+                    handleCategoryFormChange(tournament.id, 'acceptance_type', event.target.value)
+                  }
+                >
+                  <option value="waitlist">Waitlist</option>
+                  <option value="immediate">Inmediata</option>
+                </select>
+              )}
             </label>
             {usesRanking ? (
               <>
@@ -1163,19 +1170,14 @@ export default function TournamentSettings() {
               </label>
               <label>
                 Clasificación
-                {String(form.mode || '').toLowerCase() === 'open' ? (
-                  <input
-                    type="text"
-                    value="Asignación por árbitro (OPEN)"
-                    readOnly
-                    disabled
-                  />
-                ) : (
-                  <select value={form.classification_method} onChange={handleTournamentChange('classification_method')}>
-                    <option value="self_selected">Selección de categoría</option>
-                    <option value="referee_assigned">Asignación por árbitro</option>
-                  </select>
-                )}
+                <input
+                  type="text"
+                  value={String(form.mode || '').toLowerCase() === 'open'
+                    ? 'Asignación por árbitro'
+                    : 'Selección de categoría'}
+                  readOnly
+                  disabled
+                />
               </label>
               <label>
                 Ciudad
@@ -1302,13 +1304,17 @@ export default function TournamentSettings() {
                   </label>
                   <label>
                     Tipo de aceptación
-                    <select
-                      value={categoryDefaults.acceptance_type}
-                      onChange={handleCategoryDefaultsChange('acceptance_type')}
-                    >
-                      <option value="waitlist">Waitlist</option>
-                      <option value="immediate">Inmediata</option>
-                    </select>
+                    {String(form.mode || '').toLowerCase() === 'open' ? (
+                      <input type="text" value="Inmediata (OPEN)" readOnly disabled />
+                    ) : (
+                      <select
+                        value={categoryDefaults.acceptance_type}
+                        onChange={handleCategoryDefaultsChange('acceptance_type')}
+                      >
+                        <option value="waitlist">Waitlist</option>
+                        <option value="immediate">Inmediata</option>
+                      </select>
+                    )}
                   </label>
                   {tournamentUsesRanking(form.mode) ? (
                     <>
