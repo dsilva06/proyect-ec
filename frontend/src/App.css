@@ -6681,3 +6681,157 @@ label,
     padding: 20px 18px;
   }
 }
+
+/* ─── Entry announcement modal ─────────────────────────────────────────── */
+.entry-modal-card {
+  background: linear-gradient(160deg, rgba(10, 14, 34, 0.99), rgba(6, 8, 20, 0.97));
+  border: 1px solid rgba(183, 207, 79, 0.24);
+  border-radius: 28px;
+  width: min(520px, 100%);
+  padding: clamp(26px, 4vw, 40px) clamp(24px, 4vw, 38px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(183, 207, 79, 0.06) inset;
+  position: relative;
+}
+
+.entry-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: rgba(239, 231, 211, 0.45);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.15s;
+}
+
+.entry-modal-close:hover {
+  color: rgba(239, 231, 211, 0.9);
+}
+
+.entry-modal-badge {
+  display: inline-block;
+  background: rgba(183, 207, 79, 0.12);
+  border: 1px solid rgba(183, 207, 79, 0.32);
+  color: #d4ea78;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.entry-modal-card h2 {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: rgba(239, 231, 211, 0.98);
+}
+
+.entry-modal-card p {
+  color: rgba(239, 231, 211, 0.8);
+  line-height: 1.65;
+  font-size: 0.96rem;
+  margin: 0;
+}
+
+.entry-modal-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+/* ─── Edition spotlight card ────────────────────────────────────────────── */
+.home-edition-spotlight {
+  width: min(1320px, 100%);
+  margin-inline: auto;
+}
+
+.edition-spotlight-card {
+  background: linear-gradient(160deg, rgba(10, 14, 34, 0.94), rgba(26, 0, 37, 0.9));
+  border: 1px solid rgba(183, 207, 79, 0.2);
+  border-radius: 24px;
+  padding: clamp(26px, 3.5vw, 48px);
+  display: grid;
+  gap: 26px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(183, 207, 79, 0.05) inset;
+}
+
+.edition-spotlight-header h2 {
+  font-size: clamp(1.9rem, 3.5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+  color: rgba(239, 231, 211, 0.98);
+}
+
+.edition-spotlight-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.edition-spotlight-meta-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(239, 231, 211, 0.1);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 4px;
+}
+
+.edition-spotlight-meta-item span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: rgba(183, 207, 79, 0.75);
+}
+
+.edition-spotlight-meta-item strong {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: rgba(239, 231, 211, 0.96);
+  line-height: 1.3;
+}
+
+.edition-spotlight-prize {
+  background: rgba(183, 207, 79, 0.07);
+  border-color: rgba(183, 207, 79, 0.22);
+}
+
+.edition-spotlight-prize span {
+  color: rgba(183, 207, 79, 0.9);
+}
+
+.edition-spotlight-prize strong {
+  color: #d6ea7c;
+  font-size: 1.3rem;
+}
+
+.edition-spotlight-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 680px) {
+  .edition-spotlight-meta {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .entry-modal-actions {
+    flex-direction: column;
+  }
+}
