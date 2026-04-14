@@ -5,25 +5,29 @@ import { playerOpenEntriesApi } from '../../features/openEntries/api'
 import { playerRegistrationsApi } from '../../features/registrations/api'
 import { formatPlayerDate, getPlayerStatusTone, getPlayerRegistrationStageLabel } from './ui'
 
-const SEGMENT_LABELS = { men: 'Masculino', women: 'Femenino' }
+const SEGMENT_LABELS = {
+  men: 'Masculino',
+  women: 'Femenino',
+}
 
 const OPEN_ASSIGNMENT_LABELS = {
-  pending: 'Pendiente de asignación',
-  assigned: 'Categoría asignada',
+  pending: 'Pendiente de asignacion',
+  assigned: 'Categoria asignada',
 }
 
 const getOpenEntryStageLabel = (entry) => {
   const isPaid = Boolean(entry?.paid_at || entry?.payment_is_covered)
   const isAssigned = entry?.assignment_status === 'assigned'
 
-  if (isAssigned) return 'Inscripción definitiva creada'
-  if (isPaid) return 'Pagado — esperando asignación de categoría'
-  return 'Enviada — pendiente de pago'
+  if (isAssigned) return 'Inscripcion definitiva creada'
+  if (isPaid) return 'Pagado, esperando asignacion de categoria'
+  return 'Enviada, pendiente de pago'
 }
 
 const getOpenEntryTone = (entry) => {
   const isPaid = Boolean(entry?.paid_at || entry?.payment_is_covered)
   const isAssigned = entry?.assignment_status === 'assigned'
+
   if (isAssigned) return 'success'
   if (isPaid) return 'warning'
   return 'neutral'
@@ -63,12 +67,18 @@ export default function PlayerRegistrations() {
 
     if (checkout === 'success') {
       setCheckoutMessage('Volviste desde Stripe. Estamos confirmando el pago del equipo.')
+      load()
       return
     }
+
     if (checkout === 'cancelled') {
-      setCheckoutMessage('El pago fue cancelado antes de completarse. Puedes intentarlo nuevamente.')
+      setCheckoutMessage(
+        'El pago fue cancelado antes de completarse. Puedes intentarlo nuevamente.',
+      )
+      load()
       return
     }
+
     setCheckoutMessage('')
   }, [location.search])
 
@@ -100,37 +110,41 @@ export default function PlayerRegistrations() {
       }
       throw new Error('No pudimos abrir Stripe Checkout.')
     } catch (err) {
-      setError(err?.data?.message || err?.message || 'No pudimos registrar el pago de la entrada OPEN.')
+      setError(
+        err?.data?.message || err?.message || 'No pudimos registrar el pago de la entrada OPEN.',
+      )
     } finally {
       setPayingOpenId(null)
     }
   }
 
   const pendingItems = useMemo(
-    () => registrations.filter((r) =>
-      ['pending', 'accepted', 'payment_pending', 'waitlisted'].includes(
-        String(r.status?.code || '').toLowerCase(),
+    () =>
+      registrations.filter((registration) =>
+        ['pending', 'accepted', 'payment_pending', 'waitlisted'].includes(
+          String(registration.status?.code || '').toLowerCase(),
+        ),
       ),
-    ),
     [registrations],
   )
 
   const confirmedItems = useMemo(
-    () => registrations.filter((r) =>
-      ['awaiting_partner_acceptance', 'paid'].includes(
-        String(r.status?.code || '').toLowerCase(),
+    () =>
+      registrations.filter((registration) =>
+        ['awaiting_partner_acceptance', 'paid'].includes(
+          String(registration.status?.code || '').toLowerCase(),
+        ),
       ),
-    ),
     [registrations],
   )
 
   const openEntriesPendingPayment = useMemo(
-    () => openEntries.filter((e) => !e.paid_at && !e.payment_is_covered),
+    () => openEntries.filter((entry) => !entry.paid_at && !entry.payment_is_covered),
     [openEntries],
   )
 
   const openEntriesPaid = useMemo(
-    () => openEntries.filter((e) => e.paid_at || e.payment_is_covered),
+    () => openEntries.filter((entry) => entry.paid_at || entry.payment_is_covered),
     [openEntries],
   )
 
@@ -168,18 +182,19 @@ export default function PlayerRegistrations() {
         <article className="player-stat-card">
           <span>Inscripciones confirmadas</span>
           <strong>{confirmedItems.length}</strong>
-          <small>Pagadas o en proceso de confirmación.</small>
+          <small>Pagadas o en proceso de confirmacion.</small>
         </article>
         {openEntries.length > 0 && (
           <article className="player-stat-card">
             <span>Entradas OPEN</span>
             <strong>{openEntries.length}</strong>
-            <small>{openEntriesPaid.length} pagadas · {openEntriesPendingPayment.length} sin pagar.</small>
+            <small>
+              {openEntriesPaid.length} pagadas · {openEntriesPendingPayment.length} sin pagar.
+            </small>
           </article>
         )}
       </div>
 
-      {/* ── Standard registrations ─────────────────────────────────────────── */}
       {registrations.length > 0 && (
         <>
           <div className="player-section-heading">
@@ -189,7 +204,11 @@ export default function PlayerRegistrations() {
             {registrations.map((registration) => (
               <article key={registration.id} className="player-info-card">
                 <div className="player-card-topline">
-                  <span className={`player-status-pill tone-${getPlayerStatusTone(registration.status?.code)}`}>
+                  <span
+                    className={`player-status-pill tone-${getPlayerStatusTone(
+                      registration.status?.code,
+                    )}`}
+                  >
                     {registration.status?.label || 'Sin estado'}
                   </span>
                   <span className="player-soft-note">
@@ -202,7 +221,7 @@ export default function PlayerRegistrations() {
                   {' · '}
                   {registration.tournament_category?.category?.display_name ||
                     registration.tournament_category?.category?.name ||
-                    'Categoría'}
+                    'Categoria'}
                 </p>
                 <div className="player-metadata-grid">
                   <div>
@@ -214,7 +233,7 @@ export default function PlayerRegistrations() {
                     <strong>{registration.team_ranking_score ?? 'Pendiente'}</strong>
                   </div>
                   <div>
-                    <span>Posición en cola</span>
+                    <span>Posicion en cola</span>
                     <strong>{registration.queue_position ?? '—'}</strong>
                   </div>
                   <div>
@@ -223,9 +242,9 @@ export default function PlayerRegistrations() {
                   </div>
                 </div>
                 {registration.team?.created_by === user?.id &&
-                  ['accepted', 'payment_pending'].includes(
-                    String(registration.status?.code || '').toLowerCase(),
-                  ) ? (
+                ['accepted', 'payment_pending'].includes(
+                  String(registration.status?.code || '').toLowerCase(),
+                ) ? (
                   <div className="player-cta-row">
                     <button
                       className="primary-button"
@@ -233,32 +252,31 @@ export default function PlayerRegistrations() {
                       onClick={() => handlePay(registration.id)}
                       disabled={payingId === registration.id}
                     >
-                      {payingId === registration.id ? 'Registrando pago...' : 'Pagar e invitar pareja'}
+                      {payingId === registration.id
+                        ? 'Registrando pago...'
+                        : 'Pagar e invitar pareja'}
                     </button>
                   </div>
-                ) : null}
+                  ) : null}
               </article>
             ))}
           </div>
         </>
       )}
 
-      {/* ── OPEN entries ───────────────────────────────────────────────────── */}
       {openEntries.length > 0 && (
         <>
           <div className="player-section-heading">
             <h4>Entradas OPEN</h4>
-            <p className="muted">
-              Tu categoría será asignada por el árbitro después del pago.
-            </p>
+            <p className="muted">Tu categoria sera asignada por el arbitro despues del pago.</p>
           </div>
           <div className="player-card-stack">
             {openEntries.map((entry) => {
               const isPaid = Boolean(entry.paid_at || entry.payment_is_covered)
               const isAssigned = entry.assignment_status === 'assigned'
-              const partnerName = [entry.partner_first_name, entry.partner_last_name]
-                .filter(Boolean)
-                .join(' ') || entry.partner_email
+              const partnerName =
+                [entry.partner_first_name, entry.partner_last_name].filter(Boolean).join(' ') ||
+                entry.partner_email
 
               return (
                 <article key={entry.id} className="player-info-card">
@@ -271,9 +289,7 @@ export default function PlayerRegistrations() {
                       {formatPlayerDate(entry.created_at, { year: 'numeric' })}
                     </span>
                   </div>
-                  <h5>
-                    {entry.team?.display_name || `${user?.name || 'Tú'} / ${partnerName}`}
-                  </h5>
+                  <h5>{entry.team?.display_name || `${user?.name || 'Tu'} / ${partnerName}`}</h5>
                   <p>{entry.tournament?.name || 'Torneo'}</p>
                   <div className="player-metadata-grid">
                     <div>
@@ -290,7 +306,7 @@ export default function PlayerRegistrations() {
                     </div>
                     {isAssigned && (
                       <div>
-                        <span>Categoría asignada</span>
+                        <span>Categoria asignada</span>
                         <strong>
                           {entry.assigned_tournament_category?.category?.display_name ||
                             entry.assigned_tournament_category?.category?.name ||
@@ -307,7 +323,9 @@ export default function PlayerRegistrations() {
                         onClick={() => handlePayOpenEntry(entry.id)}
                         disabled={payingOpenId === entry.id}
                       >
-                        {payingOpenId === entry.id ? 'Registrando pago...' : 'Pagar entrada OPEN'}
+                        {payingOpenId === entry.id
+                          ? 'Registrando pago...'
+                          : 'Pagar entrada OPEN'}
                       </button>
                     </div>
                   ) : null}
@@ -319,7 +337,7 @@ export default function PlayerRegistrations() {
       )}
 
       {totalParticipations === 0 && (
-        <div className="player-empty-state">Aún no tienes inscripciones registradas.</div>
+        <div className="player-empty-state">Aun no tienes inscripciones registradas.</div>
       )}
     </section>
   )
