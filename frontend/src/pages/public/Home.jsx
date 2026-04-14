@@ -592,19 +592,15 @@ export default function Home() {
               {contactStatus && <p className="form-message">{contactStatus}</p>}
             </form>
             <div className="contact-panel">
-              <h3>¿Quieres impulsar el circuito?</h3>
+              <h3>¿Quieres formar parte del crecimiento del torneo?</h3>
               <p>
-                Respondemos en menos de 24 horas. Trabajamos con clubes, marcas y aliados que
-                comparten la visión de un pádel competitivo más serio y mejor organizado.
+                Respondemos dentro de 24 horas. También trabajamos con clubes, marcas y aliados
+                que quieren impulsar una experiencia competitiva cada vez más sólida.
               </p>
               <div className="contact-details">
                 <div>
-                  <span>Soporte</span>
-                  <strong>support@estarspadeltour.com</strong>
-                </div>
-                <div>
-                  <span>WhatsApp</span>
-                  <strong>+1 555 0199</strong>
+                  <span>Inscripciones y contacto</span>
+                  <strong>inscripciones@estarspadeltour.com</strong>
                 </div>
               </div>
             </div>

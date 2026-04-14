@@ -59,4 +59,6 @@ return [
 
     'support_email' => env('SUPPORT_EMAIL', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
 
+    'leads_inbox' => env('LEADS_INBOX_EMAIL', ''),
+
 ];
