@@ -486,7 +486,7 @@ export default function Tournament() {
                       </span>
                     ) : (
                       <button className="primary-button" type="button">
-                        {isOpen ? 'Enviar entrada OPEN' : 'Inscribir equipo'}
+                        {isOpen ? 'Enviar entrada' : 'Inscribir equipo'}
                       </button>
                     )
                   ) : (
