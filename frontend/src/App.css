@@ -1882,9 +1882,13 @@ main,
 
 .registrations-trello-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 460px);
+  grid-template-columns: 1fr;
   gap: 20px;
   align-items: start;
+}
+
+.registrations-trello-layout.has-drawer {
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 22vw, 400px);
 }
 
 .registrations-trello-board-shell {
@@ -2207,7 +2211,8 @@ main,
     position: static;
   }
 
-  .registrations-trello-layout {
+  .registrations-trello-layout,
+  .registrations-trello-layout.has-drawer {
     grid-template-columns: 1fr;
   }
 
@@ -3230,8 +3235,8 @@ main,
 }
 
 .draws-bracket-item {
-  padding: 18px;
-  gap: 12px;
+  padding: 20px 22px;
+  gap: 18px;
 }
 
 .draws-bracket-item .panel-header h5 {
