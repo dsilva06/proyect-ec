@@ -118,3 +118,14 @@ Action: Rewrite
 ```
 
 El `render.yaml` del repo incluye esa regla para despliegues Blueprint. Si el sitio ya fue creado manualmente en Render, agrega la misma regla en el Dashboard del servicio frontend.
+
+En Render Dashboard:
+
+```text
+Static Site -> Redirects/Rewrites -> Add Rule
+Source: /*
+Destination: /index.html
+Action: Rewrite
+```
+
+Si despues de un deploy `/` responde `200` pero `/tournament` responde `404`, el servicio publicado no esta usando la regla del Blueprint o le falta esta rewrite manual en Dashboard.

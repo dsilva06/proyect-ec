@@ -4,9 +4,8 @@ services:
     # as a Blueprint, otherwise Render can create a second service.
     name: proyect-ec-frontend
     runtime: static
-    rootDir: frontend
-    buildCommand: npm ci && npm run build
-    staticPublishPath: dist
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/dist
     routes:
       - type: rewrite
         source: /*
