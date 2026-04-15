@@ -1310,6 +1310,11 @@ main,
   gap: 32px;
 }
 
+.tournament-back-button {
+  justify-self: start;
+  width: fit-content;
+}
+
 .tournament-page-header {
   display: flex;
   justify-content: space-between;

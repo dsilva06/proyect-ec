@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { playerOpenEntriesApi } from '../../features/openEntries/api'
 import { playerRegistrationsApi } from '../../features/registrations/api'
@@ -131,6 +131,7 @@ const getRegistrationMessage = (statusCode) => {
 
 export default function Tournament() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [tournaments, setTournaments] = useState([])
   const [registrations, setRegistrations] = useState([])
   const [openEntries, setOpenEntries] = useState([])
@@ -235,6 +236,15 @@ export default function Tournament() {
 
   const handleClose = () => {
     setActiveTournamentId(null)
+  }
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+
+    navigate('/')
   }
 
   const handleStandardRegister = async (event, tournament) => {
@@ -381,6 +391,10 @@ export default function Tournament() {
 
   return (
     <div className="tournament-page">
+      <button className="ghost-button tournament-back-button" type="button" onClick={handleBack}>
+        Volver
+      </button>
+
       <div className="tournament-page-header">
         <div>
           <h1>Torneos abiertos</h1>
@@ -449,10 +463,12 @@ export default function Tournament() {
                       )}
                     </strong>
                   </div>
-                  <div>
-                    <span>{isOpen ? 'Entrada' : 'Categorias'}</span>
-                    <strong>{isOpen ? 'Asignacion por arbitro' : categories.length}</strong>
-                  </div>
+                  {!isOpen ? (
+                    <div>
+                      <span>Categorias</span>
+                      <strong>{categories.length}</strong>
+                    </div>
+                  ) : null}
                   <div>
                     <span>Costo por equipo</span>
                     <strong>{formatTournamentFee(tournament)}</strong>
@@ -553,7 +569,7 @@ export default function Tournament() {
                     <div className="registration-form">
                       {isOpen ? (
                         <>
-                          <h4>Entrada OPEN</h4>
+                          <h4>Inscribir pareja OPEN</h4>
                           <p className="muted">
                             Inscribe tu pareja. El arbitro asignara la categoria despues del pago y
                             aqui no debes escogerla.
