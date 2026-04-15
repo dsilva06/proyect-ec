@@ -1309,3 +1309,42 @@
   font-weight: 600;
   margin: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RANKINGS / JUGADORES PAGE — rule banner collapsible
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Compact banner strip showing current rule values */
+.players-rule-banner {
+  padding: 14px 20px;
+  gap: 14px;
+}
+
+/* Row: summary tags on left, edit button on right */
+.players-rule-banner-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Inline summary — label + pill tags */
+.players-rule-summary-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.86rem;
+}
+
+.players-rule-summary-inline .muted {
+  font-size: 0.82rem;
+  color: rgba(239, 231, 211, 0.52);
+}
+
+/* Expanded rule form — separated by a faint top border */
+.players-rule-form {
+  padding-top: 16px;
+  border-top: 1px solid rgba(239, 231, 211, 0.08);
+}

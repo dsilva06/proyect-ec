@@ -54,6 +54,7 @@ export default function Rankings() {
   const [rankingEdits, setRankingEdits] = useState({})
   const [rule, setRule] = useState({ win_points: 10, final_played_bonus: 5, final_won_bonus: 8 })
   const [ruleDraft, setRuleDraft] = useState({ win_points: 10, final_played_bonus: 5, final_won_bonus: 8 })
+  const [ruleOpen, setRuleOpen] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [palmares, setPalmares] = useState(null)
   const [payouts, setPayouts] = useState([])
@@ -339,49 +340,62 @@ export default function Rankings() {
       {message && <div className="form-message success">{message}</div>}
       {error && <div className="form-message error">{error}</div>}
 
-      <div className="admin-grid players-layout">
-        <div className="panel-card players-rule-card">
-          <div className="panel-header">
-            <h4>Regla puntos internos</h4>
+      <div className="panel-card players-rule-banner">
+        <div className="players-rule-banner-row">
+          <div className="players-rule-summary-inline">
+            <span className="muted">Puntos internos:</span>
+            <span className="tag muted">{rule.win_points} victoria</span>
+            <span className="tag muted">+{rule.final_played_bonus} final jugada</span>
+            <span className="tag muted">+{rule.final_won_bonus} final ganada</span>
           </div>
-          <div className="form-grid players-rule-grid">
-            <label>
-              Victoria
-              <input
-                type="number"
-                min="0"
-                value={ruleDraft.win_points}
-                onChange={handleRuleDraftChange('win_points')}
-              />
-            </label>
-            <label>
-              Bono final jugada
-              <input
-                type="number"
-                min="0"
-                value={ruleDraft.final_played_bonus}
-                onChange={handleRuleDraftChange('final_played_bonus')}
-              />
-            </label>
-            <label>
-              Bono final ganada
-              <input
-                type="number"
-                min="0"
-                value={ruleDraft.final_won_bonus}
-                onChange={handleRuleDraftChange('final_won_bonus')}
-              />
-            </label>
-            <div className="form-actions">
-              <button className="secondary-button" type="button" onClick={handleSaveRule}>Guardar regla</button>
-            </div>
-          </div>
-          <p className="muted players-rule-summary">
-            Actual: {rule.win_points} por victoria, +{rule.final_played_bonus} final jugada, +{rule.final_won_bonus} final ganada.
-          </p>
+          <button
+            className="rules-toggle-btn"
+            type="button"
+            onClick={() => setRuleOpen((prev) => !prev)}
+          >
+            {ruleOpen ? 'Cerrar regla' : 'Editar regla'}
+          </button>
         </div>
 
-        <div className="panel-card players-list-card">
+        {ruleOpen && (
+          <div className="players-rule-form">
+            <div className="form-grid players-rule-grid">
+              <label>
+                Victoria
+                <input
+                  type="number"
+                  min="0"
+                  value={ruleDraft.win_points}
+                  onChange={handleRuleDraftChange('win_points')}
+                />
+              </label>
+              <label>
+                Bono final jugada
+                <input
+                  type="number"
+                  min="0"
+                  value={ruleDraft.final_played_bonus}
+                  onChange={handleRuleDraftChange('final_played_bonus')}
+                />
+              </label>
+              <label>
+                Bono final ganada
+                <input
+                  type="number"
+                  min="0"
+                  value={ruleDraft.final_won_bonus}
+                  onChange={handleRuleDraftChange('final_won_bonus')}
+                />
+              </label>
+              <div className="form-actions">
+                <button className="secondary-button" type="button" onClick={handleSaveRule}>Guardar regla</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="panel-card players-list-card">
           <div className="panel-header">
             <h4>Listado de jugadores</h4>
             <span className="tag muted">{players.length}</span>
@@ -433,7 +447,6 @@ export default function Rankings() {
             </div>
           )}
         </div>
-      </div>
 
       {selectedPlayer && (
         <div className="modal-backdrop" onClick={closePlayerModal}>
