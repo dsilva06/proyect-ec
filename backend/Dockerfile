@@ -21,5 +21,8 @@ COPY ./docker/ca-certificate.crt /etc/ssl/certs/ca-certificate.crt
 RUN mkdir -p storage bootstrap/cache \
  && chown -R www-data:www-data storage bootstrap/cache
 
+COPY ./docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 8080
-CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
+CMD ["/start.sh"]
