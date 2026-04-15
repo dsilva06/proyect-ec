@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\UpdateTournamentStatusRequest;
 use App\Http\Resources\TournamentResource;
 use App\Models\Tournament;
 use App\Services\StatusService;
+use App\Services\TournamentDeletionService;
 use App\Support\StatusResolver;
 use Illuminate\Http\Request;
 
@@ -115,7 +116,7 @@ class TournamentController extends Controller
     public function destroy(Tournament $tournament)
     {
         $this->authorize('delete', $tournament);
-        $tournament->delete();
+        app(TournamentDeletionService::class)->deleteTournament($tournament);
 
         return response()->noContent();
     }

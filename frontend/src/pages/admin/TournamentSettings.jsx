@@ -461,14 +461,26 @@ export default function TournamentSettings() {
   }
 
   const handleDeleteTournament = async (tournamentId) => {
-    const confirmDelete = window.confirm('¿Seguro que deseas eliminar este torneo?')
+    const tournament = tournaments.find((item) => String(item.id) === String(tournamentId))
+    const categoryCount = tournament?.categories?.length || 0
+    const confirmDelete = window.confirm(
+      `¿Seguro que deseas eliminar "${tournament?.name || 'este torneo'}"?` +
+        (categoryCount > 0
+          ? `\n\nTambién se eliminarán sus ${categoryCount} categorías de configuración si no tienen operación real.`
+          : '') +
+        '\n\nSi ya tiene inscripciones, cuadros, OPEN entries o wildcards, el sistema lo bloqueará.',
+    )
     if (!confirmDelete) return
 
     try {
+      setError('')
+      setMessage('')
       await adminTournamentsApi.remove(tournamentId)
+      setMessage('Torneo eliminado correctamente.')
+      setSelectedTournamentId((current) => (String(current) === String(tournamentId) ? null : current))
       await load()
     } catch (err) {
-      setError(err?.message || 'No pudimos eliminar el torneo.')
+      setError(err?.data?.message || err?.message || 'No pudimos eliminar el torneo.')
     }
   }
 
@@ -540,11 +552,19 @@ export default function TournamentSettings() {
   }
 
   const handleRemoveCategory = async (categoryId) => {
+    const confirmDelete = window.confirm(
+      '¿Seguro que deseas eliminar esta categoría del torneo?\n\nSi ya tiene inscripciones, cuadros, wildcards o premios, el sistema lo bloqueará.',
+    )
+    if (!confirmDelete) return
+
     try {
+      setError('')
+      setMessage('')
       await adminTournamentCategoriesApi.remove(categoryId)
+      setMessage('Categoría eliminada correctamente.')
       await load()
     } catch (err) {
-      setError(err?.message || 'No pudimos eliminar la categoría.')
+      setError(err?.data?.message || err?.message || 'No pudimos eliminar la categoría.')
     }
   }
 

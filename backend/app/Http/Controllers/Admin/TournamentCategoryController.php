@@ -9,6 +9,7 @@ use App\Http\Resources\TournamentCategoryResource;
 use App\Models\Tournament;
 use App\Models\TournamentCategory;
 use App\Services\AcceptanceService;
+use App\Services\TournamentDeletionService;
 
 class TournamentCategoryController extends Controller
 {
@@ -45,7 +46,7 @@ class TournamentCategoryController extends Controller
 
     public function destroy(TournamentCategory $tournamentCategory)
     {
-        $tournamentCategory->delete();
+        app(TournamentDeletionService::class)->deleteTournamentCategory($tournamentCategory);
 
         return response()->noContent();
     }

@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Registration;
 use App\Models\Status;
+use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\TournamentCategory;
 use App\Models\User;
@@ -190,6 +192,76 @@ class AdminCrudSmokeTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['entry_fee_currency']);
+    }
+
+    public function test_verified_admin_can_delete_test_tournament_with_only_configuration_categories(): void
+    {
+        $this->seed(StatusSeeder::class);
+
+        $admin = $this->createVerifiedAdmin();
+        [, $tournamentCategory] = $this->createTournamentCategory($admin, 'deleteable');
+        $tournamentId = (int) $tournamentCategory->tournament_id;
+
+        Sanctum::actingAs($admin);
+
+        $delete = $this->deleteJson("/api/admin/tournaments/{$tournamentId}");
+
+        $delete->assertNoContent();
+        $this->assertDatabaseMissing('tournaments', ['id' => $tournamentId]);
+        $this->assertDatabaseMissing('tournament_categories', ['id' => $tournamentCategory->id]);
+    }
+
+    public function test_verified_admin_cannot_delete_tournament_with_registrations(): void
+    {
+        $this->seed(StatusSeeder::class);
+
+        $admin = $this->createVerifiedAdmin();
+        [$tournament, $tournamentCategory] = $this->createTournamentCategory($admin, 'protected');
+        $team = Team::query()->create([
+            'display_name' => 'Protected Team',
+            'created_by' => $admin->id,
+        ]);
+
+        Registration::query()->create([
+            'tournament_category_id' => $tournamentCategory->id,
+            'team_id' => $team->id,
+            'status_id' => $this->statusId('registration', 'pending'),
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $delete = $this->deleteJson("/api/admin/tournaments/{$tournament->id}");
+
+        $delete->assertStatus(422)
+            ->assertJsonValidationErrors(['tournament']);
+        $this->assertDatabaseHas('tournaments', ['id' => $tournament->id]);
+        $this->assertDatabaseHas('tournament_categories', ['id' => $tournamentCategory->id]);
+    }
+
+    public function test_verified_admin_cannot_delete_tournament_category_with_registrations(): void
+    {
+        $this->seed(StatusSeeder::class);
+
+        $admin = $this->createVerifiedAdmin();
+        [, $tournamentCategory] = $this->createTournamentCategory($admin, 'category-protected');
+        $team = Team::query()->create([
+            'display_name' => 'Category Protected Team',
+            'created_by' => $admin->id,
+        ]);
+
+        Registration::query()->create([
+            'tournament_category_id' => $tournamentCategory->id,
+            'team_id' => $team->id,
+            'status_id' => $this->statusId('registration', 'pending'),
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $delete = $this->deleteJson("/api/admin/tournament-categories/{$tournamentCategory->id}");
+
+        $delete->assertStatus(422)
+            ->assertJsonValidationErrors(['tournament_category']);
+        $this->assertDatabaseHas('tournament_categories', ['id' => $tournamentCategory->id]);
     }
 
     public function test_verified_admin_can_crud_link_wildcards_without_registration_side_effects(): void
