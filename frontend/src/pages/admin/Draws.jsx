@@ -386,6 +386,7 @@ export default function Draws() {
                 const drawPlan = getDrawPlan(bracket)
                 const byeRecipients = getByeRecipients(bracket)
                 const isOpenDraw = Boolean(drawPlan.is_open)
+                const isGenerated = hasGeneratedBracket(bracket)
 
                 return (
                   <article key={bracket.id} className="panel-card draws-bracket-item">
@@ -410,6 +411,7 @@ export default function Draws() {
                     </div>
 
                     <div className="draws-bracket-meta">
+                      {isOpenDraw ? <span className="tag accent">OPEN</span> : null}
                       <span className="tag muted">Parejas: {drawPlan.eligible_pairs_count ?? '—'}</span>
                       <span className="tag muted">Tamaño: {drawPlan.computed_draw_size || bracket.draw_size || '—'}</span>
                       <span className="tag muted">Byes: {drawPlan.bye_count ?? '—'}</span>
@@ -420,23 +422,27 @@ export default function Draws() {
                     {isOpenDraw ? (
                       <div className="open-bye-review">
                         <div>
-                          <strong>Revisión OPEN de byes</strong>
+                          <strong>{isGenerated ? 'Byes asignados' : 'Revisión OPEN de byes'}</strong>
                           <p>
-                            El tamaño se calcula automáticamente. La propuesta de byes prioriza pago confirmado y luego orden de creación.
+                            {isGenerated
+                              ? 'Parejas que avanzan con bye según prioridad de pago confirmado.'
+                              : 'El tamaño se calcula automáticamente. Los byes priorizan pago confirmado y luego orden de creación.'}
                           </p>
                         </div>
                         {Number(drawPlan.bye_count || 0) > 0 ? (
                           <div className="bye-recipient-list">
-                            <span className="muted">Parejas propuestas con bye</span>
+                            <span className="muted">
+                              {isGenerated ? 'Parejas con bye' : 'Parejas propuestas con bye'}
+                            </span>
                             {byeRecipients.length > 0 ? (
                               <ul>
                                 {byeRecipients.map((registration) => (
                                   <li key={registration.id}>{getTeamLabel(registration)}</li>
                                 ))}
                               </ul>
-                            ) : (
-                              <p className="muted">Crea la estructura para ver la asignación propuesta.</p>
-                            )}
+                            ) : !isGenerated ? (
+                              <p className="muted">Genera el cuadro para ver la asignación propuesta.</p>
+                            ) : null}
                           </div>
                         ) : (
                           <p className="muted">No hay byes requeridos para este tamaño de cuadro.</p>
@@ -444,7 +450,7 @@ export default function Draws() {
                       </div>
                     ) : null}
 
-                    {hasGeneratedBracket(bracket) ? (
+                    {isGenerated ? (
                       <div className="draws-bracket-view">
                         <BracketView
                           bracket={bracket}
@@ -453,7 +459,11 @@ export default function Draws() {
                         />
                       </div>
                     ) : (
-                      <div className="empty-state">Crea el cuadro en blanco para revisar slots, byes y cargar resultados.</div>
+                      <div className="empty-state">
+                        {isOpenDraw
+                          ? 'Genera el cuadro para confirmar los byes y cargar resultados.'
+                          : 'Genera el cuadro para comenzar a cargar resultados.'}
+                      </div>
                     )}
                   </article>
                 )
