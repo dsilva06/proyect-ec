@@ -16,6 +16,13 @@ const getTeamLabel = (registration) => registration?.team?.display_name || 'Por 
 
 const hasGeneratedBracket = (bracket) => ((bracket?.matches?.length || 0) > 0 || (bracket?.slots?.length || 0) > 0)
 
+const getDrawPlan = (bracket) => bracket?.draw_plan || {}
+
+const getByeRecipients = (bracket) => {
+  const recipients = getDrawPlan(bracket)?.bye_recipients
+  return Array.isArray(recipients) ? recipients : []
+}
+
 const toNumberOrNull = (value) => {
   if (value === '' || value === null || value === undefined) return null
   const parsed = Number(value)
@@ -209,7 +216,7 @@ export default function Draws() {
 
       const randomize = mode === 'randomize'
       await adminBracketsApi.generate(bracket.id, { randomize })
-      setMessage(randomize ? 'Cuadro generado con randomize.' : 'Cuadro generado con sorteo manual.')
+      setMessage(randomize ? 'Cuadro generado con puestos randomizados.' : 'Estructura del cuadro creada en blanco.')
       await loadBrackets(boardTournamentId)
     } catch (err) {
       setError(err?.message || 'No pudimos generar el cuadro.')
@@ -375,46 +382,82 @@ export default function Draws() {
             <div className="empty-state">No hay cuadros para este torneo.</div>
           ) : (
             <div className="draws-bracket-list">
-              {brackets.map((bracket) => (
-                <article key={bracket.id} className="panel-card draws-bracket-item">
-                  <div className="panel-header">
-                    <div>
-                      <h5>{bracket.tournament_category?.category?.display_name || bracket.tournament_category?.category?.name || 'Categoria'}</h5>
-                      <p className="muted">{bracket.status?.label || 'Sin estado'}</p>
-                    </div>
-                    <div className="form-actions">
-                      <button className="secondary-button" type="button" onClick={() => handleGenerate(bracket, 'manual')}>
-                        Generar manual
-                      </button>
-                      <button className="primary-button" type="button" onClick={() => handleGenerate(bracket, 'randomize')}>
-                        Randomize
-                      </button>
-                      {bracket.status?.code === 'draft' ? (
-                        <button className="ghost-button" type="button" onClick={() => handleDelete(bracket)}>
-                          Eliminar
+              {brackets.map((bracket) => {
+                const drawPlan = getDrawPlan(bracket)
+                const byeRecipients = getByeRecipients(bracket)
+                const isOpenDraw = Boolean(drawPlan.is_open)
+
+                return (
+                  <article key={bracket.id} className="panel-card draws-bracket-item">
+                    <div className="panel-header">
+                      <div>
+                        <h5>{bracket.tournament_category?.category?.display_name || bracket.tournament_category?.category?.name || 'Categoria'}</h5>
+                        <p className="muted">{bracket.status?.label || 'Sin estado'}</p>
+                      </div>
+                      <div className="form-actions">
+                        <button className="secondary-button" type="button" onClick={() => handleGenerate(bracket, 'manual')}>
+                          Crear en blanco
                         </button>
-                      ) : null}
+                        <button className="primary-button" type="button" onClick={() => handleGenerate(bracket, 'randomize')}>
+                          Randomize
+                        </button>
+                        {bracket.status?.code === 'draft' ? (
+                          <button className="ghost-button" type="button" onClick={() => handleDelete(bracket)}>
+                            Eliminar
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="draws-bracket-meta">
-                    <span className="tag muted">Slots: {bracket.slots?.length || 0}</span>
-                    <span className="tag muted">Matches: {bracket.matches?.length || 0}</span>
-                  </div>
-
-                  {hasGeneratedBracket(bracket) ? (
-                    <div className="draws-bracket-view">
-                      <BracketView
-                        bracket={bracket}
-                        onMatchClick={openScoreModal}
-                        matchActionLabel="Score"
-                      />
+                    <div className="draws-bracket-meta">
+                      <span className="tag muted">Parejas: {drawPlan.eligible_pairs_count ?? '—'}</span>
+                      <span className="tag muted">Tamaño: {drawPlan.computed_draw_size || bracket.draw_size || '—'}</span>
+                      <span className="tag muted">Byes: {drawPlan.bye_count ?? '—'}</span>
+                      <span className="tag muted">Slots: {bracket.slots?.length || 0}</span>
+                      <span className="tag muted">Matches: {bracket.matches?.length || 0}</span>
                     </div>
-                  ) : (
-                    <div className="empty-state">Genera el cuadro para comenzar a cargar resultados.</div>
-                  )}
-                </article>
-              ))}
+
+                    {isOpenDraw ? (
+                      <div className="open-bye-review">
+                        <div>
+                          <strong>Revisión OPEN de byes</strong>
+                          <p>
+                            El tamaño se calcula automáticamente. La propuesta de byes prioriza pago confirmado y luego orden de creación.
+                          </p>
+                        </div>
+                        {Number(drawPlan.bye_count || 0) > 0 ? (
+                          <div className="bye-recipient-list">
+                            <span className="muted">Parejas propuestas con bye</span>
+                            {byeRecipients.length > 0 ? (
+                              <ul>
+                                {byeRecipients.map((registration) => (
+                                  <li key={registration.id}>{getTeamLabel(registration)}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="muted">Crea la estructura para ver la asignación propuesta.</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="muted">No hay byes requeridos para este tamaño de cuadro.</p>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {hasGeneratedBracket(bracket) ? (
+                      <div className="draws-bracket-view">
+                        <BracketView
+                          bracket={bracket}
+                          onMatchClick={openScoreModal}
+                          matchActionLabel="Score"
+                        />
+                      </div>
+                    ) : (
+                      <div className="empty-state">Crea el cuadro en blanco para revisar slots, byes y cargar resultados.</div>
+                    )}
+                  </article>
+                )
+              })}
             </div>
           )}
         </div>

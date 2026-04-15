@@ -6,6 +6,7 @@ use App\Models\Bracket;
 use App\Models\BracketSlot;
 use App\Models\Registration;
 use App\Models\TournamentMatch;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -42,6 +43,7 @@ class BracketGenerationService
         }
 
         $registrations = Registration::query()
+            ->with(['payments.status', 'openEntry'])
             ->where('tournament_category_id', $category->id)
             ->whereHas('status', function ($statusQuery) {
                 $statusQuery->whereIn('code', ['accepted', 'paid']);
@@ -55,20 +57,14 @@ class BracketGenerationService
             ]);
         }
 
-        $drawSize = min($maxTeams, max(8, $this->nextPowerOfTwo(max(2, $totalEligible))));
+        $drawSize = min($maxTeams, $this->nextPowerOfTwo(max(2, $totalEligible)));
         $seedCount = $isOpen ? 0 : $this->seedCountForSize($drawSize);
         $seedPositions = $seedCount > 0
             ? array_slice($this->seedPositions($drawSize), 0, $seedCount)
             : [];
 
         $registrations = $isOpen
-            ? $registrations->sort(function ($a, $b) {
-                $createdAtComparison = $a->created_at <=> $b->created_at;
-
-                return $createdAtComparison !== 0
-                    ? $createdAtComparison
-                    : ($a->id <=> $b->id);
-            })->values()
+            ? $registrations->sort(fn ($a, $b) => $this->compareOpenRegistrationsForByeProposal($a, $b))->values()
             : $registrations->sort(function ($a, $b) {
                 $rankA = $a->team_ranking_score ?? PHP_INT_MAX;
                 $rankB = $b->team_ranking_score ?? PHP_INT_MAX;
@@ -89,13 +85,14 @@ class BracketGenerationService
                 ->take($seedCount)
                 ->values();
 
-        $remaining = $registrations
+        $remainingCollection = $registrations
             ->reject(fn ($registration) => $seeded->contains('id', $registration->id))
-            ->values()
-            ->all();
+            ->values();
 
-        if ($randomize || $isOpen) {
+        if ($randomize && ! $isOpen) {
+            $remaining = $remainingCollection->all();
             shuffle($remaining);
+            $remainingCollection = collect($remaining);
         }
 
         $slots = [];
@@ -113,6 +110,35 @@ class BracketGenerationService
 
         $byes = max(0, $drawSize - $registrations->count());
         $byeSlots = $this->resolveByeSlots($seededPositions, $drawSize, $byes);
+        $byeRecipientIds = [];
+
+        if ($isOpen && $byes > 0) {
+            $byeRecipients = $remainingCollection->take($byes)->values();
+
+            foreach ($byeSlots as $index => $byeSlot) {
+                $registration = $byeRecipients->get($index);
+                $recipientSlot = $this->opponentSlot($byeSlot);
+                if (! $registration || ! $recipientSlot || in_array($recipientSlot, $byeSlots, true)) {
+                    continue;
+                }
+
+                $slots[$recipientSlot] = $registration;
+                $byeRecipientIds[] = (int) $registration->id;
+            }
+
+            $remainingCollection = $remainingCollection
+                ->reject(fn ($registration) => in_array((int) $registration->id, $byeRecipientIds, true))
+                ->values();
+
+        }
+
+        if ($randomize && $isOpen) {
+            $remaining = $remainingCollection->all();
+            shuffle($remaining);
+            $remainingCollection = collect($remaining);
+        }
+
+        $remaining = $remainingCollection->all();
 
         $cursor = 0;
         for ($slotNumber = 1; $slotNumber <= $drawSize; $slotNumber++) {
@@ -208,7 +234,16 @@ class BracketGenerationService
             }
         });
 
-        return $bracket->fresh(['status', 'slots.registration.team', 'tournamentCategory.category', 'tournamentCategory.tournament.status']);
+        return $bracket->fresh([
+            'status',
+            'slots.registration.team',
+            'matches.status',
+            'matches.registrationA.team',
+            'matches.registrationB.team',
+            'matches.winnerRegistration.team',
+            'tournamentCategory.category',
+            'tournamentCategory.tournament.status',
+        ]);
     }
 
     private function seedCountForSize(int $size): int
@@ -260,8 +295,27 @@ class BracketGenerationService
         }
 
         if (count($byeSlots) < $byes) {
+            for ($slotNumber = 1; $slotNumber <= $drawSize && count($byeSlots) < $byes; $slotNumber += 2) {
+                foreach ([$slotNumber + 1, $slotNumber] as $candidate) {
+                    if ($candidate < 1 || $candidate > $drawSize) {
+                        continue;
+                    }
+                    if (in_array($candidate, $seedPositions, true) || in_array($candidate, $byeSlots, true)) {
+                        continue;
+                    }
+                    if ($this->matchAlreadyHasBye($candidate, $byeSlots)) {
+                        continue;
+                    }
+
+                    $byeSlots[] = $candidate;
+                    break;
+                }
+            }
+        }
+
+        if (count($byeSlots) < $byes) {
             $available = array_values(array_diff(range(1, $drawSize), $seedPositions, $byeSlots));
-            $extra = array_slice($available, -($byes - count($byeSlots)));
+            $extra = array_slice($available, 0, $byes - count($byeSlots));
             $byeSlots = array_merge($byeSlots, $extra);
         }
 
@@ -275,6 +329,57 @@ class BracketGenerationService
             $power *= 2;
         }
         return $power;
+    }
+
+    private function opponentSlot(int $slotNumber): ?int
+    {
+        return $slotNumber > 0
+            ? ($slotNumber % 2 === 1 ? $slotNumber + 1 : $slotNumber - 1)
+            : null;
+    }
+
+    private function matchAlreadyHasBye(int $slotNumber, array $byeSlots): bool
+    {
+        $opponent = $this->opponentSlot($slotNumber);
+
+        return $opponent !== null && in_array($opponent, $byeSlots, true);
+    }
+
+    private function compareOpenRegistrationsForByeProposal(Registration $a, Registration $b): int
+    {
+        $paidA = $this->paymentConfirmedAt($a)?->getTimestamp() ?? PHP_INT_MAX;
+        $paidB = $this->paymentConfirmedAt($b)?->getTimestamp() ?? PHP_INT_MAX;
+
+        if ($paidA !== $paidB) {
+            return $paidA <=> $paidB;
+        }
+
+        $createdA = $a->created_at?->getTimestamp() ?? PHP_INT_MAX;
+        $createdB = $b->created_at?->getTimestamp() ?? PHP_INT_MAX;
+
+        if ($createdA !== $createdB) {
+            return $createdA <=> $createdB;
+        }
+
+        return (int) $a->id <=> (int) $b->id;
+    }
+
+    private function paymentConfirmedAt(Registration $registration): ?CarbonInterface
+    {
+        if ($registration->relationLoaded('openEntry') && $registration->openEntry?->paid_at) {
+            return $registration->openEntry->paid_at;
+        }
+
+        if (! $registration->relationLoaded('payments')) {
+            return null;
+        }
+
+        $payment = $registration->payments
+            ->filter(fn ($payment) => $payment->status?->code === 'succeeded')
+            ->sortBy(fn ($payment) => $payment->paid_at?->getTimestamp() ?? $payment->created_at?->getTimestamp() ?? PHP_INT_MAX)
+            ->first();
+
+        return $payment?->paid_at ?? $payment?->created_at;
     }
 
     private function advanceWinner(TournamentMatch $match): void

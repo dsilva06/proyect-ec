@@ -143,6 +143,69 @@ class BracketGenerationServiceTest extends TestCase
         $this->assertEqualsCanonicalizing($assignedRegistrations, $slotRegistrationIds);
     }
 
+    public function test_open_generation_computes_eight_draw_for_seven_pairs(): void
+    {
+        $category = $this->makeTournamentCategory('open', 8);
+        $bracket = Bracket::query()->create([
+            'tournament_category_id' => $category->id,
+            'type' => Bracket::TYPE_SINGLE_ELIMINATION,
+            'status_id' => $this->statusId('bracket', 'draft'),
+        ]);
+
+        for ($i = 0; $i < 7; $i++) {
+            $paidAt = now()->subMinutes(20 - $i);
+            $registration = $this->makeAcceptedRegistration($category, 10 + $i, $paidAt);
+            $this->makeOpenEntry($category->tournament, "assigned-eight-{$i}@test.dev", $registration, $category, $paidAt);
+        }
+
+        app(BracketGenerationService::class)->generate($bracket, false);
+
+        $bracket->refresh()->load(['slots', 'matches']);
+        $byeMatches = $bracket->matches
+            ->where('round_number', 1)
+            ->filter(fn ($match) => ((bool) $match->registration_a_id) !== ((bool) $match->registration_b_id));
+
+        $this->assertCount(8, $bracket->slots);
+        $this->assertCount(7, $bracket->matches);
+        $this->assertCount(1, $byeMatches);
+    }
+
+    public function test_open_generation_computes_sixteen_draw_for_twelve_pairs_and_proposes_byes_by_payment_order(): void
+    {
+        $category = $this->makeTournamentCategory('open', 16);
+        $bracket = Bracket::query()->create([
+            'tournament_category_id' => $category->id,
+            'type' => Bracket::TYPE_SINGLE_ELIMINATION,
+            'status_id' => $this->statusId('bracket', 'draft'),
+        ]);
+
+        $expectedByeRecipients = [];
+        for ($i = 0; $i < 12; $i++) {
+            $paidAt = now()->subMinutes(40 - $i);
+            $registration = $this->makeAcceptedRegistration($category, 10 + $i, now()->subMinutes($i));
+            $this->makeOpenEntry($category->tournament, "assigned-sixteen-bye-{$i}@test.dev", $registration, $category, $paidAt);
+
+            if ($i < 4) {
+                $expectedByeRecipients[] = $registration->id;
+            }
+        }
+
+        app(BracketGenerationService::class)->generate($bracket, false);
+
+        $bracket->refresh()->load(['slots', 'matches']);
+        $byeWinnerIds = $bracket->matches
+            ->where('round_number', 1)
+            ->filter(fn ($match) => ((bool) $match->registration_a_id) !== ((bool) $match->registration_b_id))
+            ->pluck('winner_registration_id')
+            ->values()
+            ->all();
+
+        $this->assertCount(16, $bracket->slots);
+        $this->assertCount(15, $bracket->matches);
+        $this->assertCount(4, $byeWinnerIds);
+        $this->assertEqualsCanonicalizing($expectedByeRecipients, $byeWinnerIds);
+    }
+
     private function makeTournamentCategory(string $mode, int $maxTeams = 8): TournamentCategory
     {
         $category = Category::query()->create([
@@ -201,7 +264,8 @@ class BracketGenerationServiceTest extends TestCase
         Tournament $tournament,
         string $partnerEmail,
         ?Registration $registration = null,
-        ?TournamentCategory $assignedCategory = null
+        ?TournamentCategory $assignedCategory = null,
+        ?\DateTimeInterface $paidAt = null
     ): OpenEntry {
         $captain = User::factory()->create([
             'email' => 'captain-'.md5($partnerEmail.microtime(true)).'@test.dev',
@@ -225,6 +289,7 @@ class BracketGenerationServiceTest extends TestCase
             'partner_last_name' => 'Bracket',
             'partner_dni' => 'V-'.random_int(1000000, 9999999),
             'assignment_status' => $registration ? OpenEntry::ASSIGNMENT_ASSIGNED : OpenEntry::ASSIGNMENT_PENDING,
+            'paid_at' => $paidAt,
             'assigned_tournament_category_id' => $assignedCategory?->id,
             'registration_id' => $registration?->id,
             'assigned_by_user_id' => $registration ? $captain->id : null,
