@@ -30,7 +30,9 @@ class BracketGenerationService
         $isOpen = strtolower((string) ($category->tournament?->mode ?? '')) === 'open';
 
         $maxTeams = (int) $category->max_teams;
-        if (! in_array($maxTeams, [2, 4, 8, 16, 32, 64, 128], true)) {
+        $validMaxTeams = in_array($maxTeams, [2, 4, 8, 16, 32, 64, 128], true);
+
+        if (! $isOpen && ! $validMaxTeams) {
             throw ValidationException::withMessages([
                 'draw_size' => 'El tamaño del cuadro debe ser 2, 4, 8, 16, 32, 64 o 128.',
             ]);
@@ -57,7 +59,8 @@ class BracketGenerationService
             ]);
         }
 
-        $drawSize = min($maxTeams, $this->nextPowerOfTwo(max(2, $totalEligible)));
+        $computedSize = $this->nextPowerOfTwo(max(2, $totalEligible));
+        $drawSize = $validMaxTeams ? min($maxTeams, $computedSize) : $computedSize;
         $seedCount = $isOpen ? 0 : $this->seedCountForSize($drawSize);
         $seedPositions = $seedCount > 0
             ? array_slice($this->seedPositions($drawSize), 0, $seedCount)
