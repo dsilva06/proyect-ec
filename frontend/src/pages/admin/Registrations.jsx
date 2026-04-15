@@ -128,6 +128,7 @@ export default function Registrations() {
   const [rankingDraft, setRankingDraft] = useState([])
   const [isSavingDetail, setIsSavingDetail] = useState(false)
   const [isSavingRankings, setIsSavingRankings] = useState(false)
+  const [rulesOpen, setRulesOpen] = useState(false)
 
   const statusOptions = useMemo(() => statuses
     .filter((status) => status.module === 'registration')
@@ -531,8 +532,25 @@ export default function Registrations() {
       <div className="registrations-trello-toolbar">
         <div className="registrations-trello-toolbar-meta">
           <span className="tag muted">{filteredRegistrations.length} inscripciones visibles</span>
-          <span className="muted">Refund solo en PRO: pagado no aceptado, o waitlist no aceptado cuando inicia el torneo.</span>
+          <button
+            className="rules-toggle-btn"
+            type="button"
+            onClick={() => setRulesOpen((prev) => !prev)}
+          >
+            {rulesOpen ? 'Ocultar reglas' : 'Ver reglas de refund'}
+          </button>
         </div>
+        {rulesOpen && (
+          <div className="registrations-rules-panel">
+            <strong>Reglas de devolución (Refund)</strong>
+            <ul>
+              <li>Solo aplica en torneos <strong>PRO</strong>.</li>
+              <li>Inscripciones <strong>pagadas pero no aceptadas</strong> → candidatas a refund.</li>
+              <li>Inscripciones en <strong>waitlist no aceptadas</strong> cuando el torneo ya inició → candidatas a refund.</li>
+              <li>Inscripciones <strong>aceptadas</strong> no califican para refund.</li>
+            </ul>
+          </div>
+        )}
         <div className="registrations-trello-toolbar-filters">
           {QUICK_FILTERS.map((option) => (
             <button
@@ -548,7 +566,7 @@ export default function Registrations() {
         </div>
       </div>
 
-      <div className="registrations-trello-layout">
+      <div className={`registrations-trello-layout${selectedRegistration ? ' has-drawer' : ''}`}>
         <div className="registrations-trello-board-shell">
           {filteredRegistrations.length === 0 ? (
             <div className="empty-state">No hay inscripciones para los filtros seleccionados.</div>
@@ -584,19 +602,18 @@ export default function Registrations() {
           )}
         </div>
 
+        {selectedRegistration && (
         <aside className="panel-card registrations-detail-drawer">
-          {selectedRegistration ? (
-            <>
-              <header className="registration-drawer-header">
-                <div>
-                  <h4>{selectedRegistration.team?.display_name || 'Inscripción'}</h4>
-                  <p className="muted">
-                    {selectedRegistration.tournament_category?.tournament?.name || 'Torneo'}
-                    {' • '}
-                    {selectedRegistration.tournament_category?.category?.display_name || selectedRegistration.tournament_category?.category?.name || 'Categoría'}
-                  </p>
-                </div>
-                <button className="ghost-button" type="button" onClick={closeRegistrationDetail}>
+            <header className="registration-drawer-header">
+              <div>
+                <h4>{selectedRegistration.team?.display_name || 'Inscripción'}</h4>
+                <p className="muted">
+                  {selectedRegistration.tournament_category?.tournament?.name || 'Torneo'}
+                  {' • '}
+                  {selectedRegistration.tournament_category?.category?.display_name || selectedRegistration.tournament_category?.category?.name || 'Categoría'}
+                </p>
+              </div>
+              <button className="ghost-button" type="button" onClick={closeRegistrationDetail}>
                   Cerrar
                 </button>
               </header>
@@ -756,14 +773,8 @@ export default function Registrations() {
                   </section>
                 )}
               </div>
-            </>
-          ) : (
-            <div className="registrations-detail-empty">
-              <h4>Selecciona una inscripción</h4>
-              <p className="muted">Abre cualquier tarjeta para ver detalle completo, editar estado y ranking.</p>
-            </div>
-          )}
         </aside>
+        )}
       </div>
     </section>
   )

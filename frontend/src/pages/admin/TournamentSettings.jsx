@@ -1153,6 +1153,7 @@ export default function TournamentSettings() {
               <span className="tag muted">Admin</span>
             </div>
             <form className="form-grid tournament-create-grid" onSubmit={handleCreateTournament}>
+              <div className="form-section-header field-span-2">Información básica</div>
               <label>
                 Nombre del torneo
                 <input type="text" value={form.name} onChange={handleTournamentChange('name')} />
@@ -1161,6 +1162,8 @@ export default function TournamentSettings() {
                 Descripción
                 <textarea value={form.description} onChange={handleTournamentChange('description')} />
               </label>
+
+              <div className="form-section-header field-span-2">Modalidad</div>
               <label>
                 Modalidad
                 <select value={form.mode} onChange={handleTournamentChange('mode')}>
@@ -1181,6 +1184,8 @@ export default function TournamentSettings() {
                 />
                 <small className="field-hint">Definido automáticamente según la modalidad. No editable.</small>
               </label>
+
+              <div className="form-section-header field-span-2">Ubicación</div>
               <label>
                 Ciudad
                 <input type="text" value={form.city} onChange={handleTournamentChange('city')} />
@@ -1201,6 +1206,8 @@ export default function TournamentSettings() {
                   onChange={handleTournamentChange('venue_address')}
                 />
               </label>
+
+              <div className="form-section-header field-span-2">Fechas</div>
               <label>
                 Fecha inicio
                 <DatePicker value={form.start_date} onChange={handleValueChange('start_date')} />
@@ -1209,6 +1216,22 @@ export default function TournamentSettings() {
                 Fecha fin
                 <DatePicker value={form.end_date} onChange={handleValueChange('end_date')} />
               </label>
+              <label>
+                Apertura inscripciones
+                <DateTimePicker
+                  value={form.registration_open_at}
+                  onChange={handleValueChange('registration_open_at')}
+                />
+              </label>
+              <label>
+                Cierre inscripciones
+                <DateTimePicker
+                  value={form.registration_close_at}
+                  onChange={handleValueChange('registration_close_at')}
+                />
+              </label>
+
+              <div className="form-section-header field-span-2">Economía</div>
               <label>
                 Costo inscripción
                 <input
@@ -1229,20 +1252,7 @@ export default function TournamentSettings() {
                   <option value="EUR">EUR</option>
                 </select>
               </label>
-              <label>
-                Apertura inscripciones
-                <DateTimePicker
-                  value={form.registration_open_at}
-                  onChange={handleValueChange('registration_open_at')}
-                />
-              </label>
-              <label>
-                Cierre inscripciones
-                <DateTimePicker
-                  value={form.registration_close_at}
-                  onChange={handleValueChange('registration_close_at')}
-                />
-              </label>
+              <div className="form-section-header field-span-2">Logística</div>
               <label>
                 Duración estimada (min)
                 <input

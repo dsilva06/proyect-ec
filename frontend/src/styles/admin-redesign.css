@@ -1074,3 +1074,238 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   OPEN ENTRIES PAGE — filter row, data table, tonal tags
+   ═══════════════════════════════════════════════════════════════════ */
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.filter-row label {
+  display: grid;
+  gap: 7px;
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: rgba(239, 231, 211, 0.82);
+  flex: 1 1 150px;
+  min-width: 140px;
+}
+
+.filter-row select {
+  padding: 10px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(239, 231, 211, 0.14);
+  background: rgba(5, 7, 18, 0.78);
+  color: var(--color-white-chocolate);
+  font-size: 0.92rem;
+  font-family: var(--font-body);
+  transition: border-color 0.16s ease;
+}
+
+.filter-row select:focus {
+  outline: none;
+  border-color: rgba(183, 207, 79, 0.38);
+}
+
+.data-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 231, 211, 0.07);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+}
+
+.data-table th {
+  font-size: 0.70rem;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.46);
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.08);
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.016);
+}
+
+.data-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.055);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.014);
+}
+
+.data-table small {
+  display: block;
+  font-size: 0.75rem;
+  margin-top: 2px;
+  color: rgba(239, 231, 211, 0.54);
+}
+
+.data-table td .primary-button,
+.data-table td .ghost-button {
+  font-size: 0.80rem;
+  padding: 7px 14px;
+  white-space: nowrap;
+}
+
+/* Tonal tag variants */
+.tag.tone-success {
+  background: rgba(120, 224, 168, 0.11);
+  border-color: rgba(120, 224, 168, 0.30);
+  color: #8ef3b0;
+}
+
+.tag.tone-warning {
+  background: rgba(255, 200, 87, 0.09);
+  border-color: rgba(255, 200, 87, 0.28);
+  color: #ffd87a;
+}
+
+.tag.tone-muted {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: rgba(239, 231, 211, 0.09);
+  color: rgba(239, 231, 211, 0.55);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORM SECTION HEADERS — visual grouping in long forms
+   ═══════════════════════════════════════════════════════════════════ */
+
+.form-section-header {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(239, 231, 211, 0.40);
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.07);
+  margin-top: 8px;
+}
+
+.form-section-header:first-child {
+  margin-top: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DRAWS PAGE — bracket card structure improvements
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Bracket item — more breathing room between sections */
+.draws-bracket-item {
+  gap: 18px;
+  padding: 20px 22px;
+}
+
+/* Clean header row: category name on left, badges on right */
+.bracket-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(239, 231, 211, 0.08);
+}
+
+.bracket-item-header h5 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-white-chocolate);
+}
+
+.bracket-item-header p {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: rgba(239, 231, 211, 0.52);
+}
+
+.bracket-item-header-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Dedicated row for bracket action buttons */
+.bracket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(239, 231, 211, 0.06);
+}
+
+/* Creates panel — collapsible, full-width */
+.draws-create-panel {
+  position: static;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REGISTRATIONS PAGE — conditional drawer + rules collapsible
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Collapsible refund rules panel */
+.registrations-rules-panel {
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(255, 200, 87, 0.04);
+  border: 1px solid rgba(255, 200, 87, 0.18);
+  font-size: 0.86rem;
+  color: rgba(239, 231, 211, 0.75);
+  line-height: 1.65;
+}
+
+.registrations-rules-panel ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 4px;
+}
+
+/* Small inline button to toggle the rules panel */
+.rules-toggle-btn {
+  font-size: 0.76rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 231, 211, 0.14);
+  background: transparent;
+  color: rgba(239, 231, 211, 0.52);
+  cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+
+.rules-toggle-btn:hover {
+  border-color: rgba(239, 231, 211, 0.28);
+  color: rgba(239, 231, 211, 0.82);
+}
+
+/* Empty drawer placeholder */
+.registrations-detail-empty {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  gap: 8px;
+}
+
+.registrations-detail-empty h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
