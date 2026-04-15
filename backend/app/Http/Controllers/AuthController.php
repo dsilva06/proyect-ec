@@ -9,7 +9,6 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResendVerificationEmailRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\PendingRegistrationVerificationMail;
-use App\Mail\WelcomePlayer;
 use App\Models\PlayerProfile;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
@@ -118,7 +117,6 @@ class AuthController extends Controller
 
             if ($wasJustVerified) {
                 event(new Verified($user));
-                $this->sendWelcomeEmail($user);
             }
 
             if ($request->expectsJson()) {
@@ -418,16 +416,6 @@ class AuthController extends Controller
             ?? '$2y$12$'.str_repeat('0', 53);
 
         return Hash::check($password, $hash) && $user !== null;
-    }
-
-    private function sendWelcomeEmail(User $user): void
-    {
-        try {
-            Mail::to($user->email)
-                ->queue(new WelcomePlayer($user));
-        } catch (\Throwable $e) {
-            report($e);
-        }
     }
 
     private function sendEmailVerification(User $user): void

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\PendingRegistrationVerificationMail;
+use App\Mail\WelcomePlayer;
 use App\Models\Category;
 use App\Models\PlayerProfile;
 use App\Models\Registration;
@@ -366,6 +367,7 @@ class AuthEmailVerificationTest extends TestCase
             'email' => 'verify-link@test.dev',
         ]);
         $this->assertNotNull(User::query()->where('email', 'verify-link@test.dev')->firstOrFail()->email_verified_at);
+        Mail::assertNotQueued(WelcomePlayer::class);
     }
 
     public function test_already_verified_link_returns_verification_message_without_auth_payload(): void
