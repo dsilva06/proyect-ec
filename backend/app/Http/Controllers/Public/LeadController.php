@@ -22,7 +22,7 @@ class LeadController extends Controller
 
         $inbox = (string) config('mail.leads_inbox', '');
         if ($inbox !== '') {
-            Mail::to($inbox)->send(new LeadReceivedMail($lead));
+            Mail::to($inbox)->queue(new LeadReceivedMail($lead));
         }
 
         return new LeadResource($lead);
