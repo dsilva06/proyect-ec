@@ -1348,3 +1348,30 @@
   padding-top: 16px;
   border-top: 1px solid rgba(239, 231, 211, 0.08);
 }
+
+/* Tournament phase controls — replaces raw status <select> */
+.tournament-phase-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.btn-phase-next {
+  font-size: 0.74rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 231, 211, 0.22);
+  background: rgba(239, 231, 211, 0.06);
+  color: rgba(239, 231, 211, 0.85);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-phase-next:hover {
+  background: rgba(239, 231, 211, 0.12);
+  border-color: rgba(239, 231, 211, 0.35);
+}

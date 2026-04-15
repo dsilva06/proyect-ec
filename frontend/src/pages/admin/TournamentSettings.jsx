@@ -36,6 +36,29 @@ const GROUP_LABELS = {
   mixto: 'Mixto',
 }
 
+const TOURNAMENT_STATUS_LABELS = {
+  draft: 'Borrador',
+  registration_open: 'Inscripciones abiertas',
+  registration_closed: 'Inscripciones cerradas',
+  in_progress: 'En juego',
+  published: 'Publicado',
+  completed: 'Finalizado',
+  cancelled: 'Cancelado',
+}
+
+const TOURNAMENT_NEXT_STEPS = {
+  draft: [{ label: 'Abrir inscripciones', code: 'registration_open' }],
+  registration_open: [{ label: 'Cerrar inscripciones', code: 'registration_closed' }],
+  registration_closed: [
+    { label: 'Iniciar torneo', code: 'in_progress' },
+    { label: 'Cancelar', code: 'cancelled' },
+  ],
+  in_progress: [
+    { label: 'Finalizar', code: 'completed' },
+    { label: 'Cancelar', code: 'cancelled' },
+  ],
+}
+
 const TOURNAMENT_BOARD_COLUMNS = [
   { key: 'planning', label: 'Planificación' },
   { key: 'registration', label: 'Inscripciones' },
@@ -644,17 +667,25 @@ export default function TournamentSettings() {
             <h3>{tournament.name}</h3>
             <p>{tournament.city || 'Ciudad'} • {tournament.venue_name || 'Sede'}</p>
           </div>
-          <select
-            className="status-select"
-            value={tournament.status?.id || ''}
-            onChange={(event) => handleStatusChange(tournament.id, event.target.value)}
-          >
-            {statusOptions.map((status) => (
-              <option key={status.id} value={status.id}>
-                {status.label}
-              </option>
-            ))}
-          </select>
+          <div className="tournament-phase-controls">
+            <span className="tag muted">
+              {TOURNAMENT_STATUS_LABELS[String(tournament.status?.code || 'draft').toLowerCase()] ?? tournament.status?.label ?? 'Sin estado'}
+            </span>
+            {(TOURNAMENT_NEXT_STEPS[String(tournament.status?.code || 'draft').toLowerCase()] ?? []).map(({ label, code }) => {
+              const target = statusByCode.get(code)
+              if (!target) return null
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  className="btn-phase-next"
+                  onClick={(e) => { e.stopPropagation(); handleStatusChange(tournament.id, target.id) }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className="tournament-meta">
