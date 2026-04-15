@@ -18,6 +18,8 @@ class PlayerProfile extends Model
         'user_id',
         'first_name',
         'last_name',
+        'document_type',
+        'document_number',
         'dni',
         'province_state',
         'country',

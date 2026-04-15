@@ -26,7 +26,8 @@ class VerificationEmailLinkTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-11111111',
+            'document_type' => 'DNI',
+            'document_number' => '11111111Z',
             'email' => 'verify-link-format@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',

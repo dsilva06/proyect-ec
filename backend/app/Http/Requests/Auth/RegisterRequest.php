@@ -9,16 +9,18 @@ use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
 {
+    private const DOCUMENT_TYPES = ['DNI', 'NIE', 'PASSPORT'];
+
     protected function prepareForValidation(): void
     {
         $firstName = trim((string) $this->input('first_name'));
         $lastName = trim((string) $this->input('last_name'));
-        $dniInput = strtoupper(trim((string) $this->input('dni')));
-        $dniPrefix = Str::substr($dniInput, 0, 1);
-        $dniDigits = preg_replace('/\D+/', '', $dniInput);
-        $dni = in_array($dniPrefix, ['V', 'E', 'P'], true) && $dniDigits !== ''
-            ? $dniPrefix.'-'.$dniDigits
-            : strtoupper((string) preg_replace('/\s+/', '', $dniInput));
+        $documentType = $this->normalizeDocumentType((string) $this->input('document_type', ''));
+        $documentNumber = $this->normalizeDocumentNumber(
+            $documentType,
+            (string) $this->input('document_number', '')
+        );
+        $dni = $documentNumber;
         $email = trim((string) $this->input('email'));
         $phone = trim((string) $this->input('phone', ''));
         $provinceState = trim((string) $this->input('province_state', ''));
@@ -31,6 +33,8 @@ class RegisterRequest extends FormRequest
         $this->merge([
             'first_name' => $firstName,
             'last_name' => $lastName,
+            'document_type' => $documentType,
+            'document_number' => $documentNumber,
             'dni' => $dni,
             'email' => Str::lower($email),
             'phone' => $phone !== '' ? $phone : null,
@@ -48,10 +52,30 @@ class RegisterRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
+            'document_type' => ['required', 'string', Rule::in(self::DOCUMENT_TYPES)],
+            'document_number' => [
+                'required',
+                'string',
+                'max:40',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $type = (string) $this->input('document_type');
+                    $number = (string) $value;
+
+                    $isValid = match ($type) {
+                        'DNI' => preg_match('/^\d{8}[A-Z]$/', $number) === 1,
+                        'NIE' => preg_match('/^[XYZ]\d{7}[A-Z]$/', $number) === 1,
+                        'PASSPORT' => preg_match('/^[A-Z0-9]{5,20}$/', $number) === 1,
+                        default => false,
+                    };
+
+                    if (! $isValid) {
+                        $fail('El documento no tiene un formato válido para el tipo seleccionado.');
+                    }
+                },
+            ],
             'dni' => [
                 'required',
                 'string',
-                'regex:/^(V|E|P)-\d{7,10}$/',
                 Rule::unique('player_profiles', 'dni')->where(function ($query) {
                     $query->whereExists(function ($subquery) {
                         $subquery
@@ -82,8 +106,30 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'dni.regex' => 'El DNI debe tener el formato V-12345678, E-12345678 o P-12345678.',
+            'document_type.in' => 'El tipo de documento debe ser DNI, NIE o pasaporte.',
             'phone.regex' => 'El teléfono debe incluir código de país y solo números, por ejemplo +584121234567.',
         ];
+    }
+
+    private function normalizeDocumentType(string $type): string
+    {
+        $type = strtoupper(trim($type));
+
+        return match ($type) {
+            'DNI', 'NIE', 'PASSPORT' => $type,
+            'PASAPORTE' => 'PASSPORT',
+            default => $type,
+        };
+    }
+
+    private function normalizeDocumentNumber(string $type, string $number): string
+    {
+        $number = strtoupper(trim($number));
+        $number = preg_replace('/[\s.-]+/', '', $number) ?? '';
+
+        return match ($type) {
+            'DNI', 'NIE', 'PASSPORT' => $number,
+            default => strtoupper((string) preg_replace('/\s+/', '', $number)),
+        };
     }
 }

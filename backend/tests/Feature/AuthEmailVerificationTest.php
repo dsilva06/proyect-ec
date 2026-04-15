@@ -39,7 +39,8 @@ class AuthEmailVerificationTest extends TestCase
         $response = $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-10000001',
+            'document_type' => 'DNI',
+            'document_number' => '10000001Z',
             'email' => 'verify-register-message@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -63,7 +64,8 @@ class AuthEmailVerificationTest extends TestCase
         $response = $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-10000001',
+            'document_type' => 'DNI',
+            'document_number' => '10000001Z',
             'email' => 'verify-register-notify@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -95,7 +97,8 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-10000009',
+            'document_type' => 'DNI',
+            'document_number' => '10000009Z',
             'email' => 'pending-register@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -121,7 +124,9 @@ class AuthEmailVerificationTest extends TestCase
             'user_id' => $legacyUser->id,
             'first_name' => 'Legacy',
             'last_name' => 'Pending',
-            'dni' => 'V-10000123',
+            'document_type' => 'DNI',
+            'document_number' => '10000123Z',
+            'dni' => '10000123Z',
             'province_state' => 'Unknown',
             'ranking_source' => 'NONE',
         ]);
@@ -129,7 +134,8 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-10000123',
+            'document_type' => 'DNI',
+            'document_number' => '10000123Z',
             'email' => 'legacy-pending@test.dev',
             'phone' => '+584121234567',
             'password' => 'Password123!',
@@ -158,7 +164,8 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-10000124',
+            'document_type' => 'DNI',
+            'document_number' => '10000124Z',
             'email' => 'verified-register@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -172,23 +179,25 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => '10000001',
+            'document_type' => 'DNI',
+            'document_number' => '10000001',
             'email' => 'verify-register-invalid-dni@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
         ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['dni']);
+            ->assertJsonValidationErrors(['document_number']);
     }
 
-    public function test_register_accepts_passport_style_dni_prefix(): void
+    public function test_register_accepts_passport_document(): void
     {
         Mail::fake();
 
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'P-10000001',
+            'document_type' => 'PASSPORT',
+            'document_number' => 'PA1000001',
             'email' => 'verify-register-passport-prefix@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -196,42 +205,61 @@ class AuthEmailVerificationTest extends TestCase
             ->assertCreated();
     }
 
-    public function test_register_rejects_invalid_dni_prefix(): void
-    {
-        $this->postJson('/api/auth/register', [
-            'first_name' => 'Diego',
-            'last_name' => 'Silva',
-            'dni' => 'X-12345678',
-            'email' => 'verify-register-invalid-prefix@test.dev',
-            'password' => 'Password123!',
-            'password_confirmation' => 'Password123!',
-        ])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['dni']);
-    }
-
-    public function test_register_rejects_identity_numbers_longer_than_ten_digits(): void
-    {
-        $this->postJson('/api/auth/register', [
-            'first_name' => 'Diego',
-            'last_name' => 'Silva',
-            'dni' => 'V-12345678901',
-            'email' => 'verify-register-invalid-length@test.dev',
-            'password' => 'Password123!',
-            'password_confirmation' => 'Password123!',
-        ])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['dni']);
-    }
-
-    public function test_register_normalizes_dni_format_before_verification(): void
+    public function test_register_accepts_nie_document(): void
     {
         Mail::fake();
 
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => ' v12345678 ',
+            'document_type' => 'NIE',
+            'document_number' => 'X1234567L',
+            'email' => 'verify-register-nie@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertCreated();
+    }
+
+    public function test_register_rejects_invalid_document_type(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'document_type' => 'CEDULA',
+            'document_number' => '12345678',
+            'email' => 'verify-register-invalid-prefix@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['document_type']);
+    }
+
+    public function test_register_rejects_invalid_passport_length(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'document_type' => 'PASSPORT',
+            'document_number' => 'ABC123456789012345678',
+            'email' => 'verify-register-invalid-length@test.dev',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['document_number']);
+    }
+
+    public function test_register_normalizes_document_format_before_verification(): void
+    {
+        Mail::fake();
+
+        $this->postJson('/api/auth/register', [
+            'first_name' => 'Diego',
+            'last_name' => 'Silva',
+            'document_type' => 'dni',
+            'document_number' => ' 12345678 z ',
             'email' => 'verify-register-normalized-dni@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -260,7 +288,9 @@ class AuthEmailVerificationTest extends TestCase
         $this->getJson($relativeVerificationUrl)->assertOk();
 
         $this->assertDatabaseHas('player_profiles', [
-            'dni' => 'V-12345678',
+            'document_type' => 'DNI',
+            'document_number' => '12345678Z',
+            'dni' => '12345678Z',
         ]);
     }
 
@@ -269,7 +299,8 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-10000001',
+            'document_type' => 'DNI',
+            'document_number' => '10000001Y',
             'email' => 'verify-register-invalid-phone@test.dev',
             'phone' => '0412-12',
             'password' => 'Password123!',
@@ -324,7 +355,8 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-10000010',
+            'document_type' => 'DNI',
+            'document_number' => '10000010Z',
             'email' => 'verify-link@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -377,7 +409,8 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/register', [
             'first_name' => 'Diego',
             'last_name' => 'Silva',
-            'dni' => 'V-10000011',
+            'document_type' => 'DNI',
+            'document_number' => '10000011Z',
             'email' => 'already-verified-link@test.dev',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',

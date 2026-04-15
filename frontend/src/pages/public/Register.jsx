@@ -13,7 +13,29 @@ const PHONE_COUNTRY_OPTIONS = [
   { code: 'ES', label: 'España', dial: '+34', localLength: 9, placeholder: '612345678' },
 ]
 
-const DNI_PREFIX_OPTIONS = ['V', 'E', 'P']
+const DOCUMENT_TYPE_OPTIONS = [
+  {
+    value: 'DNI',
+    label: 'DNI',
+    placeholder: '12345678Z',
+    hint: '8 números y una letra final.',
+    maxLength: 9,
+  },
+  {
+    value: 'NIE',
+    label: 'NIE',
+    placeholder: 'X1234567L',
+    hint: 'Una letra inicial, 7 números y una letra final.',
+    maxLength: 9,
+  },
+  {
+    value: 'PASSPORT',
+    label: 'Pasaporte',
+    placeholder: 'AB123456',
+    hint: 'Entre 5 y 20 letras o números.',
+    maxLength: 20,
+  },
+]
 
 const DEFAULT_PHONE_COUNTRY = PHONE_COUNTRY_OPTIONS[0]
 
@@ -21,8 +43,19 @@ function onlyDigits(value, maxLength) {
   return value.replace(/\D/g, '').slice(0, maxLength)
 }
 
+function normalizeDocumentNumber(value, maxLength) {
+  return value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, maxLength)
+}
+
 function findPhoneCountry(dialCode) {
   return PHONE_COUNTRY_OPTIONS.find((country) => country.dial === dialCode) ?? DEFAULT_PHONE_COUNTRY
+}
+
+function findDocumentType(type) {
+  return DOCUMENT_TYPE_OPTIONS.find((option) => option.value === type) ?? DOCUMENT_TYPE_OPTIONS[0]
 }
 
 export default function Register() {
@@ -31,8 +64,8 @@ export default function Register() {
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
-    dni_prefix: 'V',
-    dni_number: '',
+    document_type: 'DNI',
+    document_number: '',
     email: '',
     phone_country: DEFAULT_PHONE_COUNTRY.dial,
     phone_local: '',
@@ -70,12 +103,18 @@ export default function Register() {
   }, [])
 
   const selectedPhoneCountry = findPhoneCountry(form.phone_country)
+  const selectedDocumentType = findDocumentType(form.document_type)
 
   const buildRegisterPayload = () => {
-    const dniNumber = onlyDigits(form.dni_number, 10)
+    const documentNumber = normalizeDocumentNumber(form.document_number, selectedDocumentType.maxLength)
+    const documentPatterns = {
+      DNI: /^\d{8}[A-Z]$/,
+      NIE: /^[XYZ]\d{7}[A-Z]$/,
+      PASSPORT: /^[A-Z0-9]{5,20}$/,
+    }
 
-    if (dniNumber.length < 7 || dniNumber.length > 10) {
-      setError('El DNI debe tener entre 7 y 10 números.')
+    if (!documentPatterns[form.document_type]?.test(documentNumber)) {
+      setError(`El documento no tiene un formato válido. ${selectedDocumentType.hint}`)
       return null
     }
 
@@ -96,7 +135,8 @@ export default function Register() {
     return {
       first_name: form.first_name,
       last_name: form.last_name,
-      dni: `${form.dni_prefix}-${dniNumber}`,
+      document_type: form.document_type,
+      document_number: documentNumber,
       email: form.email,
       phone: normalizedPhone,
       password: form.password,
@@ -193,32 +233,43 @@ export default function Register() {
                       />
                     </label>
                     <label>
-                      DNI
+                      Documento
                       <div className="auth-inline-input">
                         <select
-                          value={form.dni_prefix}
-                          onChange={(event) => setForm({ ...form, dni_prefix: event.target.value })}
+                          value={form.document_type}
+                          onChange={(event) =>
+                            setForm({
+                              ...form,
+                              document_type: event.target.value,
+                              document_number: '',
+                            })}
                           disabled={isSubmitting}
                           required
                         >
-                          {DNI_PREFIX_OPTIONS.map((prefix) => (
-                            <option key={prefix} value={prefix}>{prefix}</option>
+                          {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
                           ))}
                         </select>
                         <input
                           type="text"
-                          inputMode="numeric"
-                          placeholder="12345678"
-                          value={form.dni_number}
+                          inputMode="text"
+                          placeholder={selectedDocumentType.placeholder}
+                          value={form.document_number}
                           onChange={(event) =>
-                            setForm({ ...form, dni_number: onlyDigits(event.target.value, 10) })}
-                          maxLength={10}
+                            setForm({
+                              ...form,
+                              document_number: normalizeDocumentNumber(
+                                event.target.value,
+                                selectedDocumentType.maxLength,
+                              ),
+                            })}
+                          maxLength={selectedDocumentType.maxLength}
                           disabled={isSubmitting}
                           required
                         />
                       </div>
                       <small className="auth-field-hint">
-                        Formato obligatorio: V-12345678, E-12345678 o P-12345678.
+                        {selectedDocumentType.hint}
                       </small>
                     </label>
                     <label>

@@ -30,7 +30,9 @@ class UserResourcePrivacyTest extends TestCase
         $subject->setRelation('playerProfile', new PlayerProfile([
             'first_name' => 'Another',
             'last_name' => 'Player',
-            'dni' => 'V-12345678',
+            'document_type' => 'DNI',
+            'document_number' => '12345678Z',
+            'dni' => '12345678Z',
             'province_state' => 'Caracas',
             'ranking_source' => 'FEP',
             'ranking_value' => 100,
@@ -45,6 +47,9 @@ class UserResourcePrivacyTest extends TestCase
         $this->assertNull($payload['phone']);
         $this->assertArrayHasKey('player_profile', $payload);
         $this->assertArrayNotHasKey('dni', $payload['player_profile']);
+        $this->assertArrayNotHasKey('document_type', $payload['player_profile']);
+        $this->assertArrayNotHasKey('document_number', $payload['player_profile']);
+        $this->assertArrayNotHasKey('document', $payload['player_profile']);
     }
 
     public function test_user_can_see_own_sensitive_fields(): void
@@ -67,7 +72,9 @@ class UserResourcePrivacyTest extends TestCase
         $subject->setRelation('playerProfile', new PlayerProfile([
             'first_name' => 'Same',
             'last_name' => 'User',
-            'dni' => 'V-87654321',
+            'document_type' => 'NIE',
+            'document_number' => 'X7654321L',
+            'dni' => 'X7654321L',
             'province_state' => 'Lara',
             'ranking_source' => 'FIP',
             'ranking_value' => 50,
@@ -81,6 +88,12 @@ class UserResourcePrivacyTest extends TestCase
         $this->assertSame('same@example.com', $payload['email']);
         $this->assertSame('+584121112233', $payload['phone']);
         $this->assertArrayHasKey('dni', $payload['player_profile']);
-        $this->assertSame('V-87654321', $payload['player_profile']['dni']);
+        $this->assertSame('X7654321L', $payload['player_profile']['dni']);
+        $this->assertSame('NIE', $payload['player_profile']['document_type']);
+        $this->assertSame('X7654321L', $payload['player_profile']['document_number']);
+        $this->assertSame([
+            'type' => 'NIE',
+            'number' => 'X7654321L',
+        ], $payload['player_profile']['document']);
     }
 }

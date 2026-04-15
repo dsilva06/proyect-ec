@@ -7,6 +7,17 @@ const getDisplayValue = (value, fallback = 'Por definir') => {
   return value
 }
 
+const getDocumentValue = (playerProfile) => {
+  const type = playerProfile.document_type
+  const number = playerProfile.document_number || playerProfile.dni
+
+  if (!type && !number) return 'Por definir'
+  if (!type) return number
+  if (!number) return type
+
+  return `${type} ${number}`
+}
+
 export default function PlayerProfile() {
   const [profile, setProfile] = useState(null)
   const [error, setError] = useState('')
@@ -59,8 +70,8 @@ export default function PlayerProfile() {
               <strong>{getDisplayValue(playerProfile.last_name)}</strong>
             </div>
             <div>
-              <span>DNI</span>
-              <strong>{getDisplayValue(playerProfile.dni)}</strong>
+              <span>Documento</span>
+              <strong>{getDocumentValue(playerProfile)}</strong>
             </div>
             <div>
               <span>Provincia / estado</span>

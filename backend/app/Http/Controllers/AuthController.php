@@ -230,6 +230,8 @@ class AuthController extends Controller
         return [
             'first_name' => trim((string) $validated['first_name']),
             'last_name' => trim((string) $validated['last_name']),
+            'document_type' => (string) $validated['document_type'],
+            'document_number' => (string) $validated['document_number'],
             'dni' => trim((string) $validated['dni']),
             'email' => Str::lower((string) $validated['email']),
             'phone' => $validated['phone'] ?? null,
@@ -332,6 +334,12 @@ class AuthController extends Controller
             }
         }
 
+        $payload['document_type'] = is_string($payload['document_type'] ?? null)
+            ? strtoupper(trim((string) $payload['document_type']))
+            : null;
+        $payload['document_number'] = is_string($payload['document_number'] ?? null)
+            ? strtoupper(trim((string) $payload['document_number']))
+            : null;
         $payload['email'] = Str::lower(trim((string) $payload['email']));
         $payload['phone'] = filled($payload['phone'] ?? null) ? (string) $payload['phone'] : null;
         $payload['province_state'] = filled($payload['province_state'] ?? null) ? (string) $payload['province_state'] : null;
@@ -365,6 +373,8 @@ class AuthController extends Controller
                 [
                     'first_name' => (string) $payload['first_name'],
                     'last_name' => (string) $payload['last_name'],
+                    'document_type' => $payload['document_type'] ?? null,
+                    'document_number' => $payload['document_number'] ?? null,
                     'dni' => (string) $payload['dni'],
                     'province_state' => filled($payload['province_state'] ?? null)
                         ? (string) $payload['province_state']

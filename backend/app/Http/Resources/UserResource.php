@@ -35,6 +35,12 @@ class UserResource extends JsonResource
 
             if ($canViewSensitiveFields) {
                 $profileData['dni'] = $profile->dni;
+                $profileData['document_type'] = $profile->document_type;
+                $profileData['document_number'] = $profile->document_number;
+                $profileData['document'] = [
+                    'type' => $profile->document_type,
+                    'number' => $profile->document_number,
+                ];
             }
         }
 
