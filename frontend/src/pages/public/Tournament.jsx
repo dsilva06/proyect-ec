@@ -569,7 +569,7 @@ export default function Tournament() {
                     <div className="registration-form">
                       {isOpen ? (
                         <>
-                          <h4>Inscribir pareja OPEN</h4>
+                          <h4>Inscribir pareja</h4>
                           <p className="muted">
                             Inscribe tu pareja. El arbitro asignara la categoria despues del pago y
                             aqui no debes escogerla.
