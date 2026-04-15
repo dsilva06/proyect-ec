@@ -9,10 +9,10 @@ import BrandLockup from '../../components/shared/BrandLockup'
 import '../../App.css'
 
 const categories = [
-  { name: 'Masculino Abierto', rule: 'Nivel abierto' },
+  { name: 'Masculino Abierto', rule: 'Categoría OPEN — árbitro asigna nivel' },
   { name: 'Masculino 1era', rule: 'Nivel avanzado' },
   { name: 'Masculino 2da', rule: 'Nivel intermedio' },
-  { name: 'Femenino Abierto', rule: 'Nivel abierto' },
+  { name: 'Femenino Abierto', rule: 'Categoría OPEN — árbitro asigna nivel' },
   { name: 'Femenino 1era', rule: 'Nivel avanzado' },
   { name: 'Femenino 2da', rule: 'Nivel intermedio' },
 ]
@@ -70,7 +70,7 @@ const formatRange = (start, end) => {
   const startLabel = formatDate(start)
   const endLabel = formatDate(end)
   if (startLabel === 'Por confirmar' && endLabel === 'Por confirmar') return 'Por confirmar'
-  if (startLabel !== 'Por confirmar' && endLabel !== 'Por confirmar') return `${startLabel} - ${endLabel}`
+  if (startLabel !== 'Por confirmar' && endLabel !== 'Por confirmar') return `${startLabel} – ${endLabel}`
   return startLabel !== 'Por confirmar' ? startLabel : endLabel
 }
 
@@ -78,7 +78,7 @@ const formatRegistrationWindow = (start, end) => {
   const startLabel = formatDateTime(start)
   const endLabel = formatDateTime(end)
   if (!startLabel && !endLabel) return 'Por confirmar'
-  if (startLabel && endLabel) return `${startLabel} - ${endLabel}`
+  if (startLabel && endLabel) return `${startLabel} – ${endLabel}`
   return startLabel || endLabel
 }
 
@@ -125,7 +125,6 @@ export default function Home() {
   const { user, logout } = useAuth()
   const [tournaments, setTournaments] = useState([])
   const [tournamentsLoading, setTournamentsLoading] = useState(true)
-  const [tournamentsError, setTournamentsError] = useState('')
   const [verificationState, setVerificationState] = useState({
     status: 'idle',
     message: '',
@@ -140,8 +139,15 @@ export default function Home() {
   const [contactStatus, setContactStatus] = useState('')
   const verificationParams = new URLSearchParams(location.search)
   const verificationUrl = verificationParams.get('verify_url') || verificationParams.get('url')
+  // Do not show modal during verification flow
+  const [showModal, setShowModal] = useState(!verificationUrl)
   const currentTournament = useMemo(() => pickCurrentTournament(tournaments), [tournaments])
-  const currentCategoryCount = Array.isArray(currentTournament?.categories) ? currentTournament.categories.length : 0
+  const currentCategoryCount = Array.isArray(currentTournament?.categories)
+    ? currentTournament.categories.length
+    : 0
+
+  // Auth-aware inscription destination
+  const inscripcionTo = user ? '/player/tournaments' : '/login'
 
   useEffect(() => {
     const updateScroll = () => {
@@ -159,20 +165,16 @@ export default function Home() {
 
     const loadTournaments = async () => {
       setTournamentsLoading(true)
-      setTournamentsError('')
 
       try {
         const response = await publicTournamentsApi.list()
         if (ignore) return
         setTournaments(normalizeCollection(response))
-      } catch (error) {
+      } catch {
         if (ignore) return
         setTournaments([])
-        setTournamentsError(error?.message || 'No pudimos cargar los torneos actuales.')
       } finally {
-        if (!ignore) {
-          setTournamentsLoading(false)
-        }
+        if (!ignore) setTournamentsLoading(false)
       }
     }
 
@@ -274,13 +276,8 @@ export default function Home() {
   }
 
   if (verificationState.status === 'success') {
-    const params = new URLSearchParams({
-      status: 'verified',
-    })
-
-    if (verificationState.name) {
-      params.set('name', verificationState.name)
-    }
+    const params = new URLSearchParams({ status: 'verified' })
+    if (verificationState.name) params.set('name', verificationState.name)
 
     return (
       <Navigate
@@ -329,14 +326,59 @@ export default function Home() {
 
   return (
     <div className="page home-page">
+      {/* Entry announcement modal */}
+      {showModal && !user && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="entry-modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="entry-modal-close"
+              onClick={() => setShowModal(false)}
+              type="button"
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+            <div className="entry-modal-badge">1ª Edición · Mayo 2025</div>
+            <h2>Inscripciones abiertas</h2>
+            <p>
+              Ya están abiertas las inscripciones para la primera edición de ESTARS PÁDEL TOUR.
+              Regístrate o inicia sesión para asegurar tu plaza en el torneo del
+              8, 9 y 10 de mayo en DUIN SPORTS Las Rozas.
+            </p>
+            <div className="entry-modal-actions">
+              <Link
+                className="primary-button"
+                to="/login"
+                onClick={() => setShowModal(false)}
+              >
+                Iniciar sesión
+              </Link>
+              <Link
+                className="secondary-button"
+                to="/register"
+                onClick={() => setShowModal(false)}
+              >
+                Crear cuenta
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="background-orb orb-one" />
       <div className="background-orb orb-two" />
       <div className="background-grid" />
 
       <header className="nav home-nav">
-        <BrandLockup subtitle="Circuito competitivo" />
+        <BrandLockup subtitle="Circuito de pádel competitivo" />
         <nav className="nav-links">
-          <a href="#tournaments">Torneo</a>
+          <a href="#edicion">1ª Edición</a>
           <a href="#categories">Categorías</a>
           <a href="#schedule">Cronograma</a>
           <a href="#contact">Contacto</a>
@@ -357,130 +399,165 @@ export default function Home() {
 
       <div className="hero-marquee home-marquee" aria-hidden="true">
         <span>ESTARS PADEL TOUR</span>
-        <span>COMPETENCIA RANKEADA</span>
-        <span>CUADROS EN VIVO</span>
-        <span>ESTARS PADEL TOUR</span>
+        <span>1ª EDICIÓN PRO</span>
+        <span>8.000€ PRIZE MONEY</span>
+        <span>DUIN SPORTS LAS ROZAS</span>
       </div>
 
       <main className="landing-main home-main">
+        {/* Hero */}
         <section className="home-hero reveal">
           <div className="home-hero-main hero-copy">
-            <div className="pill">Temporada activa</div>
-            <h1>Pádel de circuito. Sin atajos.</h1>
+            <div className="pill">Inscripciones abiertas · Mayo 2025</div>
+            <h1>ESTARS PÁDEL TOUR</h1>
             <p>
-              ESTARS PADEL TOUR es la plataforma que gestiona torneos de pádel de principio a fin: inscripciones,
-              cuadros, categorías y resultados en tiempo real. Un circuito serio, con estándares claros y la
-              ambición de convertirse en referencia competitiva de la región.
+              ESTARS PÁDEL TOUR es un circuito de transición profesional que dará paso a su 1era edición PRO este
+              8, 9 y 10 de mayo en DUIN SPORTS Las Rozas. Un circuito pensado para quienes buscan llevar su carrera
+              deportiva al siguiente nivel. En esta primera edición se repartirán 8.000€ en Prize Money + material
+              deportivo, en categorías OPEN, 1era y 2da masculina y femenina. Todo está preparado para que la élite
+              del pádel amateur y la competición profesional se fusionen en un mismo escenario y te impulsen al
+              próximo nivel.
             </p>
             <div className="hero-actions">
-              <Link className="primary-button" to="/register">Crear cuenta</Link>
-              <Link className="secondary-button" to="/login">Iniciar sesión</Link>
-              <a className="ghost-button" href="#contact">Hablar con nosotros</a>
+              <Link className="primary-button" to={inscripcionTo}>Inscribirme</Link>
+              {!user && <Link className="secondary-button" to="/login">Iniciar sesión</Link>}
+              <a className="ghost-button" href="#edicion">Ver torneo actual</a>
             </div>
             <div className="hero-stats home-stats-row">
               <div>
-                <strong>{tournamentsLoading ? '...' : tournaments.length}</strong>
-                <span>Torneos públicos</span>
+                <strong>8.000€</strong>
+                <span>Prize Money</span>
               </div>
               <div>
-                <strong>{tournamentsLoading ? '...' : currentCategoryCount}</strong>
-                <span>Categorías activas</span>
+                <strong>{tournamentsLoading ? '...' : (currentCategoryCount || 6)}</strong>
+                <span>Categorías</span>
               </div>
               <div>
-                <strong>24h</strong>
-                <span>Soporte operativo</span>
+                <strong>8–10 May</strong>
+                <span>Las Rozas</span>
               </div>
             </div>
           </div>
         </section>
 
+        {/* Edition key highlights */}
         <section className="home-signal-grid reveal">
           <article className="home-signal-card">
-            <span className="tag muted">01</span>
-            <h3>Operación sin fricciones</h3>
-            <p className="card-detail">Inscripciones, validación y pagos gestionados en un flujo claro y sin pasos innecesarios.</p>
+            <span className="tag accent">Prize Money</span>
+            <h3>8.000€ + material deportivo</h3>
+            <p className="card-detail">La primera edición reparte premio en metálico y material deportivo entre los ganadores de cada categoría.</p>
           </article>
           <article className="home-signal-card">
-            <span className="tag muted">02</span>
-            <h3>Criterio competitivo real</h3>
-            <p className="card-detail">Ranking, cupos y aceptación con reglas definidas. Sin ambigüedad, sin favoritismos.</p>
+            <span className="tag muted">Fecha y sede</span>
+            <h3>8, 9 y 10 de mayo — DUIN SPORTS Las Rozas</h3>
+            <p className="card-detail">Tres días de competencia en las instalaciones de DUIN SPORTS, Las Rozas de Madrid.</p>
           </article>
           <article className="home-signal-card">
-            <span className="tag muted">03</span>
-            <h3>El torneo, en vivo</h3>
-            <p className="card-detail">Cuadros, horarios y resultados actualizados al ritmo de cada jornada de competencia.</p>
+            <span className="tag muted">Categorías</span>
+            <h3>OPEN · 1ª · 2ª — Masculino y Femenino</h3>
+            <p className="card-detail">Seis divisiones para que compitas en el nivel que te corresponde. Admisión gestionada con criterio.</p>
           </article>
         </section>
 
-        <section id="tournaments" className="section section-block section-tone-ice reveal">
+        {/* Current edition spotlight */}
+        <section id="edicion" className="section section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
-            <span className="section-kicker">Temporada actual</span>
-            <h2>Torneo destacado</h2>
-            <p>Información pública del torneo activo, publicada directamente desde administración.</p>
+            <span className="section-kicker">Edición activa</span>
+            <h2>1ª Edición ESTARS PÁDEL TOUR</h2>
+            <p>Una sola edición. Un solo foco. Asegura tu plaza antes de que se cierre el cuadro.</p>
           </div>
-          <div className="card-grid home-tournament-grid">
-            {tournamentsLoading ? (
-              <article className="card card-featured">
-                <div className="card-header">
-                  <h3>Cargando torneo actual...</h3>
-                  <span className="tag muted">Sincronizando</span>
-                </div>
-                <p className="card-detail">Actualizando la información oficial del torneo.</p>
-              </article>
-            ) : currentTournament ? (
-              <>
-                <article className="card card-featured">
-                  <div className="card-header">
-                    <h3>{currentTournament.name}</h3>
-                    <span className="tag muted">{getTournamentStatusLabel(currentTournament.status)}</span>
-                  </div>
-                  <p className="card-detail">Fechas: {formatRange(currentTournament.start_date, currentTournament.end_date)}</p>
-                  <p className="card-detail">
-                    Sede: {currentTournament.venue_name || 'Por confirmar'}
-                    {currentTournament.city ? ` · ${currentTournament.city}` : ''}
-                  </p>
-                  <Link className="secondary-button full" to="/tournament">Ver torneo</Link>
-                </article>
 
-                <article className="card home-mini-brief">
-                  <div className="card-header">
-                    <h3>Estado del torneo</h3>
-                    <span className="tag muted">En vivo</span>
+          <div className="home-edition-spotlight">
+            {tournamentsLoading ? (
+              <div className="edition-spotlight-card">
+                <div className="edition-spotlight-header">
+                  <div>
+                    <div className="entry-modal-badge">Cargando...</div>
+                    <h2 style={{ marginTop: '12px' }}>Sincronizando datos del torneo</h2>
                   </div>
-                  <p className="card-detail">Inscripción: {formatRegistrationWindow(
-                    currentTournament.registration_open_at,
-                    currentTournament.registration_close_at,
-                  )}</p>
-                  <p className="card-detail">Categorías configuradas: {currentCategoryCount}</p>
-                  <p className="card-detail">
-                    Horario de juego: {currentTournament.day_start_time || '--:--'} - {currentTournament.day_end_time || '--:--'}
-                  </p>
-                </article>
-              </>
+                </div>
+              </div>
+            ) : currentTournament ? (
+              <div className="edition-spotlight-card">
+                <div className="edition-spotlight-header">
+                  <div>
+                    <span className="tag accent">{getTournamentStatusLabel(currentTournament.status)}</span>
+                    <h2 style={{ marginTop: '12px' }}>{currentTournament.name}</h2>
+                  </div>
+                </div>
+
+                <div className="edition-spotlight-meta">
+                  <div className="edition-spotlight-meta-item">
+                    <span>Fechas</span>
+                    <strong>{formatRange(currentTournament.start_date, currentTournament.end_date)}</strong>
+                  </div>
+                  <div className="edition-spotlight-meta-item">
+                    <span>Sede</span>
+                    <strong>
+                      {currentTournament.venue_name || 'DUIN SPORTS'}
+                      {currentTournament.city ? ` · ${currentTournament.city}` : ' · Las Rozas'}
+                    </strong>
+                  </div>
+                  <div className="edition-spotlight-meta-item edition-spotlight-prize">
+                    <span>Prize Money</span>
+                    <strong>8.000€ + material</strong>
+                  </div>
+                  <div className="edition-spotlight-meta-item">
+                    <span>Categorías</span>
+                    <strong>{currentCategoryCount > 0 ? `${currentCategoryCount} divisiones` : '6 divisiones'}</strong>
+                  </div>
+                  {(currentTournament.registration_open_at || currentTournament.registration_close_at) && (
+                    <div className="edition-spotlight-meta-item">
+                      <span>Inscripción</span>
+                      <strong>{formatRegistrationWindow(
+                        currentTournament.registration_open_at,
+                        currentTournament.registration_close_at,
+                      )}</strong>
+                    </div>
+                  )}
+                </div>
+
+                <div className="edition-spotlight-actions">
+                  <Link className="primary-button" to={inscripcionTo}>Inscribirme</Link>
+                  <Link className="secondary-button" to="/tournament">Ver detalles</Link>
+                </div>
+              </div>
             ) : (
-              <>
-                <article className="card card-featured">
-                  <div className="card-header">
-                    <h3>No hay torneos publicados todavía</h3>
-                    <span className="tag muted">Pendiente</span>
+              <div className="edition-spotlight-card">
+                <div className="edition-spotlight-header">
+                  <div>
+                    <span className="tag accent">Próximamente</span>
+                    <h2 style={{ marginTop: '12px' }}>1ª Edición ESTARS PÁDEL TOUR</h2>
                   </div>
-                  <p className="card-detail">Cuando se publique un torneo o se abran inscripciones, aparecerá aquí automáticamente.</p>
-                  <a className="ghost-button full" href="#contact">Solicitar aviso</a>
-                </article>
-                <article className="card home-mini-brief">
-                  <div className="card-header">
-                    <h3>Estado de publicación</h3>
-                    <span className="tag muted">{tournamentsError ? 'Error' : 'Sin datos'}</span>
+                </div>
+                <div className="edition-spotlight-meta">
+                  <div className="edition-spotlight-meta-item">
+                    <span>Fechas</span>
+                    <strong>8, 9 y 10 de mayo 2025</strong>
                   </div>
-                  <p className="card-detail">
-                    {tournamentsError || 'Todavía no hay un torneo visible en la vitrina pública.'}
-                  </p>
-                </article>
-              </>
+                  <div className="edition-spotlight-meta-item">
+                    <span>Sede</span>
+                    <strong>DUIN SPORTS · Las Rozas</strong>
+                  </div>
+                  <div className="edition-spotlight-meta-item edition-spotlight-prize">
+                    <span>Prize Money</span>
+                    <strong>8.000€ + material</strong>
+                  </div>
+                  <div className="edition-spotlight-meta-item">
+                    <span>Categorías</span>
+                    <strong>6 divisiones</strong>
+                  </div>
+                </div>
+                <div className="edition-spotlight-actions">
+                  <Link className="primary-button" to={inscripcionTo}>Inscribirme</Link>
+                  <a className="ghost-button" href="#contact">Solicitar información</a>
+                </div>
+              </div>
             )}
           </div>
         </section>
 
+        {/* How it works */}
         <section className="section flow section-block section-tone-solid reveal">
           <div className="section-title home-section-title">
             <span className="section-kicker">Cómo funciona</span>
@@ -498,11 +575,12 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Categories */}
         <section id="categories" className="section section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
             <span className="section-kicker">Divisiones</span>
-            <h2>Categorías competitivas</h2>
-            <p>Divisiones definidas para sostener un torneo ordenado, competitivo y con criterios claros.</p>
+            <h2>Categorías de la 1ª edición</h2>
+            <p>Seis divisiones diseñadas para una competencia ordenada, con criterios claros y nivel parejo.</p>
           </div>
           <div className="category-grid">
             {categories.map((category) => (
@@ -511,12 +589,13 @@ export default function Home() {
                   <h3>{category.name}</h3>
                   <p>{category.rule}</p>
                 </div>
-                <button className="secondary-button">Ver categoría</button>
+                <Link className="secondary-button" to={inscripcionTo}>Inscribirme</Link>
               </div>
             ))}
           </div>
         </section>
 
+        {/* Schedule */}
         <section id="schedule" className="section section-block section-tone-solid reveal">
           <div className="section-title home-section-title">
             <span className="section-kicker">Competencia</span>
@@ -525,7 +604,7 @@ export default function Home() {
           </div>
           <div className="schedule">
             <div className="schedule-item">
-              <span className="tag">Cronograma</span>
+              <span className="tag">8–10 Mayo · Las Rozas</span>
               <div>
                 <h3>Agenda oficial del torneo</h3>
                 <p>Horarios, canchas y rondas se confirman una vez armado el cuadro definitivo.</p>
@@ -533,9 +612,10 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <a className="primary-button" href="#contact">Solicitar información</a>
+          <Link className="primary-button" to={inscripcionTo}>Asegurar mi plaza</Link>
         </section>
 
+        {/* Contact / Alliances */}
         <section id="contact" className="section contact section-block section-tone-ice reveal">
           <div className="section-title home-section-title">
             <span className="section-kicker">Alianzas</span>
@@ -592,19 +672,15 @@ export default function Home() {
               {contactStatus && <p className="form-message">{contactStatus}</p>}
             </form>
             <div className="contact-panel">
-              <h3>¿Quieres impulsar el circuito?</h3>
+              <h3>¿Quieres formar parte del crecimiento del torneo?</h3>
               <p>
-                Respondemos en menos de 24 horas. Trabajamos con clubes, marcas y aliados que
-                comparten la visión de un pádel competitivo más serio y mejor organizado.
+                Respondemos dentro de 24 horas. También trabajamos con clubes, marcas y aliados
+                que quieren impulsar una experiencia competitiva cada vez más sólida.
               </p>
               <div className="contact-details">
                 <div>
-                  <span>Soporte</span>
-                  <strong>support@estarspadeltour.com</strong>
-                </div>
-                <div>
-                  <span>WhatsApp</span>
-                  <strong>+1 555 0199</strong>
+                  <span>Inscripciones y contacto</span>
+                  <strong>inscripciones@estarspadeltour.com</strong>
                 </div>
               </div>
             </div>
@@ -615,7 +691,7 @@ export default function Home() {
       <footer className="footer home-footer">
         <div>
           <strong>ESTARS PADEL TOUR</strong>
-          <span>Construyendo el circuito de pádel que la región merece.</span>
+          <span>1ª Edición PRO · 8, 9 y 10 de mayo · DUIN SPORTS Las Rozas</span>
         </div>
         <div className="footer-links">
           <a href="#">Privacidad</a>
