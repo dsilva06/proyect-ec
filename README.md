@@ -106,3 +106,15 @@ npm run build
 4. Cron del scheduler activo.
 5. Worker de queue activo.
 6. SPA deploy con fallback a `index.html` sin reescribir `/api/*`.
+
+### Render Static Site
+
+Para evitar 404 al refrescar rutas de la SPA (`/tournament`, `/admin`, `/player/...`), Render debe tener una rewrite:
+
+```text
+Source: /*
+Destination: /index.html
+Action: Rewrite
+```
+
+El `render.yaml` del repo incluye esa regla para despliegues Blueprint. Si el sitio ya fue creado manualmente en Render, agrega la misma regla en el Dashboard del servicio frontend.
