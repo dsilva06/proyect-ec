@@ -11,49 +11,53 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::createIfNotExists('archived_team_invites', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('legacy_team_invite_id')->unique();
-            $table->unsignedBigInteger('team_id')->nullable();
-            $table->string('invited_email')->nullable();
-            $table->string('invited_phone')->nullable();
-            $table->unsignedBigInteger('invited_user_id')->nullable();
-            $table->integer('invited_ranking_value')->nullable();
-            $table->string('invited_ranking_source')->nullable();
-            $table->string('token')->nullable();
-            $table->string('status_code')->nullable();
-            $table->string('status_label')->nullable();
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamp('email_sent_at')->nullable();
-            $table->text('email_last_error')->nullable();
-            $table->unsignedInteger('email_attempts')->default(0);
-            $table->timestamp('original_created_at')->nullable();
-            $table->timestamp('original_updated_at')->nullable();
-            $table->timestamp('archived_at');
+        if (! Schema::hasTable('archived_team_invites')) {
+            Schema::create('archived_team_invites', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('legacy_team_invite_id')->unique();
+                $table->unsignedBigInteger('team_id')->nullable();
+                $table->string('invited_email')->nullable();
+                $table->string('invited_phone')->nullable();
+                $table->unsignedBigInteger('invited_user_id')->nullable();
+                $table->integer('invited_ranking_value')->nullable();
+                $table->string('invited_ranking_source')->nullable();
+                $table->string('token')->nullable();
+                $table->string('status_code')->nullable();
+                $table->string('status_label')->nullable();
+                $table->timestamp('expires_at')->nullable();
+                $table->timestamp('email_sent_at')->nullable();
+                $table->text('email_last_error')->nullable();
+                $table->unsignedInteger('email_attempts')->default(0);
+                $table->timestamp('original_created_at')->nullable();
+                $table->timestamp('original_updated_at')->nullable();
+                $table->timestamp('archived_at');
 
-            $table->index(['team_id']);
-            $table->index(['invited_email']);
-        });
+                $table->index(['team_id']);
+                $table->index(['invited_email']);
+            });
+        }
 
-        Schema::createIfNotExists('archived_team_invite_status_history', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('legacy_status_history_id')->unique();
-            $table->unsignedBigInteger('legacy_team_invite_id')->nullable();
-            $table->foreignId('archived_team_invite_id')->nullable()->constrained('archived_team_invites')->nullOnDelete();
-            $table->string('module');
-            $table->string('entity_type');
-            $table->unsignedBigInteger('entity_id');
-            $table->string('from_status_code')->nullable();
-            $table->string('to_status_code');
-            $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('reason')->nullable();
-            $table->json('meta')->nullable();
-            $table->timestamp('original_created_at')->nullable();
-            $table->timestamp('archived_at');
+        if (! Schema::hasTable('archived_team_invite_status_history')) {
+            Schema::create('archived_team_invite_status_history', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('legacy_status_history_id')->unique();
+                $table->unsignedBigInteger('legacy_team_invite_id')->nullable();
+                $table->foreignId('archived_team_invite_id')->nullable()->constrained('archived_team_invites')->nullOnDelete();
+                $table->string('module');
+                $table->string('entity_type');
+                $table->unsignedBigInteger('entity_id');
+                $table->string('from_status_code')->nullable();
+                $table->string('to_status_code');
+                $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->string('reason')->nullable();
+                $table->json('meta')->nullable();
+                $table->timestamp('original_created_at')->nullable();
+                $table->timestamp('archived_at');
 
-            $table->index(['legacy_team_invite_id']);
-            $table->index(['module', 'entity_type', 'entity_id']);
-        });
+                $table->index(['legacy_team_invite_id']);
+                $table->index(['module', 'entity_type', 'entity_id']);
+            });
+        }
 
         $archivedAt = now();
 
