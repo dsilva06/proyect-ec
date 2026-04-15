@@ -11,7 +11,7 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::create('archived_team_invites', function (Blueprint $table) {
+        Schema::createIfNotExists('archived_team_invites', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('legacy_team_invite_id')->unique();
             $table->unsignedBigInteger('team_id')->nullable();
@@ -35,7 +35,7 @@ return new class extends Migration
             $table->index(['invited_email']);
         });
 
-        Schema::create('archived_team_invite_status_history', function (Blueprint $table) {
+        Schema::createIfNotExists('archived_team_invite_status_history', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('legacy_status_history_id')->unique();
             $table->unsignedBigInteger('legacy_team_invite_id')->nullable();
