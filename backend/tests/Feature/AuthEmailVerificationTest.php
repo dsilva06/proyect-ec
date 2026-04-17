@@ -485,7 +485,7 @@ class AuthEmailVerificationTest extends TestCase
         ])
             ->assertOk()
             ->assertExactJson([
-                'message' => 'If the account exists and is not yet verified, a verification email has been sent.',
+                'message' => 'Correo de verificación reenviado. Revisa tu bandeja de entrada.',
             ]);
 
         Notification::assertSentTo($user, VerifyEmail::class);
@@ -498,9 +498,9 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/email/resend', [
             'email' => 'missing-account@test.dev',
         ])
-            ->assertOk()
-            ->assertExactJson([
-                'message' => 'If the account exists and is not yet verified, a verification email has been sent.',
+            ->assertNotFound()
+            ->assertJson([
+                'error_code' => 'PENDING_REGISTRATION_NOT_FOUND',
             ]);
 
         Notification::assertNothingSent();
@@ -519,9 +519,9 @@ class AuthEmailVerificationTest extends TestCase
         $this->postJson('/api/auth/email/resend', [
             'email' => 'public-resend-verified@test.dev',
         ])
-            ->assertOk()
-            ->assertExactJson([
-                'message' => 'If the account exists and is not yet verified, a verification email has been sent.',
+            ->assertNotFound()
+            ->assertJson([
+                'error_code' => 'PENDING_REGISTRATION_NOT_FOUND',
             ]);
 
         Notification::assertNothingSent();

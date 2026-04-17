@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -59,6 +60,11 @@ class AuthRateLimitTest extends TestCase
 
     public function test_public_resend_verification_endpoint_is_rate_limited(): void
     {
+        User::factory()->unverified()->create([
+            'email' => 'resend-limit@example.com',
+            'is_active' => true,
+        ]);
+
         for ($attempt = 1; $attempt <= 3; $attempt++) {
             $this->postJson('/api/auth/email/resend', [
                 'email' => 'resend-limit@example.com',
