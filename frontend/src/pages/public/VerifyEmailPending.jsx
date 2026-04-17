@@ -77,11 +77,14 @@ export default function VerifyEmailPending() {
         setVerificationContext(data.verification_context)
       }
 
-      setMessage(
-        data?.message || 'Si la cuenta existe y aún no está verificada, enviamos un correo de verificación.',
-      )
+      setMessage(data?.message || 'Correo de verificación reenviado. Revisa tu bandeja de entrada.')
     } catch (err) {
-      setError(err?.data?.message || err?.message || 'No pudimos reenviar el correo de verificación.')
+      const code = err?.data?.error_code
+      if (code === 'PENDING_REGISTRATION_NOT_FOUND') {
+        setError('No encontramos una cuenta pendiente con ese correo. El proceso ha expirado — vuelve a registrarte desde el inicio.')
+      } else {
+        setError(err?.data?.message || err?.message || 'No pudimos reenviar el correo de verificación. Inténtalo en unos minutos.')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -131,7 +134,16 @@ export default function VerifyEmailPending() {
                 </form>
               )}
 
-              {error && <p className="auth-error">{error}</p>}
+              {error && (
+                <div>
+                  <p className="auth-error">{error}</p>
+                  {error.includes('registrarte') && (
+                    <Link className="secondary-button auth-submit" to="/register">
+                      Volver a registrarse
+                    </Link>
+                  )}
+                </div>
+              )}
 
               <p className="auth-switch">
                 {isVerified ? (

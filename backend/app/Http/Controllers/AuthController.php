@@ -204,18 +204,47 @@ class AuthController extends Controller
             ->where('email', Str::lower($validated['email']))
             ->first();
 
+        $sent = false;
+
         if ($user && ! $user->hasVerifiedEmail()) {
-            $this->sendEmailVerification($user);
+            try {
+                $this->sendEmailVerification($user);
+                $sent = true;
+            } catch (\Throwable $e) {
+                report($e);
+
+                return response()->json([
+                    'message' => 'No se pudo enviar el correo en este momento. Inténtalo de nuevo en unos minutos.',
+                    'error_code' => 'VERIFICATION_EMAIL_SEND_FAILED',
+                ], 503);
+            }
         } elseif (! empty($validated['verification_context'])) {
             $pendingRegistration = $this->pendingRegistrationFromContext($validated['verification_context']);
 
             if ($pendingRegistration && Str::lower($pendingRegistration['email']) === Str::lower($validated['email'])) {
-                $this->sendPendingRegistrationVerification($pendingRegistration, $validated['verification_context']);
+                try {
+                    $this->sendPendingRegistrationVerification($pendingRegistration, $validated['verification_context']);
+                    $sent = true;
+                } catch (\Throwable $e) {
+                    report($e);
+
+                    return response()->json([
+                        'message' => 'No se pudo enviar el correo en este momento. Inténtalo de nuevo en unos minutos.',
+                        'error_code' => 'VERIFICATION_EMAIL_SEND_FAILED',
+                    ], 503);
+                }
             }
         }
 
+        if (! $sent) {
+            return response()->json([
+                'message' => 'No encontramos una cuenta pendiente de verificación con ese correo. Vuelve a registrarte desde el inicio.',
+                'error_code' => 'PENDING_REGISTRATION_NOT_FOUND',
+            ], 404);
+        }
+
         $response = [
-            'message' => 'If the account exists and is not yet verified, a verification email has been sent.',
+            'message' => 'Correo de verificación reenviado. Revisa tu bandeja de entrada.',
         ];
 
         if (! empty($validated['verification_context'])) {
