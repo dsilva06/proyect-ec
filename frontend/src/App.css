@@ -1506,6 +1506,28 @@ main,
   color: var(--color-text);
 }
 
+.registration-form .amateur-registration-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 16px;
+  align-items: end;
+  padding-top: 4px;
+}
+
+.registration-form .amateur-registration-form label {
+  min-width: 0;
+}
+
+.registration-form .amateur-registration-form .form-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+  padding-top: 8px;
+}
+
+.registration-form .amateur-registration-form .primary-button {
+  min-width: 180px;
+}
+
 .registration-groups {
   display: grid;
   gap: 20px;
@@ -5925,6 +5947,16 @@ label,
 
   .admin-shell-player .tournament-card {
     padding: 16px;
+  }
+
+  .registration-form .amateur-registration-form {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .registration-form .amateur-registration-form .primary-button {
+    width: 100%;
+    min-width: 0;
   }
 
   .admin-shell-player .modal-card {

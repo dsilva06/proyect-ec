@@ -831,7 +831,10 @@ export default function Tournament() {
                           </div>
                           {!user ? <p className="muted">Inicia sesion para registrarte.</p> : null}
                           {user && !isRegistered ? (
-                            <form onSubmit={(event) => handleStandardRegister(event, tournament)}>
+                            <form
+                              className={!usesRanking ? 'amateur-registration-form' : undefined}
+                              onSubmit={(event) => handleStandardRegister(event, tournament)}
+                            >
                               <label>
                                 Categoria
                                 <select
