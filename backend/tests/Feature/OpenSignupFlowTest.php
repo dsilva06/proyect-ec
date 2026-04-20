@@ -78,7 +78,7 @@ class OpenSignupFlowTest extends TestCase
         $this->assertSame(1, Team::query()->count());
     }
 
-    public function test_non_open_signup_flow_still_creates_registration(): void
+    public function test_amateur_signup_flow_creates_registration_without_rankings(): void
     {
         $captain = $this->makePlayer('captain-non-open@test.dev');
         $category = $this->makeTournamentCategory('amateur');
@@ -88,14 +88,12 @@ class OpenSignupFlowTest extends TestCase
         $this->postJson('/api/player/registrations', [
             'tournament_category_id' => $category->id,
             'partner_email' => 'partner-non-open@test.dev',
-            'self_ranking_value' => 10,
-            'self_ranking_source' => 'FEP',
-            'partner_ranking_value' => 20,
-            'partner_ranking_source' => 'FEP',
         ])->assertOk()
             ->assertJsonPath('tournament_category.id', $category->id);
 
+        $registration = Registration::query()->with('rankings')->firstOrFail();
         $this->assertSame(1, Registration::query()->count());
+        $this->assertTrue($registration->rankings->every(fn ($ranking) => $ranking->ranking_value === null));
         $this->assertSame(0, OpenEntry::query()->count());
     }
 

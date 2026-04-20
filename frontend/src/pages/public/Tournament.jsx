@@ -38,6 +38,8 @@ const isOpenTournament = (tournament) => String(tournament?.mode || '').toLowerC
 const isOpenCategory = (category) =>
   String(category?.category?.level_code || '').toLowerCase() === 'open'
 
+const tournamentUsesRanking = (tournament) => String(tournament?.mode || '').toLowerCase() === 'pro'
+
 const formatDateShort = (value) => {
   if (!value) return ''
   const parsed = new Date(value)
@@ -264,19 +266,22 @@ export default function Tournament() {
       setError('Ingresa el email del partner.')
       return
     }
-    if (!standardForm.selfRanking) {
-      setError('Ingresa tu ranking.')
-      return
-    }
-    if (!standardForm.partnerRanking) {
-      setError('Ingresa el ranking de tu partner.')
-      return
-    }
 
     const categories = tournament?.categories || []
     const selectedCategory = categories.find(
       (category) => String(category.id) === String(standardForm.categoryId),
     )
+    const requiresRanking = tournamentUsesRanking(tournament)
+
+    if (requiresRanking && !standardForm.selfRanking) {
+      setError('Ingresa tu ranking.')
+      return
+    }
+    if (requiresRanking && !standardForm.partnerRanking) {
+      setError('Ingresa el ranking de tu partner.')
+      return
+    }
+
     const sourceOptions = getRankingSourceOptions(selectedCategory)
     const selfSource = sourceOptions.includes(standardForm.selfRankingSource)
       ? standardForm.selfRankingSource
@@ -286,14 +291,19 @@ export default function Tournament() {
       : sourceOptions[0]
 
     try {
-      const registration = await playerRegistrationsApi.create({
+      const payload = {
         tournament_category_id: standardForm.categoryId,
         partner_email: standardForm.partnerEmail,
-        self_ranking_value: Number(standardForm.selfRanking),
-        self_ranking_source: selfSource,
-        partner_ranking_value: Number(standardForm.partnerRanking),
-        partner_ranking_source: partnerSource,
-      })
+      }
+
+      if (requiresRanking) {
+        payload.self_ranking_value = Number(standardForm.selfRanking)
+        payload.self_ranking_source = selfSource
+        payload.partner_ranking_value = Number(standardForm.partnerRanking)
+        payload.partner_ranking_source = partnerSource
+      }
+
+      const registration = await playerRegistrationsApi.create(payload)
 
       const statusCode = String(registration?.status?.code || '').toLowerCase()
       if (['accepted', 'payment_pending'].includes(statusCode)) {
@@ -523,6 +533,7 @@ export default function Tournament() {
                 ) || null
               const rankingSourceOptions = getRankingSourceOptions(selectedCategory)
               const rankingSourceLabel = rankingSourceOptions.join(' / ')
+              const usesRanking = tournamentUsesRanking(tournament)
 
               return (
                 <>
@@ -826,72 +837,76 @@ export default function Tournament() {
                                   }
                                 />
                               </label>
-                              <label>
-                                Tu ranking {rankingSourceLabel}
-                                <input
-                                  type="number"
-                                  min="1"
-                                  placeholder="Ej: 350"
-                                  value={standardForm.selfRanking}
-                                  onChange={(event) =>
-                                    setStandardForm((prev) => ({
-                                      ...prev,
-                                      selfRanking: event.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-                              <label>
-                                Fuente de ranking (tu)
-                                <select
-                                  value={standardForm.selfRankingSource}
-                                  onChange={(event) =>
-                                    setStandardForm((prev) => ({
-                                      ...prev,
-                                      selfRankingSource: event.target.value,
-                                    }))
-                                  }
-                                >
-                                  {rankingSourceOptions.map((source) => (
-                                    <option key={source} value={source}>
-                                      {source}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                              <label>
-                                Ranking del partner {rankingSourceLabel}
-                                <input
-                                  type="number"
-                                  min="1"
-                                  placeholder="Ej: 420"
-                                  value={standardForm.partnerRanking}
-                                  onChange={(event) =>
-                                    setStandardForm((prev) => ({
-                                      ...prev,
-                                      partnerRanking: event.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-                              <label>
-                                Fuente de ranking (partner)
-                                <select
-                                  value={standardForm.partnerRankingSource}
-                                  onChange={(event) =>
-                                    setStandardForm((prev) => ({
-                                      ...prev,
-                                      partnerRankingSource: event.target.value,
-                                    }))
-                                  }
-                                >
-                                  {rankingSourceOptions.map((source) => (
-                                    <option key={source} value={source}>
-                                      {source}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
+                              {usesRanking ? (
+                                <>
+                                  <label>
+                                    Tu ranking {rankingSourceLabel}
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      placeholder="Ej: 350"
+                                      value={standardForm.selfRanking}
+                                      onChange={(event) =>
+                                        setStandardForm((prev) => ({
+                                          ...prev,
+                                          selfRanking: event.target.value,
+                                        }))
+                                      }
+                                    />
+                                  </label>
+                                  <label>
+                                    Fuente de ranking (tu)
+                                    <select
+                                      value={standardForm.selfRankingSource}
+                                      onChange={(event) =>
+                                        setStandardForm((prev) => ({
+                                          ...prev,
+                                          selfRankingSource: event.target.value,
+                                        }))
+                                      }
+                                    >
+                                      {rankingSourceOptions.map((source) => (
+                                        <option key={source} value={source}>
+                                          {source}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                  <label>
+                                    Ranking del partner {rankingSourceLabel}
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      placeholder="Ej: 420"
+                                      value={standardForm.partnerRanking}
+                                      onChange={(event) =>
+                                        setStandardForm((prev) => ({
+                                          ...prev,
+                                          partnerRanking: event.target.value,
+                                        }))
+                                      }
+                                    />
+                                  </label>
+                                  <label>
+                                    Fuente de ranking (partner)
+                                    <select
+                                      value={standardForm.partnerRankingSource}
+                                      onChange={(event) =>
+                                        setStandardForm((prev) => ({
+                                          ...prev,
+                                          partnerRankingSource: event.target.value,
+                                        }))
+                                      }
+                                    >
+                                      {rankingSourceOptions.map((source) => (
+                                        <option key={source} value={source}>
+                                          {source}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                </>
+                              ) : null}
                               <div className="form-actions">
                                 <button className="primary-button" type="submit">
                                   Enviar inscripcion

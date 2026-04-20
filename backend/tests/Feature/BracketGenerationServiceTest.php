@@ -51,7 +51,7 @@ class BracketGenerationServiceTest extends TestCase
         $this->assertCount(0, $seededRegistrations);
     }
 
-    public function test_non_open_generation_keeps_ranking_based_seeding(): void
+    public function test_pro_generation_keeps_ranking_based_seeding(): void
     {
         $category = $this->makeTournamentCategory('pro');
         $bracket = Bracket::query()->create([
@@ -69,6 +69,32 @@ class BracketGenerationServiceTest extends TestCase
 
         $this->assertSame(1, $topSeed->fresh()->seed_number);
         $this->assertSame(2, $secondSeed->fresh()->seed_number);
+    }
+
+    public function test_amateur_generation_does_not_assign_ranking_based_seeds(): void
+    {
+        $category = $this->makeTournamentCategory('amateur');
+        $bracket = Bracket::query()->create([
+            'tournament_category_id' => $category->id,
+            'type' => Bracket::TYPE_SINGLE_ELIMINATION,
+            'status_id' => $this->statusId('bracket', 'draft'),
+        ]);
+
+        $this->makeAcceptedRegistration($category, 10, now()->subMinutes(4));
+        $this->makeAcceptedRegistration($category, 20, now()->subMinutes(3));
+        $this->makeAcceptedRegistration($category, 30, now()->subMinutes(2));
+        $this->makeAcceptedRegistration($category, 40, now()->subMinute());
+
+        app(BracketGenerationService::class)->generate($bracket, false);
+
+        $seededSlots = $bracket->fresh('slots')->slots->filter(fn ($slot) => $slot->seed_number !== null);
+        $seededRegistrations = Registration::query()
+            ->where('tournament_category_id', $category->id)
+            ->whereNotNull('seed_number')
+            ->get();
+
+        $this->assertCount(0, $seededSlots);
+        $this->assertCount(0, $seededRegistrations);
     }
 
     public function test_open_generation_uses_assigned_registrations_only_and_ignores_raw_open_entries(): void

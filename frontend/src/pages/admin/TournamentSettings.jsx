@@ -97,7 +97,7 @@ const getClassificationMethodLabel = (classificationMethod) => {
   return 'Selección de categoría'
 }
 
-const tournamentUsesRanking = (mode) => String(mode || '').toLowerCase() !== 'open'
+const tournamentUsesRanking = (mode) => String(mode || '').toLowerCase() === 'pro'
 
 const buildRankingRangePayload = (values, usesRanking) => {
   if (!usesRanking) {
@@ -795,7 +795,7 @@ export default function TournamentSettings() {
                   handleTournamentEdit(tournament.id, 'mode', event.target.value)
                 }
               >
-                <option value="amateur">Amateur — inscripción libre por ranking</option>
+                <option value="amateur">Amateur — elegir categoría sin ranking</option>
                 <option value="pro">PRO — inscripción libre por ranking</option>
                 <option value="open">OPEN — árbitro asigna la categoría</option>
               </select>
@@ -806,7 +806,9 @@ export default function TournamentSettings() {
                 type="text"
                 value={String(tournamentEdits[tournament.id]?.mode ?? tournament.mode ?? 'amateur').toLowerCase() === 'open'
                   ? 'Asignación por árbitro (OPEN)'
-                  : 'Jugadores eligen su categoría (PRO / Amateur)'}
+                  : String(tournamentEdits[tournament.id]?.mode ?? tournament.mode ?? 'amateur').toLowerCase() === 'pro'
+                    ? 'Jugadores eligen su categoría con ranking (PRO)'
+                    : 'Jugadores eligen su categoría sin ranking (Amateur)'}
                 readOnly
                 disabled
               />
@@ -1218,7 +1220,7 @@ export default function TournamentSettings() {
               <label>
                 Modalidad
                 <select value={form.mode} onChange={handleTournamentChange('mode')}>
-                  <option value="amateur">Amateur — inscripción libre por ranking</option>
+                  <option value="amateur">Amateur — elegir categoría sin ranking</option>
                   <option value="pro">PRO — inscripción libre por ranking</option>
                   <option value="open">OPEN — árbitro asigna la categoría</option>
                 </select>
@@ -1229,7 +1231,9 @@ export default function TournamentSettings() {
                   type="text"
                   value={String(form.mode || '').toLowerCase() === 'open'
                     ? 'Asignación por árbitro (OPEN)'
-                    : 'Jugadores eligen su categoría (PRO / Amateur)'}
+                    : String(form.mode || '').toLowerCase() === 'pro'
+                      ? 'Jugadores eligen su categoría con ranking (PRO)'
+                      : 'Jugadores eligen su categoría sin ranking (Amateur)'}
                   readOnly
                   disabled
                 />

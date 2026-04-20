@@ -42,7 +42,7 @@ class TeamService
         $category = TournamentCategory::query()
             ->with('tournament')
             ->findOrFail($tournamentCategoryId);
-        $requiresRanking = strtolower((string) ($category->tournament?->mode ?? '')) !== 'open';
+        $requiresRanking = strtolower((string) ($category->tournament?->mode ?? '')) === 'pro';
 
         $existing = $this->findPendingRegistrationByCaptainTournamentAndPartner(
             $captain->id,

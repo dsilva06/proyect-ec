@@ -27,7 +27,9 @@ class BracketGenerationService
             ]);
         }
 
-        $isOpen = strtolower((string) ($category->tournament?->mode ?? '')) === 'open';
+        $mode = strtolower((string) ($category->tournament?->mode ?? ''));
+        $isOpen = $mode === 'open';
+        $usesSeedings = $mode === 'pro';
 
         $maxTeams = (int) $category->max_teams;
         $validMaxTeams = in_array($maxTeams, [2, 4, 8, 16, 32, 64, 128], true);
@@ -61,12 +63,12 @@ class BracketGenerationService
 
         $computedSize = $this->nextPowerOfTwo(max(2, $totalEligible));
         $drawSize = $validMaxTeams ? min($maxTeams, $computedSize) : $computedSize;
-        $seedCount = $isOpen ? 0 : $this->seedCountForSize($drawSize);
+        $seedCount = $usesSeedings ? $this->seedCountForSize($drawSize) : 0;
         $seedPositions = $seedCount > 0
             ? array_slice($this->seedPositions($drawSize), 0, $seedCount)
             : [];
 
-        $registrations = $isOpen
+        $registrations = ! $usesSeedings
             ? $registrations->sort(fn ($a, $b) => $this->compareOpenRegistrationsForByeProposal($a, $b))->values()
             : $registrations->sort(function ($a, $b) {
                 $rankA = $a->team_ranking_score ?? PHP_INT_MAX;
@@ -81,7 +83,7 @@ class BracketGenerationService
             $registrations = $registrations->take($drawSize);
         }
 
-        $seeded = $isOpen
+        $seeded = ! $usesSeedings
             ? collect()
             : $registrations
                 ->filter(fn ($registration) => ! $registration->is_wildcard && $registration->team_ranking_score !== null)

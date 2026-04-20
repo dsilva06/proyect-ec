@@ -51,6 +51,34 @@ class PlayerRegistrationValidationTest extends TestCase
         ])->assertOk();
     }
 
+    public function test_amateur_registration_does_not_require_rankings(): void
+    {
+        $captain = $this->makePlayer('captain-amateur-no-ranking@test.dev');
+        $category = $this->makeTournamentCategory('amateur');
+
+        Sanctum::actingAs($captain);
+
+        $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
+            'partner_email' => 'partner-amateur-no-ranking@test.dev',
+        ])->assertOk()
+            ->assertJsonPath('has_ranking', false);
+    }
+
+    public function test_pro_registration_still_requires_rankings(): void
+    {
+        $captain = $this->makePlayer('captain-pro-no-ranking@test.dev');
+        $category = $this->makeTournamentCategory('pro');
+
+        Sanctum::actingAs($captain);
+
+        $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
+            'partner_email' => 'partner-pro-no-ranking@test.dev',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['ranking']);
+    }
+
     public function test_existing_team_flow_allows_missing_partner_email(): void
     {
         $captain = $this->makePlayer('captain-existing-team@test.dev');

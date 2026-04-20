@@ -48,7 +48,7 @@ class AcceptanceServiceTest extends TestCase
         $this->assertNull($newerRegistration->accepted_at);
     }
 
-    public function test_non_open_recalculation_keeps_ranking_based_ordering(): void
+    public function test_pro_recalculation_keeps_ranking_based_ordering(): void
     {
         $category = $this->makeTournamentCategory('pro', 'ranking_desc', 1);
 
@@ -66,6 +66,28 @@ class AcceptanceServiceTest extends TestCase
         $this->assertSame(15, $newerBetterRegistration->team_ranking_score);
         $this->assertNull($olderWorseRegistration->accepted_at);
         $this->assertNotNull($newerBetterRegistration->accepted_at);
+    }
+
+    public function test_amateur_recalculation_uses_fifo_without_ranking_scores(): void
+    {
+        $category = $this->makeTournamentCategory('amateur', 'ranking_desc', 1);
+
+        $olderRegistration = $this->makeRegistration($category, 'older-amateur@test.dev', now()->subMinute());
+        $newerRegistration = $this->makeRegistration($category, 'newer-amateur@test.dev', now(), [1, 2]);
+
+        app(AcceptanceService::class)->recalculateForTournamentCategory($category->id);
+
+        $olderRegistration->refresh();
+        $newerRegistration->refresh();
+
+        $this->assertSame('accepted', $olderRegistration->fresh('status')->status?->code);
+        $this->assertSame('waitlisted', $newerRegistration->fresh('status')->status?->code);
+        $this->assertSame(1, $olderRegistration->queue_position);
+        $this->assertSame(1, $newerRegistration->queue_position);
+        $this->assertNull($olderRegistration->team_ranking_score);
+        $this->assertNull($newerRegistration->team_ranking_score);
+        $this->assertNotNull($olderRegistration->accepted_at);
+        $this->assertNull($newerRegistration->accepted_at);
     }
 
     public function test_open_recalculation_uses_only_assigned_registrations_and_ignores_raw_open_entries(): void

@@ -427,7 +427,7 @@ class RegistrationService
 
     private function tournamentRequiresRanking(TournamentCategory $category): bool
     {
-        return strtolower((string) ($category->tournament?->mode ?? '')) !== 'open';
+        return strtolower((string) ($category->tournament?->mode ?? '')) === 'pro';
     }
 
     private function defaultRankingSourceForCategory(TournamentCategory $category): string

@@ -24,8 +24,8 @@ class AcceptanceService
         $windowHours = $category->acceptance_window_hours;
         $seedingRule = $category->seeding_rule ?: 'ranking_desc';
         $wildcardSlots = max(0, (int) $category->wildcard_slots);
-        $isOpen = strtolower((string) ($category->tournament?->mode ?? '')) === 'open';
-        $requiresRanking = ! $isOpen;
+        $mode = strtolower((string) ($category->tournament?->mode ?? ''));
+        $usesRanking = $mode === 'pro';
 
         $registrations = Registration::query()
             ->where('tournament_category_id', $category->id)
@@ -48,7 +48,7 @@ class AcceptanceService
                 continue;
             }
 
-            if ($isOpen) {
+            if (! $usesRanking) {
                 $eligible[] = [
                     'registration' => $registration,
                     'avg' => null,
@@ -65,7 +65,7 @@ class AcceptanceService
             $rankingA = $rankings->get(0)?->ranking_value;
             $rankingB = $rankings->get(1)?->ranking_value;
 
-            if (($rankingA === null || $rankingB === null) && $requiresRanking) {
+            if ($rankingA === null || $rankingB === null) {
                 $pending[] = $registration;
                 continue;
             }
@@ -84,9 +84,9 @@ class AcceptanceService
             ];
         }
 
-        usort($eligible, function ($a, $b) use ($isOpen, $seedingRule) {
+        usort($eligible, function ($a, $b) use ($usesRanking, $seedingRule) {
             $createdAtComparison = $a['registration']->created_at <=> $b['registration']->created_at;
-            if ($isOpen || $seedingRule === 'fifo') {
+            if (! $usesRanking || $seedingRule === 'fifo') {
                 return $createdAtComparison !== 0
                     ? $createdAtComparison
                     : ($a['registration']->id <=> $b['registration']->id);
@@ -144,7 +144,7 @@ class AcceptanceService
             $this->statusService->transition($registration, 'registration', $nextStatus);
 
             $registration->queue_position = $acceptedOffset + $wildcardCount + $index + 1;
-            $registration->team_ranking_score = $isOpen ? null : (int) round($item['avg']);
+            $registration->team_ranking_score = $usesRanking ? (int) round($item['avg']) : null;
             $registration->accepted_at = $registration->accepted_at ?? now();
             if ($windowHours && ! $registration->payment_due_at) {
                 $registration->payment_due_at = now()->addHours((int) $windowHours);
@@ -158,7 +158,7 @@ class AcceptanceService
             $this->statusService->transition($registration, 'registration', $waitlistStatusId);
 
             $registration->queue_position = $index + 1;
-            $registration->team_ranking_score = $isOpen ? null : (int) round($item['avg']);
+            $registration->team_ranking_score = $usesRanking ? (int) round($item['avg']) : null;
             $registration->accepted_at = null;
             $registration->payment_due_at = null;
             $registration->save();
