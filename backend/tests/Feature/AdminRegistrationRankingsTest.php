@@ -61,7 +61,7 @@ class AdminRegistrationRankingsTest extends TestCase
 
         $tournament = Tournament::query()->create([
             'name' => 'Test',
-            'mode' => 'amateur',
+            'mode' => 'pro',
             'status_id' => $tournamentStatusId,
             'start_date' => now()->toDateString(),
             'end_date' => now()->addDays(2)->toDateString(),
