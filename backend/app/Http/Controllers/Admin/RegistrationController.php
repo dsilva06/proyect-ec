@@ -33,6 +33,10 @@ class RegistrationController extends Controller
             });
         }
 
+        if ($request->filled('tournament_category_id')) {
+            $query->where('tournament_category_id', (int) $request->query('tournament_category_id'));
+        }
+
         if ($request->filled('category_id')) {
             $query->whereHas('tournamentCategory.category', function ($builder) use ($request) {
                 $builder->where('categories.id', $request->query('category_id'));

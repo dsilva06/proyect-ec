@@ -3290,6 +3290,41 @@ main,
   margin: 0;
 }
 
+.bracket-slot-editor-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(239, 231, 211, 0.12);
+  border-radius: 16px;
+  background: rgba(7, 9, 17, 0.52);
+}
+
+.bracket-slot-editor-panel strong {
+  display: block;
+  color: #f7f1df;
+  margin-bottom: 4px;
+}
+
+.bracket-slot-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.bracket-slot-editor-grid label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: rgba(239, 231, 211, 0.78);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.bracket-slot-editor-grid select {
+  width: 100%;
+  min-width: 0;
+}
+
 .bye-recipient-list {
   display: grid;
   gap: 8px;

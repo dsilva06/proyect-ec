@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { adminBracketsApi } from '../../features/brackets/api'
+import { adminBracketsApi, adminBracketSlotsApi } from '../../features/brackets/api'
 import { adminMatchesApi } from '../../features/matches/api'
+import { adminRegistrationsApi } from '../../features/registrations/api'
 import { adminTournamentsApi } from '../../features/tournaments/api'
 import { statusesApi } from '../../features/statuses/api'
 import { cleanPayload } from '../../utils/cleanPayload'
@@ -15,6 +16,9 @@ const initialForm = {
 const getTeamLabel = (registration) => registration?.team?.display_name || 'Por definir'
 
 const hasGeneratedBracket = (bracket) => ((bracket?.matches?.length || 0) > 0 || (bracket?.slots?.length || 0) > 0)
+
+const isBracketEligibleRegistration = (registration) =>
+  ['accepted', 'paid'].includes(String(registration?.status?.code || '').toLowerCase())
 
 const getDrawPlan = (bracket) => bracket?.draw_plan || {}
 
@@ -87,6 +91,8 @@ export default function Draws() {
   const [scoreMatch, setScoreMatch] = useState(null)
   const [scoreForm, setScoreForm] = useState(buildInitialScoreForm(null))
   const [scoreError, setScoreError] = useState('')
+  const [registrationsByCategoryId, setRegistrationsByCategoryId] = useState({})
+  const [slotSavingId, setSlotSavingId] = useState('')
 
   const selectedBoardTournament = useMemo(
     () => tournaments.find((tournament) => String(tournament.id) === String(boardTournamentId)) || null,
@@ -151,6 +157,35 @@ export default function Draws() {
       setError('')
       const data = await adminBracketsApi.list(cleanPayload({ tournament_id: tournamentId }))
       setBrackets(data)
+
+      const categoryIds = [
+        ...new Set(
+          data
+            .map((bracket) => bracket.tournament_category_id)
+            .filter(Boolean)
+            .map((id) => String(id)),
+        ),
+      ]
+
+      if (categoryIds.length > 0) {
+        const entries = await Promise.all(
+          categoryIds.map(async (categoryId) => {
+            const registrations = await adminRegistrationsApi.list({
+              tournament_category_id: categoryId,
+            })
+
+            return [
+              categoryId,
+              registrations.filter((registration) => isBracketEligibleRegistration(registration)),
+            ]
+          }),
+        )
+
+        setRegistrationsByCategoryId((current) => ({
+          ...current,
+          ...Object.fromEntries(entries),
+        }))
+      }
     } catch (err) {
       setError(err?.message || 'No pudimos cargar los cuadros.')
     }
@@ -239,6 +274,27 @@ export default function Draws() {
       await loadBrackets(boardTournamentId)
     } catch (err) {
       setError(err?.message || 'No pudimos eliminar el cuadro.')
+    }
+  }
+
+  const handleSlotRegistrationChange = async (bracket, slot, value) => {
+    if (!slot?.id) return
+
+    const slotKey = String(slot.id)
+    setSlotSavingId(slotKey)
+    setError('')
+    setMessage('')
+
+    try {
+      await adminBracketSlotsApi.update(slot.id, {
+        registration_id: value ? Number(value) : null,
+      })
+      setMessage('Slot actualizado.')
+      await loadBrackets(boardTournamentId || bracket.tournament_category?.tournament?.id)
+    } catch (err) {
+      setError(err?.data?.message || err?.message || 'No pudimos actualizar el slot.')
+    } finally {
+      setSlotSavingId('')
     }
   }
 
@@ -399,6 +455,11 @@ export default function Draws() {
               const byeRecipients = getByeRecipients(bracket)
               const isOpenDraw = Boolean(drawPlan.is_open)
               const isGenerated = hasGeneratedBracket(bracket)
+              const bracketRegistrations =
+                registrationsByCategoryId[String(bracket.tournament_category_id)] || []
+              const orderedSlots = (bracket.slots || [])
+                .slice()
+                .sort((a, b) => Number(a.slot_number) - Number(b.slot_number))
 
               return (
                 <article key={bracket.id} className="panel-card draws-bracket-item">
@@ -433,6 +494,54 @@ export default function Draws() {
                       </button>
                     ) : null}
                   </div>
+
+                  {isGenerated && orderedSlots.length > 0 ? (
+                    <div className="bracket-slot-editor-panel">
+                      <div>
+                        <strong>Editar parejas del cuadro</strong>
+                        <p className="muted">
+                          Solo aparecen parejas aceptadas o pagadas de esta categoría.
+                        </p>
+                      </div>
+                      <div className="bracket-slot-editor-grid">
+                        {orderedSlots.map((slot) => {
+                          const assignedRegistrationIds = new Set(
+                            orderedSlots
+                              .filter((item) => item.id !== slot.id && item.registration?.id)
+                              .map((item) => String(item.registration.id)),
+                          )
+                          const currentRegistrationId = slot.registration?.id
+                            ? String(slot.registration.id)
+                            : ''
+                          const options = bracketRegistrations.filter(
+                            (registration) =>
+                              String(registration.id) === currentRegistrationId ||
+                              !assignedRegistrationIds.has(String(registration.id)),
+                          )
+
+                          return (
+                            <label key={slot.id || slot.slot_number}>
+                              Slot {slot.slot_number}
+                              <select
+                                value={currentRegistrationId}
+                                disabled={slotSavingId === String(slot.id)}
+                                onChange={(event) =>
+                                  handleSlotRegistrationChange(bracket, slot, event.target.value)
+                                }
+                              >
+                                <option value="">Libre</option>
+                                {options.map((registration) => (
+                                  <option key={registration.id} value={registration.id}>
+                                    {getTeamLabel(registration)}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
 
                   {isOpenDraw ? (
                     <div className="open-bye-review">
