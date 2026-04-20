@@ -131,6 +131,23 @@ const getRegistrationMessage = (statusCode) => {
   return 'Inscripcion enviada correctamente.'
 }
 
+const getRegistrationStatusCode = (registration) =>
+  String(registration?.status?.code || '').toLowerCase()
+
+const registrationCanPay = (registration, user) =>
+  registration?.team?.created_by === user?.id &&
+  ['accepted', 'payment_pending'].includes(getRegistrationStatusCode(registration)) &&
+  !registration?.payment_is_covered
+
+const getExistingRegistrationLabel = (registration) => {
+  const statusCode = getRegistrationStatusCode(registration)
+  if (['accepted', 'payment_pending'].includes(statusCode)) return 'Pago pendiente'
+  if (statusCode === 'waitlisted') return 'En lista de espera'
+  if (statusCode === 'pending') return 'Inscripcion pendiente'
+  if (statusCode === 'paid') return 'Inscripcion pagada'
+  return 'Ya inscrito'
+}
+
 export default function Tournament() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -205,6 +222,17 @@ export default function Tournament() {
     () =>
       new Set(
         registrations.map((registration) => registration.tournament_category?.tournament?.id),
+      ),
+    [registrations],
+  )
+
+  const registrationByTournamentId = useMemo(
+    () =>
+      new Map(
+        registrations.map((registration) => [
+          String(registration.tournament_category?.tournament?.id),
+          registration,
+        ]),
       ),
     [registrations],
   )
@@ -399,6 +427,22 @@ export default function Tournament() {
     }
   }
 
+  const handleRegistrationCheckout = async (registrationId) => {
+    setError('')
+    setMessage('')
+
+    try {
+      const checkout = await playerRegistrationsApi.pay(registrationId)
+      if (checkout?.checkout_url) {
+        window.location.assign(checkout.checkout_url)
+        return
+      }
+      setMessage('No pudimos abrir la pasarela de pago.')
+    } catch (err) {
+      setError(err?.data?.message || err?.message || 'No pudimos abrir el checkout.')
+    }
+  }
+
   return (
     <div className="tournament-page">
       <button className="ghost-button tournament-back-button" type="button" onClick={handleBack}>
@@ -427,6 +471,7 @@ export default function Tournament() {
             const categories = tournament.categories || []
             const isOpen = isOpenTournament(tournament)
             const existingOpenEntry = openEntryByTournamentId.get(String(tournament.id)) || null
+            const existingRegistration = registrationByTournamentId.get(String(tournament.id)) || null
             const isRegistered = registeredTournamentIds.has(tournament.id)
             const participating = isRegistered || Boolean(existingOpenEntry)
             const hasPendingOpenEntry = Boolean(
@@ -492,7 +537,9 @@ export default function Tournament() {
                   {user ? (
                     participating ? (
                       <span className="tag muted">
-                        {hasPendingOpenEntry ? 'Inscripcion OPEN pendiente de pago' : 'Ya inscrito'}
+                        {hasPendingOpenEntry
+                          ? 'Inscripcion OPEN pendiente de pago'
+                          : getExistingRegistrationLabel(existingRegistration)}
                       </span>
                     ) : (
                       <button className="primary-button" type="button">
@@ -525,6 +572,7 @@ export default function Tournament() {
               const categories = tournament.categories || []
               const isOpen = isOpenTournament(tournament)
               const existingOpenEntry = openEntryByTournamentId.get(String(tournament.id)) || null
+              const existingRegistration = registrationByTournamentId.get(String(tournament.id)) || null
               const isRegistered = registeredTournamentIds.has(tournament.id)
               const participating = isRegistered || Boolean(existingOpenEntry)
               const selectedCategory =
@@ -916,8 +964,51 @@ export default function Tournament() {
                               {error ? <p className="form-message error">{error}</p> : null}
                             </form>
                           ) : null}
-                          {user && isRegistered ? (
-                            <p className="muted">Ya estas inscrito en este torneo.</p>
+                          {user && existingRegistration ? (
+                            <div className="player-card-stack">
+                              <article className="player-info-card">
+                                <div className="player-card-topline">
+                                  <span
+                                    className={`player-status-pill tone-${
+                                      registrationCanPay(existingRegistration, user)
+                                        ? 'warning'
+                                        : 'success'
+                                    }`}
+                                  >
+                                    {getExistingRegistrationLabel(existingRegistration)}
+                                  </span>
+                                  <span className="player-soft-note">
+                                    {existingRegistration.tournament_category?.category
+                                      ?.display_name ||
+                                      existingRegistration.tournament_category?.category?.name ||
+                                      'Categoria'}
+                                  </span>
+                                </div>
+                                <h5>
+                                  {registrationCanPay(existingRegistration, user)
+                                    ? 'Pago pendiente'
+                                    : 'Inscripcion registrada'}
+                                </h5>
+                                <p>
+                                  {registrationCanPay(existingRegistration, user)
+                                    ? 'Tu equipo ya tiene la categoria reservada. Completa el pago para confirmar la inscripcion.'
+                                    : 'Tu equipo ya tiene una inscripcion para este torneo.'}
+                                </p>
+                                {registrationCanPay(existingRegistration, user) ? (
+                                  <div className="form-actions">
+                                    <button
+                                      className="primary-button"
+                                      type="button"
+                                      onClick={() =>
+                                        handleRegistrationCheckout(existingRegistration.id)
+                                      }
+                                    >
+                                      Continuar pago
+                                    </button>
+                                  </div>
+                                ) : null}
+                              </article>
+                            </div>
                           ) : null}
                         </>
                       )}
