@@ -131,6 +131,7 @@ export default function TournamentSettings() {
   const [categoryDefaults, setCategoryDefaults] = useState({
     max_teams: 32,
     wildcard_slots: 0,
+    entry_fee_amount: '',
     acceptance_type: 'waitlist',
     min_fip_rank: '',
     max_fip_rank: '',
@@ -342,6 +343,10 @@ export default function TournamentSettings() {
               category_id: categoryId,
               max_teams: Number(categoryDefaults.max_teams || 0),
               wildcard_slots: Number(categoryDefaults.wildcard_slots || 0),
+              entry_fee_amount: categoryDefaults.entry_fee_amount === ''
+                ? Number(tournament.entry_fee_amount || 0)
+                : Number(categoryDefaults.entry_fee_amount || 0),
+              currency: tournament.entry_fee_currency || 'EUR',
               acceptance_type: categoryDefaults.acceptance_type || 'waitlist',
               ...rankingRangePayload,
             }),
@@ -492,6 +497,8 @@ export default function TournamentSettings() {
           category_id: '',
           max_teams: 32,
           wildcard_slots: 0,
+          entry_fee_amount: '',
+          currency: 'EUR',
           acceptance_type: 'waitlist',
           min_fip_rank: '',
           max_fip_rank: '',
@@ -518,6 +525,10 @@ export default function TournamentSettings() {
         ...payload,
         max_teams: Number(payload.max_teams || 0),
         wildcard_slots: Number(payload.wildcard_slots || 0),
+        entry_fee_amount: payload.entry_fee_amount === undefined || payload.entry_fee_amount === ''
+          ? Number(tournament?.entry_fee_amount || 0)
+          : Number(payload.entry_fee_amount || 0),
+        currency: payload.currency || tournament?.entry_fee_currency || 'EUR',
         acceptance_type: isOpenTournament ? 'immediate' : (payload.acceptance_type || 'waitlist'),
         ...rankingRangePayload,
       }))
@@ -957,6 +968,19 @@ export default function TournamentSettings() {
                       />
                     </div>
                     <div>
+                      <span>Costo inscripción</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        className="no-spinner"
+                        value={edits.entry_fee_amount ?? category.entry_fee_amount ?? tournament.entry_fee_amount ?? ''}
+                        onChange={(event) =>
+                          handleCategoryEdit(category.id, 'entry_fee_amount', event.target.value)
+                        }
+                      />
+                    </div>
+                    <div>
                       <span>Tipo de aceptación</span>
                       {isOpenMode ? (
                         <input type="text" value="Inmediata — asignación OPEN" readOnly disabled />
@@ -1090,6 +1114,19 @@ export default function TournamentSettings() {
                 value={categoryForm.wildcard_slots || 0}
                 onChange={(event) =>
                   handleCategoryFormChange(tournament.id, 'wildcard_slots', event.target.value)
+                }
+              />
+            </label>
+            <label>
+              Costo inscripción
+              <input
+                type="number"
+                min="0"
+                step="1"
+                className="no-spinner"
+                value={categoryForm.entry_fee_amount ?? tournament.entry_fee_amount ?? ''}
+                onChange={(event) =>
+                  handleCategoryFormChange(tournament.id, 'entry_fee_amount', event.target.value)
                 }
               />
             </label>
@@ -1367,6 +1404,18 @@ export default function TournamentSettings() {
                       min="0"
                       value={categoryDefaults.wildcard_slots}
                       onChange={handleCategoryDefaultsChange('wildcard_slots')}
+                    />
+                  </label>
+                  <label>
+                    Costo inscripción (default)
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="no-spinner"
+                      value={categoryDefaults.entry_fee_amount}
+                      placeholder={form.entry_fee_amount || '0'}
+                      onChange={handleCategoryDefaultsChange('entry_fee_amount')}
                     />
                   </label>
                   <label>

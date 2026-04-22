@@ -76,8 +76,8 @@ class StripePaymentService
             ];
         }
 
-        $amountCents = max(0, (int) ($registrationModel->tournamentCategory?->tournament?->entry_fee_amount ?? $registrationModel->tournamentCategory?->entry_fee_amount ?? 0)) * 100;
-        $currency = strtolower((string) ($registrationModel->tournamentCategory?->tournament?->entry_fee_currency ?: $registrationModel->tournamentCategory?->currency ?: 'eur'));
+        $amountCents = max(0, (int) ($registrationModel->tournamentCategory?->entry_fee_amount ?? $registrationModel->tournamentCategory?->tournament?->entry_fee_amount ?? 0)) * 100;
+        $currency = strtolower((string) ($registrationModel->tournamentCategory?->currency ?: $registrationModel->tournamentCategory?->tournament?->entry_fee_currency ?: 'eur'));
         $tournamentName = (string) ($registrationModel->tournamentCategory?->tournament?->name ?: 'ESTARS PADEL TOUR');
         $categoryName = (string) (
             $registrationModel->tournamentCategory?->category?->display_name

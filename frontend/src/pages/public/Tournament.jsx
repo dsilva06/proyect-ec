@@ -89,6 +89,18 @@ const formatTournamentFee = (tournament) => {
   }).format(amount)
 }
 
+const formatCategoryFee = (category, tournament) => {
+  if (!category) return formatTournamentFee(tournament)
+
+  const amount = Number(category.entry_fee_amount ?? tournament?.entry_fee_amount ?? 0)
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: category.currency || tournament?.entry_fee_currency || 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
 const getRankingSourceOptions = (category) => {
   if (isOpenCategory(category)) return ['FIP', 'FEP']
   return ['FEP']
@@ -637,7 +649,7 @@ export default function Tournament() {
                             <div>
                               <div className="entry-fee-banner-label">Costo total del equipo</div>
                               <div className="entry-fee-banner-amount">
-                                {formatTournamentFee(tournament)}
+                                {formatCategoryFee(selectedCategory, tournament)}
                               </div>
                             </div>
                             <div className="entry-fee-banner-note">
@@ -820,7 +832,7 @@ export default function Tournament() {
                             <div>
                               <div className="entry-fee-banner-label">Costo total del equipo</div>
                               <div className="entry-fee-banner-amount">
-                                {formatTournamentFee(tournament)}
+                                {formatCategoryFee(selectedCategory, tournament)}
                               </div>
                             </div>
                             <div className="entry-fee-banner-note">

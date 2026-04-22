@@ -97,13 +97,16 @@ class AdminCrudSmokeTest extends TestCase
 
         $updateCategory = $this->patchJson("/api/admin/tournament-categories/{$tournamentCategoryId}", [
             'wildcard_slots' => 2,
+            'entry_fee_amount' => 35,
             'acceptance_type' => 'immediate',
         ]);
 
         $updateCategory->assertOk();
+        $updateCategory->assertJsonPath('entry_fee_amount', 35);
         $this->assertDatabaseHas('tournament_categories', [
             'id' => $tournamentCategoryId,
             'wildcard_slots' => 2,
+            'entry_fee_amount' => 35,
             'acceptance_type' => 'immediate',
         ]);
 

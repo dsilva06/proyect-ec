@@ -138,6 +138,40 @@ class TeamTournamentRegistrationFlowTest extends TestCase
         Queue::assertNothingPushed();
     }
 
+    public function test_standard_checkout_uses_tournament_category_entry_fee(): void
+    {
+        Queue::fake();
+        $this->mockStripeCheckoutCreation('cs_category_fee', 6500, 'eur');
+
+        $captain = $this->makePlayer('captain-category-fee@test.dev');
+        $partner = $this->makePlayer('partner-category-fee@test.dev');
+        $category = $this->makeTournamentCategory('amateur');
+        $category->tournament->update([
+            'entry_fee_amount' => 20,
+            'entry_fee_currency' => 'EUR',
+        ]);
+        $category->update([
+            'entry_fee_amount' => 65,
+            'currency' => 'EUR',
+        ]);
+
+        Sanctum::actingAs($captain);
+
+        $registrationId = $this->postJson('/api/player/registrations', [
+            'tournament_category_id' => $category->id,
+            'partner_email' => $partner->email,
+        ])->json('id');
+
+        $this->postJson("/api/player/registrations/{$registrationId}/pay")
+            ->assertOk()
+            ->assertJsonPath('session_id', 'cs_category_fee');
+
+        $payment = Payment::query()->firstOrFail();
+
+        $this->assertSame(6500, $payment->amount_cents);
+        $this->assertSame('EUR', $payment->currency);
+    }
+
     public function test_stripe_webhook_completion_links_existing_partner_account_without_creating_invite(): void
     {
         Queue::fake();
@@ -292,11 +326,22 @@ class TeamTournamentRegistrationFlowTest extends TestCase
             ->id;
     }
 
-    private function mockStripeCheckoutCreation(string $sessionId): void
+    private function mockStripeCheckoutCreation(string $sessionId, ?int $expectedAmountCents = null, ?string $expectedCurrency = null): void
     {
         $mock = Mockery::mock(StripeCheckoutGateway::class);
         $mock->shouldReceive('isConfigured')->andReturn(true);
-        $mock->shouldReceive('createCheckoutSession')->once()->andReturn([
+
+        $expectation = $mock->shouldReceive('createCheckoutSession')->once();
+        if ($expectedAmountCents !== null || $expectedCurrency !== null) {
+            $expectation->with(Mockery::on(function (array $payload) use ($expectedAmountCents, $expectedCurrency): bool {
+                $priceData = $payload['line_items'][0]['price_data'] ?? [];
+
+                return ($expectedAmountCents === null || (int) ($priceData['unit_amount'] ?? 0) === $expectedAmountCents)
+                    && ($expectedCurrency === null || (string) ($priceData['currency'] ?? '') === $expectedCurrency);
+            }));
+        }
+
+        $expectation->andReturn([
             'id' => $sessionId,
             'url' => "https://checkout.stripe.test/{$sessionId}",
             'status' => 'open',
